@@ -1,0 +1,126 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# real_estate_lease (房屋租赁合同) mirrors employment.yaml (consulted Kimi 2026-07-30).
+contract_type: real_estate_lease
+tags:
+  - name: priority_purchase_status
+    values: [waived, retained, written_notice_required]
+    why: 《民法典》第726条承租人优先购买权仅存在于租赁关系，买卖合同无此概念；通用risk维度无法量化该权利的行使/放弃流程
+  - name: subletting_permission
+    values: [prohibited, written_consent_required, freely_allowed]
+    why: 租赁物使用权的二次流转是房屋租赁核心特征，买卖不涉及转租；通用stance无法界定具体的操作权限边界
+  - name: residential_safety_compliance
+    values: [compliant, has_hazards, pending_rectification]
+    why: 涉及人身健康与居住适格性（甲醛/结构/消防），买卖默认交付即合格而租赁强调持续适居；通用risk过于宽泛无法指向具体居住标准
+  - name: deposit_deduction_items
+    values: [rent_arrears, facility_damage, cleaning_fee, liquidated_damages, other]
+    why: 租赁押金退租清算涉及多类扣款，不同于买卖定金/预付款，具担保履约特殊性；通用strength无法覆盖具体扣款逻辑
+clauses:
+  - family: 优先购买权通知与放弃
+    section: 权利义务
+    body: >
+      甲方出售房屋的，应提前{{notice_days}}日书面通知乙方。乙方应在收到通知后{{response_days}}日内书面回复是否行使优先购买权；逾期未回复视为放弃。
+      依据：《民法典》第726条。
+    stance: balanced
+    strength: standard
+    why: 示范文本常省略"通知期限"和"默示放弃"机制，易引发优先购买权行使纠纷
+    verdict: real
+    slot_instructions:
+      - name: notice_days
+        label: 通知提前天数
+        description: 甲方出售房屋前需提前书面通知乙方的日数
+        example: "15"
+        required: true
+      - name: response_days
+        label: 答复期限
+        description: 乙方收到通知后书面回复是否行使优先购买权的日数，逾期视为放弃
+        example: "15"
+        required: true
+  - family: 房屋安全隐患告知与解除
+    section: 权利义务
+    body: >
+      甲方保证房屋符合建筑/消防/环保安全标准。若因房屋质量问题危及乙方安全或健康的，乙方可随时解除合同，且不承担违约责任。
+      依据：《民法典》第731条。
+    stance: pro_b
+    strength: strong
+    why: 通用模板多只谈维修，少谈"危及安全可直接解约"，此为承租人核心保护条款
+    verdict: real
+  - family: 转租书面确认流程
+    section: 权利义务
+    body: >
+      乙方转租需经甲方书面同意。甲方应在收到申请后{{reply_days}}日内答复，逾期不答复视为不同意。未经同意的转租，甲方有权解除合同。
+      依据：《民法典》第716条。
+    stance: pro_a
+    strength: standard
+    why: 示范文本常只写"不得转租"，未约定同意流程和沉默后果，实操易生歧义
+    verdict: real
+    slot_instructions:
+      - name: reply_days
+        label: 审批答复天数
+        description: 甲方收到转租申请后答复的日数，逾期不答复视为不同意
+        example: "10"
+        required: true
+  - family: 续租优先权行使期限
+    section: 履行期限
+    body: >
+      租赁期满前{{notice_days}}日，乙方有权以同等条件优先续租。甲方应在期满后{{reply_days}}日内通知是否续租，否则视为同意按原条件续租。
+      依据：《民法典》第734条。
+    stance: pro_b
+    strength: standard
+    why: 示范文本常忽略续租的通知义务和默认续租机制，导致承租人被动搬离
+    verdict: real
+    slot_instructions:
+      - name: notice_days
+        label: 续租申请期限
+        description: 租赁期满前承租人可申请优先续租的提前日数
+        example: "30"
+        required: true
+      - name: reply_days
+        label: 续租答复天数
+        description: 租赁期满后出租人通知是否续租的日数，逾期视为同意按原条件续租
+        example: "7"
+        required: true
+  - family: 水电燃气抄表与费用结算
+    section: 履行期限
+    body: >
+      交房/退租当日，双方共同抄录水表{{water_meter}}、电表{{electricity_meter}}、燃气表{{gas_meter}}读数。截止读数前的费用由甲方承担，之后由乙方承担。
+    stance: balanced
+    strength: standard
+    why: 通用模板常笼统写"按实际使用"，缺乏抄表确认环节，退租时极易扯皮
+    verdict: real
+    slot_instructions:
+      - name: water_meter
+        label: 水表读数
+        description: 交房或退租当日抄录的水表读数
+        example: "1234"
+        required: true
+      - name: electricity_meter
+        label: 电表读数
+        description: 交房或退租当日抄录的电表读数
+        example: "5678"
+        required: true
+      - name: gas_meter
+        label: 燃气表读数
+        description: 交房或退租当日抄录的燃气表读数
+        example: "901"
+        required: true
+  - family: 政府征收导致无法履行的补偿
+    section: 违约责任
+    body: >
+      因政府征收/拆迁导致合同无法履行的，双方互不承担违约责任。但针对装修残值/搬迁费用的补偿，归乙方所有（或按比例分配）。
+    stance: pro_b
+    strength: standard
+    why: 示范文本极少提及征收场景下的内部补偿分配，易被忽略
+    verdict: real
+skipped:
+  - item: 租金支付金额与周期
+    reason: 已在base"价款及支付"章节完全覆盖，无需新增
+  - item: 房屋交付时间与地点
+    reason: 已在base"履行期限"章节作为基础要素存在，属大路货
+  - item: 双方主体身份信息
+    reason: 已在base"当事人"章节覆盖，属通用必备信息
+  - item: 争议解决管辖法院
+    reason: 已在base"争议解决"章节覆盖，属通用法律条款
+  - item: 一般违约赔偿责任
+    reason: 已在base"违约责任"章节覆盖，新增条款需聚焦租赁特有场景
+  - item: 房屋基本状况描述
+    reason: 已在base"合同标的"章节覆盖，无需重复细化

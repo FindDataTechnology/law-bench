@@ -1,0 +1,65 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# utilities_supply (供用电水气热力合同) - consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: utilities_supply
+tags:
+  - name: metering_attributes
+    values: [prepaid, postpaid, smart_meter, mechanical_meter, transformer_ratio]
+    why: 公用事业计费核心依赖物理计量设备状态（预付费/后付费、智能表/机械表、倍率/互感器规格），直接影响价款计算逻辑，买卖合同无此技术细节
+  - name: safety_boundary_point
+    values: [property_boundary, maintenance_boundary, service_line_end]
+    why: 涉及人身触电、燃气泄漏等高风险事故的责任认定，法律强制要求明确物理分界，买卖/租赁无此概念
+  - name: supply_continuity_level
+    values: [tier_1_guaranteed, tier_2_guaranteed, ordinary_supply, ordered_consumption_level]
+    why: 涉及工业生产或民生保障的稳定性承诺，区别于一般货物的"交付"，具有公共服务垄断性和中断特殊性
+clauses:
+  - family: 计划检修停电通知
+    section: 权利义务
+    body: >
+      因供电设施计划检修需要停电时，供电人应提前{{days}}日通知用电人（《中华人民共和国民法典》第六百五十二条）。未提前通知造成损失的，应承担赔偿责任。
+    stance: pro_b
+    strength: standard
+    why: 示范文本常仅写"配合检修"，未量化法定通知期，易引发违约争议；非买卖通用条款
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 提前通知天数
+        description: 计划检修停电前供电人需提前通知用电人的天数
+        example: 7
+        required: true
+  - family: 计量装置误差处理
+    section: 价款及支付
+    body: >
+      双方对计量装置准确性有异议时，以法定计量检定机构检定结果为准。误差在允许范围内，电费据实结算；超出范围，按{{rule}}原则退补电量（《供电营业规则》第七十九条）。
+    stance: balanced
+    strength: standard
+    why: 示范文本多忽略计量争议的技术处理流程，直接引用通用"质量异议"条款不适用；§79 经核确为计量误差退补规定（用户申请校验、超差退补电费）
+    verdict: real
+    slot_instructions:
+      - name: rule
+        label: 退补原则
+        description: 计量装置误差超出允许范围时的电量退补原则
+        example: 多退少补、按误差比例计算
+        required: true
+  - family: 产权分界与维护责任
+    section: 权利义务
+    body: >
+      供电设施的运行维护管理责任，以{{location}}为产权分界点。分界点电源侧由供电人负责，负荷侧由用电人负责（《电力供应与使用条例》第三十条）。
+    stance: balanced
+    strength: standard
+    why: 示范文本常笼统写"各自维护"，未明确物理分界点定义，安全事故责任不清
+    verdict: real
+    slot_instructions:
+      - name: location
+        label: 产权分界点
+        description: 供电设施运行维护管理的产权分界点物理位置
+        example: 变压器低压侧出线端
+        required: true
+skipped:
+  - item: 不可抗力
+    reason: 属于通用合同必备条款，已在「违约责任」或「附则」中覆盖，无需针对公用事业单独定制
+  - item: 逾期付款违约金
+    reason: 示范文本「价款及支付」章节通常已包含通用滞纳金条款，除非涉及特定阶梯电价惩罚，否则属大路货
+  - item: 争议解决管辖
+    reason: 通用模板已有约定，虽公用事业常有指定法院，但属于程序性通用条款，非实体权利义务特有
+  - item: 保密条款
+    reason: 适用于所有商业合同，不体现供用电水气热力的行业特殊风险（电网数据、用户隐私除外，此处指通用保密）

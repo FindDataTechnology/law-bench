@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ t.contracts.h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.contracts.h1 }}</h1>
+</div>
+<p class="muted">{{ t.contracts.intro }}</p>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{{ t.contracts.col_type }}</th>
+        <th>{{ t.contracts.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ct in types %}
+      <tr>
+        <td class="muted">{{ loop.index }}</td>
+        <td>
+          <a href="{{ url_for('page_contract_detail', contract_type=ct.key) }}"><strong>{{ ct.zh }}</strong></a>
+          <div class="muted"><code>{{ ct.key }}</code></div>
+        </td>
+        <td>
+          <a href="{{ url_for('page_contract_detail', contract_type=ct.key) }}">{{ t.contracts.view }}</a>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not types %}
+      <tr><td colspan="3" class="muted">{{ t.contracts.empty }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

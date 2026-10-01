@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ title_for_rubric(rubric.name) }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{{ title_for_rubric(rubric.name) }}
+      {% if rubric.is_harbor %}<span class="badge harbor">{{ source_label(rubric.source) }}</span>
+      {% else %}<span class="badge local">{{ t.badge.local }}</span>{% endif %}
+    </h1>
+    <a href="{{ url_for('page_list_rubrics') }}">{{ t.detail.back_to_rubrics }}</a>
+  </div>
+  <div class="toolbar">
+    {% if not rubric.is_harbor and has_scope('content:write') %}
+      <a class="btn" href="{{ url_for('page_edit_rubric', name=rubric.name) }}">{{ t.detail.edit_rubric }}</a>
+    {% endif %}
+    {% if not rubric.is_harbor and has_scope('admin') %}
+      <form method="post" action="{{ url_for('page_delete_rubric', name=rubric.name) }}"
+            data-confirm="{{ tr('detail.delete_rubric_confirm', name=rubric.name, count=rubric.criterion_count) }}">
+        <button type="submit" class="btn btn-danger">{{ t.detail.delete_rubric }}</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if rubric.is_harbor %}
+<div class="readonly-note">
+  {{ tr('detail.readonly_note', source=source_label(rubric.source))|safe }}
+</div>
+{% endif %}
+
+<div class="panel">
+  <dl class="meta">
+    <dt>{{ t.col.context }}</dt><dd><code>{{ label_for('context', rubric.context) }}</code></dd>
+    <dt>{{ t.col.source }}</dt><dd>{{ source_label(rubric.source) }}</dd>
+    {% if rubric.source_path %}<dt>{{ t.col.source_path }}</dt><dd><code>{{ rubric.source_path }}</code></dd>{% endif %}
+    <dt>{{ t.form.description }}</dt><dd>{{ rubric.description or '-' }}</dd>
+    <dt>{{ t.col.criteria }}</dt><dd>{{ rubric.criterion_count }}</dd>
+    <dt>{{ t.col.created }}</dt><dd class="muted">{{ rubric.created_at }}</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <h2>{{ t.h1.criteria }}</h2>
+  {% for c in rubric.criteria %}
+  <div class="criterion-row">
+    <div class="crow-head">
+      <strong>{{ loop.index }}. {{ criterion_for(c.name, 'title', c.name) }}</strong>
+      {% if not rubric.is_harbor and has_scope('content:write') %}
+      <div class="crit-actions">
+        <form method="post" action="{{ url_for('page_move_criterion', name=rubric.name, cid=c.id) }}">
+          <input type="hidden" name="direction" value="up">
+          <button type="submit" class="btn btn-sm" {{ 'disabled' if loop.first else '' }}>▲</button>
+        </form>
+        <form method="post" action="{{ url_for('page_move_criterion', name=rubric.name, cid=c.id) }}">
+          <input type="hidden" name="direction" value="down">
+          <button type="submit" class="btn btn-sm" {{ 'disabled' if loop.last else '' }}>▼</button>
+        </form>
+        <button type="button" class="btn btn-sm" data-toggle-edit>{{ t.detail.edit_btn }}</button>
+        {% if has_scope('admin') %}
+        <form method="post" action="{{ url_for('page_delete_criterion', name=rubric.name, cid=c.id) }}"
+              data-confirm="{{ tr('detail.delete_criterion_confirm', name=c.name) }}">
+          <button type="submit" class="btn btn-sm btn-danger">✗</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div><strong>{{ t.detail.description_label }}</strong> {{ criterion_for(c.name, 'description', c.description) }}</div>
+    <div class="muted"><strong>{{ t.detail.guidance_label }}</strong> {{ criterion_for(c.name, 'guidance', c.guidance) }}</div>
+
+    {% if not rubric.is_harbor and has_scope('content:write') %}
+    <form method="post" class="crit-edit"
+          action="{{ url_for('page_update_criterion', name=rubric.name, cid=c.id) }}">
+      <div class="grid2">
+        <div class="row">
+          <label>{{ t.form.name }}</label>
+          <input type="text" name="name" value="{{ c.name }}" required>
+        </div>
+        <div class="row">
+          <label>{{ t.form.description }}</label>
+          <textarea name="description" required>{{ c.description }}</textarea>
+        </div>
+      </div>
+      <div class="row">
+        <label>{{ t.form.guidance }}</label>
+        <textarea name="guidance" required>{{ c.guidance }}</textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">{{ t.detail.save_criterion }}</button>
+    </form>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="muted">{{ t.detail.no_criteria }}</p>
+  {% endfor %}
+
+  {% if not rubric.is_harbor and has_scope('content:write') %}
+  <h3>{{ t.detail.add_criterion }}</h3>
+  <form method="post" action="{{ url_for('page_add_criterion', name=rubric.name) }}">
+    <div class="grid2">
+      <div class="row">
+        <label>{{ t.form.name }}</label>
+        <input type="text" name="name" required placeholder="{{ t.detail.criterion_name_placeholder }}">
+      </div>
+      <div class="row">
+        <label>{{ t.form.description }}</label>
+        <textarea name="description" required placeholder="{{ t.detail.criterion_desc_placeholder }}"></textarea>
+      </div>
+    </div>
+    <div class="row">
+      <label>{{ t.form.guidance }}</label>
+      <textarea name="guidance" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ t.detail.add_criterion }}</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

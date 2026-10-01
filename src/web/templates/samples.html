@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}{{ t.samples.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.samples.h1 }}</h1>
+  <span class="muted">{{ tr('samples.total', total=total) }}{% if include_history %}{{ t.samples.incl_history }}{% endif %}</span>
+</div>
+<p class="muted">{{ t.samples.intro }}</p>
+
+<div class="panel">
+  <form method="GET" action="{{ url_for('page_samples') }}" class="filter-form">
+    <div class="filter-group">
+      <label>{{ t.samples.filter_type }}</label>
+      <select name="contract_type" onchange="this.form.submit()">
+        <option value="">{{ t.samples.all_types }}</option>
+        {% for ct in all_types %}
+        <option value="{{ ct.key }}"{% if selected_ct == ct.key %} selected{% endif %}>{{ ct.zh }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>{{ t.samples.filter_scenario }}</label>
+      <select name="scenario" onchange="this.form.submit()">
+        <option value="">{{ t.samples.all_scenarios }}</option>
+        {% for s in scen_opts %}
+        <option value="{{ s }}"{% if selected_scenario == s %} selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label>{{ t.samples.filter_stance }}</label>
+      <select name="stance" onchange="this.form.submit()">
+        <option value="">{{ t.samples.all_stances }}</option>
+        {% for s in stance_opts %}
+        <option value="{{ s }}"{% if selected_stance == s %} selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="include_history" value="1"
+               onchange="this.form.submit()"
+               {% if include_history %}checked{% endif %}>
+        {{ t.samples.include_history }}
+      </label>
+    </div>
+
+    {# Preserve limit across auto-submits; offset resets on filter change. #}
+    <input type="hidden" name="limit" value="{{ limit }}">
+
+    <noscript>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">{{ t.samples.apply }}</button>
+      </div>
+    </noscript>
+  </form>
+</div>
+
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{{ t.samples.col_type }}</th>
+        <th>{{ t.samples.col_scenario }}</th>
+        <th>{{ t.samples.col_stance }}</th>
+        <th>{{ t.samples.col_slots }}</th>
+        <th>{{ t.samples.col_download }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in artifacts %}
+      <tr>
+        <td class="muted">{{ offset + loop.index }}</td>
+        <td><code>{{ type_map.get(a.contract_type, a.contract_type) }}</code></td>
+        <td>{% if a.scenario %}{{ a.scenario }}{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>{% if a.stance %}{{ a.stance }}{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>{{ a.slots|length }}</td>
+        <td class="dl-cell">
+          {% if a.docx_key %}
+          <a href="/api/contracts/artifacts/{{ a.id }}/download?format=docx" class="btn btn-sm">DOCX</a>
+          {% else %}
+          <span class="btn btn-sm disabled" title="{{ t.samples.no_docx }}">DOCX</span>
+          {% endif %}
+          {% if a.pdf_key %}
+          <a href="/api/contracts/artifacts/{{ a.id }}/download?format=pdf" class="btn btn-sm">PDF</a>
+          {% else %}
+          <span class="btn btn-sm disabled" title="{{ t.samples.no_pdf }}">PDF</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not artifacts %}
+      <tr><td colspan="6" class="muted">{% if selected_ct or selected_scenario or selected_stance %}{{ t.samples.empty_filtered }}{% else %}{{ t.samples.empty }}{% endif %}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{% if pages > 1 %}
+<div class="pagination">
+  {% if has_prev %}
+  <a href="?contract_type={{ selected_ct or '' }}&amp;scenario={{ selected_scenario or '' }}&amp;stance={{ selected_stance or '' }}&amp;limit={{ limit }}&amp;offset={{ offset - limit }}{% if include_history %}&amp;include_history=1{% endif %}" class="btn btn-sm">{{ t.samples.prev_page }}</a>
+  {% else %}
+  <span class="btn btn-sm disabled">{{ t.samples.prev_page }}</span>
+  {% endif %}
+
+  <span class="page-info">{{ tr('samples.page_info', page=page, pages=pages, total=total) }}</span>
+
+  {% if has_next %}
+  <a href="?contract_type={{ selected_ct or '' }}&amp;scenario={{ selected_scenario or '' }}&amp;stance={{ selected_stance or '' }}&amp;limit={{ limit }}&amp;offset={{ offset + limit }}{% if include_history %}&amp;include_history=1{% endif %}" class="btn btn-sm">{{ t.samples.next_page }}</a>
+  {% else %}
+  <span class="btn btn-sm disabled">{{ t.samples.next_page }}</span>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

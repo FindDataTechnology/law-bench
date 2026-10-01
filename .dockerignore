@@ -1,0 +1,35 @@
+# VCS / CI metadata
+.git
+.github
+.gitignore
+
+# Python local state
+.venv/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Never ship local secrets or run output
+.env
+.env.example
+output/
+*.log
+
+# Tooling / docs not needed at runtime
+.deepeval/
+openspec/
+.claude/
+tests/
+.DS_Store
+**/.DS_Store
+
+# Node islands' deps (rebuilt inside the image; never sent as context)
+assistant-ui/node_modules/
+copilot-runtime/node_modules/
+.tmp-ck-inspect/
+nul
+
+# node islands stray artifacts
+src/web/static/assistant/

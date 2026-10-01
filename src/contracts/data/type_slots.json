@@ -1,0 +1,5288 @@
+[
+  {
+    "type": "sale",
+    "zh": "买卖合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（卖方）名称",
+        "description": "请提供甲方（卖方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（买方）名称",
+        "description": "请提供乙方（买方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "标的物名称",
+        "latin": "subject",
+        "label": "标的物名称及规格",
+        "description": "买卖的标的物是什么？名称、型号、规格",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "标的物数量",
+        "latin": "subject",
+        "label": "数量",
+        "description": "数量是多少？",
+        "example": "1",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "标的物价款",
+        "latin": "subject",
+        "label": "价款总额",
+        "description": "总价款是多少元？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "付款方式",
+        "latin": "party_b_duty",
+        "label": "付款方式",
+        "description": "采用哪种付款方式？",
+        "example": "一次性付款",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "付款期限",
+        "latin": "party_b_duty",
+        "label": "付款期限",
+        "description": "什么时候付款？（具体日期或交付后X日内）",
+        "example": "买卖合同的具体内容",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "交付方式",
+        "latin": "party_a_duty",
+        "label": "交付方式",
+        "description": "采用哪种交付方式？",
+        "example": "自提",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "交付时间",
+        "latin": "party_a_duty",
+        "label": "交付时间",
+        "description": "什么时候交付？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "质量标准",
+        "latin": null,
+        "label": "质量标准",
+        "description": "标的物的质量标准是什么？（国家标准/行业标准/双方约定）",
+        "example": "买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "验收标准",
+        "latin": "party_a_duty",
+        "label": "验收标准及期限",
+        "description": "验收标准是什么？验收期限多少天？",
+        "example": "买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/sale.yaml"
+  },
+  {
+    "type": "utilities_supply",
+    "zh": "供用电水气热力合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "供应类别",
+        "latin": null,
+        "label": "供应类别",
+        "description": "供应的是电、水、气还是热力？",
+        "example": "供电",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "供应地点",
+        "latin": null,
+        "label": "供应地点",
+        "description": "供应接入的地点（计量点）在哪里？",
+        "example": "供用电水气热力合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "用量",
+        "latin": null,
+        "label": "预计用量/容量",
+        "description": "预计用量或申请容量是多少？",
+        "example": "供用电水气热力合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "计量方式",
+        "latin": null,
+        "label": "计量方式",
+        "description": "如何计量？（表计计量、抄表周期等）",
+        "example": "供用电水气热力合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "单价",
+        "latin": null,
+        "label": "单价及计价方式",
+        "description": "价格是多少？（含计价方式、阶梯价、峰谷价等）",
+        "example": "供用电水气热力合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "缴费周期",
+        "latin": null,
+        "label": "缴费周期",
+        "description": "费用如何缴纳？（周期、方式）",
+        "example": "供用电水气热力合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/utility.yaml"
+  },
+  {
+    "type": "gift",
+    "zh": "赠与合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "赠与物",
+        "latin": null,
+        "label": "赠与物",
+        "description": "赠与的财产是什么？",
+        "example": "赠与合同的具体内容",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "交付时间",
+        "latin": "party_a_duty",
+        "label": "交付时间",
+        "description": "赠与物什么时候交付？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "交付方式",
+        "latin": "party_a_duty",
+        "label": "交付方式",
+        "description": "以什么方式交付？",
+        "example": "直接交付",
+        "required": true,
+        "source": "party_a"
+      }
+    ],
+    "source": "masters/gift.yaml"
+  },
+  {
+    "type": "loan",
+    "zh": "借款合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出借人）名称",
+        "description": "请提供甲方（出借人）的姓名/名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（借款人）名称",
+        "description": "请提供乙方（借款人）的姓名/名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "借款金额",
+        "latin": "amount",
+        "label": "借款金额",
+        "description": "借款金额是多少元？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "借款用途",
+        "latin": null,
+        "label": "借款用途",
+        "description": "借款用途是什么？",
+        "example": "借款合同的具体内容",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "借款期限",
+        "latin": null,
+        "label": "借款期限",
+        "description": "借款期限多长？（多少个月）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "借款利率",
+        "latin": null,
+        "label": "借款利率",
+        "description": "年利率是多少？（不得超过LPR的四倍）",
+        "example": "借款合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "还款方式",
+        "latin": "party_b_duty",
+        "label": "还款方式",
+        "description": "采用哪种还款方式？",
+        "example": "到期一次还本付息",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "还款日期",
+        "latin": "party_b_duty",
+        "label": "还款日期",
+        "description": "最终还款日期是哪天？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "放款方式",
+        "latin": null,
+        "label": "放款方式",
+        "description": "以什么方式放款？",
+        "example": "银行转账",
+        "required": true,
+        "source": "party_a"
+      }
+    ],
+    "source": "masters/loan.yaml"
+  },
+  {
+    "type": "guarantee",
+    "zh": "保证合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（债权人）名称",
+        "description": "请提供甲方（债权人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（保证人）名称",
+        "description": "请提供乙方（保证人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "主债务",
+        "latin": null,
+        "label": "主债务",
+        "description": "被担保的主债务是什么？（借款金额、履行义务等）",
+        "example": "保证合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保证金额",
+        "latin": "amount",
+        "label": "保证金额/范围",
+        "description": "保证的金额或范围是多少？（主债权及利息、违约金、实现债权费用等）",
+        "example": "保证合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保证方式",
+        "latin": null,
+        "label": "保证方式",
+        "description": "保证方式是什么？（一般保证/连带责任保证；未约定的视为一般保证）",
+        "example": "一般保证",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保证期间",
+        "latin": null,
+        "label": "保证期间",
+        "description": "保证期间多长？（未约定或约定不明的为主债务履行期届满之日起六个月）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保证人信息",
+        "latin": null,
+        "label": "保证人",
+        "description": "保证人的名称/姓名及证件信息？",
+        "example": "保证合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "主债务履行期",
+        "latin": null,
+        "label": "主债务履行期限",
+        "description": "主债务何时到期？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/guarantee.yaml"
+  },
+  {
+    "type": "lease",
+    "zh": "租赁合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "租赁物",
+        "latin": "subject",
+        "label": "租赁物",
+        "description": "出租的是什么？",
+        "example": "租赁合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租金",
+        "latin": "amount",
+        "label": "租金",
+        "description": "租金多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租期",
+        "latin": null,
+        "label": "租赁期限",
+        "description": "租期多久？请说明起止日期或时长（如「1年」「2026-01-01 至 2026-12-31」）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/lease.yaml"
+  },
+  {
+    "type": "financing_lease",
+    "zh": "融资租赁合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "租赁物",
+        "latin": "subject",
+        "label": "租赁物",
+        "description": "出租的是什么？",
+        "example": "融资租赁合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租金",
+        "latin": "amount",
+        "label": "租金",
+        "description": "租金多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租期",
+        "latin": null,
+        "label": "租赁期限",
+        "description": "租期多久？请说明起止日期或时长（如「1年」「2026-01-01 至 2026-12-31」）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "融资租赁物",
+        "latin": "subject",
+        "label": "租赁物名称及规格",
+        "description": "融资租赁的标的物是什么？名称、型号、规格",
+        "example": "融资租赁合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "出卖方",
+        "latin": null,
+        "label": "出卖人（供应商）",
+        "description": "租赁物的出卖方（供应商）是谁？由承租人选择",
+        "example": "融资租赁合同的具体内容",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "购买价款",
+        "latin": "amount",
+        "label": "购买价款",
+        "description": "出租人向出卖人支付的购买价款是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "每期租金",
+        "latin": "amount",
+        "label": "每期租金",
+        "description": "每期租金是多少元？",
+        "example": "100000",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "租金期数",
+        "latin": "amount",
+        "label": "租金支付期数",
+        "description": "共分多少期支付？",
+        "example": "1",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租金总额",
+        "latin": "amount",
+        "label": "租金总额",
+        "description": "全部租金总额是多少？（含购买价款+融资利息）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租赁期限",
+        "latin": null,
+        "label": "租赁期限",
+        "description": "融资租赁期限多长？（多少个月）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "留购价款",
+        "latin": "amount",
+        "label": "留购价款",
+        "description": "租赁期满后，承租人留购租赁物的价格是多少？（通常为名义价格）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "交付方式",
+        "latin": "party_a_duty",
+        "label": "交付方式",
+        "description": "租赁物如何交付？（通常由出卖人直接交付承租人）",
+        "example": "融资租赁合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "维修责任",
+        "latin": null,
+        "label": "维修责任",
+        "description": "租赁物维修由谁负责？（融资租赁中通常由承租人负责）",
+        "example": "承租人负责",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/lease.financing.yaml"
+  },
+  {
+    "type": "factoring",
+    "zh": "保理合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "应收账款",
+        "latin": null,
+        "label": "应收账款",
+        "description": "转让的应收账款是什么？（债务人、金额、到期日）",
+        "example": "保理合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "应收账款债务人",
+        "latin": null,
+        "label": "应收账款债务人",
+        "description": "应收账款的债务人是哪方？",
+        "example": "保理合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "转让价款",
+        "latin": "amount",
+        "label": "应收账款转让价款",
+        "description": "保理人支付给债权人的转让对价是多少？（通常为账款面值折价）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "融资期限",
+        "latin": null,
+        "label": "融资期限",
+        "description": "保理融资的期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保理服务费",
+        "latin": "amount",
+        "label": "保理服务费",
+        "description": "保理服务费（利息+管理费）是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "通知方式",
+        "latin": null,
+        "label": "债权转让通知",
+        "description": "应收账款转让是否通知债务人？由谁通知？以什么方式通知？",
+        "example": "保理合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "追索方式",
+        "latin": null,
+        "label": "追索/回购",
+        "description": "是有追索权保理还是无追索权保理？（有追索权：债务人到期不付，保理人可向债权人追索/要求回购）",
+        "example": "有追索权保理",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/factoring.yaml"
+  },
+  {
+    "type": "work",
+    "zh": "承揽合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（定作人）名称",
+        "description": "请提供甲方（定作人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承揽人）名称",
+        "description": "请提供乙方（承揽人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "承揽项目",
+        "latin": null,
+        "label": "承揽项目",
+        "description": "承揽的工作内容是什么？",
+        "example": "承揽合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "技术要求",
+        "latin": null,
+        "label": "技术要求及图纸",
+        "description": "有什么技术要求？是否提供图纸？",
+        "example": "承揽合同的具体内容",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "材料提供",
+        "latin": null,
+        "label": "材料提供方",
+        "description": "材料由谁提供？",
+        "example": "定作人提供",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "完成期限",
+        "latin": "term_end",
+        "label": "完成期限",
+        "description": "工作完成期限是哪天？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "交付方式",
+        "latin": "party_a_duty",
+        "label": "交付方式",
+        "description": "工作成果如何交付？",
+        "example": "承揽合同的具体内容",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "报酬总额",
+        "latin": "amount",
+        "label": "报酬总额",
+        "description": "报酬总额是多少元？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "支付方式",
+        "latin": "party_b_duty",
+        "label": "支付方式",
+        "description": "报酬如何支付？",
+        "example": "完成验收后一次付清",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "质量标准",
+        "latin": null,
+        "label": "质量标准",
+        "description": "工作成果的质量标准是什么？",
+        "example": "承揽合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "验收期限",
+        "latin": "party_a_duty",
+        "label": "验收期限",
+        "description": "定作人应在多少天内验收？",
+        "example": "12个月",
+        "required": true,
+        "source": "party_a"
+      }
+    ],
+    "source": "masters/work.yaml"
+  },
+  {
+    "type": "construction",
+    "zh": "建设工程合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（发包人）名称",
+        "description": "请提供甲方（发包人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承包人）名称",
+        "description": "请提供乙方（承包人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      }
+    ],
+    "source": "masters/project.yaml"
+  },
+  {
+    "type": "transport",
+    "zh": "运输合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（托运人/旅客）名称",
+        "description": "请提供甲方（托运人/旅客）的姓名/名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承运人）名称",
+        "description": "请提供乙方（承运人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      }
+    ],
+    "source": "masters/transport.yaml"
+  },
+  {
+    "type": "technology",
+    "zh": "技术合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（委托方）名称",
+        "description": "请提供甲方（委托方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（受托方）名称",
+        "description": "请提供乙方（受托方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      }
+    ],
+    "source": "masters/technology.yaml"
+  },
+  {
+    "type": "bailment",
+    "zh": "保管合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（寄存人）名称",
+        "description": "请提供甲方（寄存人）的姓名/名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（保管人）名称",
+        "description": "请提供乙方（保管人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "保管物",
+        "latin": null,
+        "label": "保管物",
+        "description": "寄存的保管物是什么？",
+        "example": "保管合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保管期限",
+        "latin": null,
+        "label": "保管期限",
+        "description": "保管期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保管费",
+        "latin": null,
+        "label": "保管费",
+        "description": "保管费是多少？（无偿保管的填写0）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保管场所",
+        "latin": null,
+        "label": "保管场所",
+        "description": "保管物存放于何处？",
+        "example": "保管合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "验收方式",
+        "latin": "party_a_duty",
+        "label": "交付验收方式",
+        "description": "交付时如何验收保管物的现状？",
+        "example": "保管合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/deposit.yaml"
+  },
+  {
+    "type": "warehousing",
+    "zh": "仓储合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（存货人）名称",
+        "description": "请提供甲方（存货人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（保管人）名称",
+        "description": "请提供乙方（保管人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "仓储物",
+        "latin": null,
+        "label": "仓储物",
+        "description": "入库储存的货物是什么？",
+        "example": "仓储合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "仓储数量",
+        "latin": null,
+        "label": "仓储数量",
+        "description": "货物的数量、重量、体积是多少？",
+        "example": "仓储合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "仓储费",
+        "latin": null,
+        "label": "仓储费",
+        "description": "仓储费是多少？如何计费（按日/按月/按件）？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "仓储条件",
+        "latin": null,
+        "label": "仓储条件",
+        "description": "需要什么样的仓储条件？（常温/恒温/冷藏/防潮等）",
+        "example": "仓储合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "入库时间",
+        "latin": null,
+        "label": "入库时间",
+        "description": "货物何时入库？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "出库时间",
+        "latin": null,
+        "label": "出库时间",
+        "description": "约定何时出库？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/storage.yaml"
+  },
+  {
+    "type": "entrustment",
+    "zh": "委托合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（委托人）名称",
+        "description": "请提供甲方（委托人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（受托人）名称",
+        "description": "请提供乙方（受托人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "委托事项",
+        "latin": null,
+        "label": "委托事项",
+        "description": "委托受托人处理的具体事务是什么？",
+        "example": "委托合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "委托权限",
+        "latin": null,
+        "label": "委托权限范围",
+        "description": "受托人的权限范围是什么？（可办理事项、可否代签文件、可否转委托）",
+        "example": "委托合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "受托报酬",
+        "latin": "amount",
+        "label": "受托报酬",
+        "description": "受托人的报酬是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "委托期限",
+        "latin": null,
+        "label": "委托期限",
+        "description": "委托期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "费用承担",
+        "latin": "amount",
+        "label": "处理事务费用",
+        "description": "处理委托事务的差旅费、通讯费等由谁承担？",
+        "example": "委托合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/mandate.yaml"
+  },
+  {
+    "type": "property_service",
+    "zh": "物业服务合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（业主/物业使用人）名称",
+        "description": "请提供甲方（业主）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（物业服务人）名称",
+        "description": "请提供乙方（物业服务人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "服务项目",
+        "latin": null,
+        "label": "物业服务项目",
+        "description": "物业服务的具体内容是什么？（保洁、安保、绿化、维修、秩序维护等）",
+        "example": "物业服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "物业区域",
+        "latin": null,
+        "label": "物业服务区域",
+        "description": "物业服务覆盖的区域范围是？",
+        "example": "物业服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "物业费标准",
+        "latin": null,
+        "label": "物业费标准",
+        "description": "物业费按什么标准收取？（元/平米/月、收费方式）",
+        "example": "物业服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务期限",
+        "latin": null,
+        "label": "服务期限",
+        "description": "物业服务合同期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务标准",
+        "latin": null,
+        "label": "服务标准",
+        "description": "物业服务的质量标准是什么？（参照行业服务标准）",
+        "example": "物业服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "业委会业主大会",
+        "latin": null,
+        "label": "签约主体",
+        "description": "代表业主签约的主体是什么？（业委会/业主大会/街道办事处临时机构等）",
+        "example": "物业服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/property.yaml"
+  },
+  {
+    "type": "brokerage",
+    "zh": "行纪合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（委托人）名称",
+        "description": "请提供甲方（委托人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（中介人）名称",
+        "description": "请提供乙方（中介人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "中介事项",
+        "latin": null,
+        "label": "中介事项",
+        "description": "中介人为委托人促成或媒介的事务是什么？（如房屋买卖、租售、婚介等）",
+        "example": "行纪合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "中介报酬",
+        "latin": "amount",
+        "label": "中介报酬（佣金）",
+        "description": "佣金/报酬是多少？按什么标准计算？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "报酬支付条件",
+        "latin": "amount",
+        "label": "报酬支付条件",
+        "description": "什么时候才需要支付佣金？（通常为合同促成时）",
+        "example": "行纪合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "中介费用",
+        "latin": "amount",
+        "label": "中介活动费用",
+        "description": "中介活动产生的费用由谁承担？（未促成合同的处理方式）",
+        "example": "行纪合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/brokerage.yaml"
+  },
+  {
+    "type": "intermediation",
+    "zh": "中介合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（委托人）名称",
+        "description": "请提供甲方（委托人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（中介人）名称",
+        "description": "请提供乙方（中介人）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "中介事项",
+        "latin": null,
+        "label": "中介事项",
+        "description": "中介人为委托人促成或媒介的事务是什么？（如房屋买卖、租售、婚介等）",
+        "example": "中介合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "中介报酬",
+        "latin": "amount",
+        "label": "中介报酬（佣金）",
+        "description": "佣金/报酬是多少？按什么标准计算？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "报酬支付条件",
+        "latin": "amount",
+        "label": "报酬支付条件",
+        "description": "什么时候才需要支付佣金？（通常为合同促成时）",
+        "example": "中介合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "中介费用",
+        "latin": "amount",
+        "label": "中介活动费用",
+        "description": "中介活动产生的费用由谁承担？（未促成合同的处理方式）",
+        "example": "中介合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/brokerage.yaml"
+  },
+  {
+    "type": "partnership",
+    "zh": "合伙合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "合伙目的",
+        "latin": null,
+        "label": "合伙目的/经营范围",
+        "description": "合伙要经营的事业或项目是什么？",
+        "example": "合伙合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "出资方式",
+        "latin": null,
+        "label": "出资方式与金额",
+        "description": "各合伙人如何出资？（货币/实物/知识产权/劳务，各出多少）",
+        "example": "合伙合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "盈余分配",
+        "latin": null,
+        "label": "盈余分配比例",
+        "description": "利润如何分配？（约定比例/按出资比例）",
+        "example": "合伙合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "亏损分担",
+        "latin": null,
+        "label": "亏损分担比例",
+        "description": "亏损如何分担？（约定比例/按出资比例）",
+        "example": "合伙合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "事务执行人",
+        "latin": null,
+        "label": "事务执行人",
+        "description": "由谁执行合伙事务？重大事项如何决策？",
+        "example": "合伙合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/partnership.yaml"
+  },
+  {
+    "type": "company_formation",
+    "zh": "公司设立合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "equity_transfer",
+    "zh": "股权转让合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "目标公司",
+        "latin": null,
+        "label": "目标公司",
+        "description": "转让的股权属于哪家公司？",
+        "example": "股权转让合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "转让股权比例",
+        "latin": null,
+        "label": "转让股权比例/数量",
+        "description": "转让的股权比例或数量是多少？",
+        "example": "股权转让合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "转让价款",
+        "latin": "amount",
+        "label": "股权转让价款",
+        "description": "股权转让价款是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "支付方式",
+        "latin": "party_b_duty",
+        "label": "价款支付方式",
+        "description": "价款如何支付？（一次性/分期）",
+        "example": "股权转让合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "股东同意",
+        "latin": null,
+        "label": "其他股东同意",
+        "description": "其他股东是否已同意本次转让？（有限责任公司对外转让需其他股东过半数同意）",
+        "example": "已取得",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "优先购买权",
+        "latin": null,
+        "label": "优先购买权放弃",
+        "description": "其他股东是否已书面放弃优先购买权？",
+        "example": "已书面放弃",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "工商变更",
+        "latin": null,
+        "label": "工商变更登记",
+        "description": "何时办理工商变更登记？",
+        "example": "股权转让合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/equity-transfer.yaml"
+  },
+  {
+    "type": "capital_increase",
+    "zh": "增资扩股协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "merger_acquisition",
+    "zh": "公司并购协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "equity_incentive",
+    "zh": "股权激励协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "vam_agreement",
+    "zh": "估值调整（对赌）协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "equity_holding_in_trust",
+    "zh": "股权代持协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（实际出资人）姓名",
+        "description": "请提供实际出资人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（名义股东）姓名",
+        "description": "请提供名义股东姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "代持标的",
+        "latin": "subject",
+        "label": "代持股权",
+        "description": "代持哪家公司多少比例的股权？",
+        "example": "股权代持协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "实际出资",
+        "latin": null,
+        "label": "实际出资",
+        "description": "实际出资金额与出资凭证（转账记录等）？",
+        "example": "股权代持协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "收益归属",
+        "latin": null,
+        "label": "投资收益归属",
+        "description": "分红、增值等投资收益归谁？如何划转？",
+        "example": "股权代持协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "表决权行使",
+        "latin": null,
+        "label": "表决权如何行使",
+        "description": "名义股东投票听谁的？（按实际出资人指示/自行决定）",
+        "example": "股权代持协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/nominee-holding.yaml"
+  },
+  {
+    "type": "real_estate_sale",
+    "zh": "房产买卖合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（卖方）名称",
+        "description": "请提供甲方（卖方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（买方）名称",
+        "description": "请提供乙方（买方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "标的物名称",
+        "latin": "subject",
+        "label": "标的物名称及规格",
+        "description": "买卖的标的物是什么？名称、型号、规格",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "标的物数量",
+        "latin": "subject",
+        "label": "数量",
+        "description": "数量是多少？",
+        "example": "1",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "标的物价款",
+        "latin": "subject",
+        "label": "价款总额",
+        "description": "总价款是多少元？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "付款方式",
+        "latin": "party_b_duty",
+        "label": "付款方式",
+        "description": "采用哪种付款方式？",
+        "example": "一次性付款",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "付款期限",
+        "latin": "party_b_duty",
+        "label": "付款期限",
+        "description": "什么时候付款？（具体日期或交付后X日内）",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "交付方式",
+        "latin": "party_a_duty",
+        "label": "交付方式",
+        "description": "采用哪种交付方式？",
+        "example": "自提",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "交付时间",
+        "latin": "party_a_duty",
+        "label": "交付时间",
+        "description": "什么时候交付？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "质量标准",
+        "latin": null,
+        "label": "质量标准",
+        "description": "标的物的质量标准是什么？（国家标准/行业标准/双方约定）",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "验收标准",
+        "latin": "party_a_duty",
+        "label": "验收标准及期限",
+        "description": "验收标准是什么？验收期限多少天？",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "房屋坐落",
+        "latin": "subject",
+        "label": "房屋坐落",
+        "description": "房屋坐落地址是什么？",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "建筑面积",
+        "latin": null,
+        "label": "建筑面积",
+        "description": "房屋建筑面积是多少？（以产权证记载为准）",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "房屋权属",
+        "latin": null,
+        "label": "房屋权属及产权证号",
+        "description": "房屋权属情况是什么？（产权证号、共有情况、有无抵押查封）",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "付款节点",
+        "latin": "party_b_duty",
+        "label": "付款节点",
+        "description": "购房款如何支付？（一次性/按揭/分期，各节点金额）",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "交房时间",
+        "latin": null,
+        "label": "交房时间",
+        "description": "何时交房？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "过户登记时间",
+        "latin": null,
+        "label": "过户登记时间",
+        "description": "何时办理不动产过户登记？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "税费承担",
+        "latin": null,
+        "label": "税费承担",
+        "description": "契税、个税、增值税等税费由谁承担？",
+        "example": "房产买卖合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/sale.real-estate.yaml"
+  },
+  {
+    "type": "real_estate_lease",
+    "zh": "房屋租赁合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "租赁物",
+        "latin": "subject",
+        "label": "租赁物",
+        "description": "出租的是什么？",
+        "example": "房屋租赁合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租金",
+        "latin": "amount",
+        "label": "租金",
+        "description": "租金多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租期",
+        "latin": null,
+        "label": "租赁期限",
+        "description": "租期多久？请说明起止日期或时长（如「1年」「2026-01-01 至 2026-12-31」）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "房屋坐落",
+        "latin": "subject",
+        "label": "房屋坐落地址",
+        "description": "房屋的详细地址（XX 市 XX 区 XX 路 XX 小区 X 号楼 X 单元 XXX 室）",
+        "example": "房屋租赁合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "租金金额",
+        "latin": "amount",
+        "label": "每月租金金额",
+        "description": "每月的租金是多少元？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "支付方式",
+        "latin": "party_b_duty",
+        "label": "租金支付方式",
+        "description": "租金采用哪种支付方式？（押一付一/押一付三/押一付年等）",
+        "example": "押一付一",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "维修责任",
+        "latin": null,
+        "label": "维修责任划分",
+        "description": "房屋维修责任如何划分？",
+        "example": "全部甲方",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/lease.immovable.house.yaml"
+  },
+  {
+    "type": "employment",
+    "zh": "劳动合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "用人单位名称",
+        "latin": null,
+        "label": "用人单位名称",
+        "description": "公司营业执照上的全称是什么？",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "employer"
+      },
+      {
+        "name": "用人单位住所",
+        "latin": null,
+        "label": "用人单位住所",
+        "description": "公司的注册地址（住所）在哪里？",
+        "example": "劳动合同的具体内容",
+        "required": false,
+        "source": "employer"
+      },
+      {
+        "name": "法定代表人或主要负责人",
+        "latin": null,
+        "label": "法定代表人或主要负责人",
+        "description": "公司的法定代表人（或主要负责人）是谁？",
+        "example": "劳动合同的具体内容",
+        "required": false,
+        "source": "employer"
+      },
+      {
+        "name": "劳动者姓名",
+        "latin": null,
+        "label": "劳动者姓名",
+        "description": "员工身份证上的姓名是什么？",
+        "example": "劳动合同的具体内容",
+        "required": false,
+        "source": "employee"
+      },
+      {
+        "name": "劳动者住址",
+        "latin": null,
+        "label": "劳动者住址",
+        "description": "员工的经常居住地址是哪里？",
+        "example": "劳动合同的具体内容",
+        "required": false,
+        "source": "employee"
+      },
+      {
+        "name": "劳动者身份证件号码",
+        "latin": null,
+        "label": "劳动者身份证件号码",
+        "description": "员工的居民身份证号码是多少？",
+        "example": "劳动合同的具体内容",
+        "required": false,
+        "source": "employee"
+      },
+      {
+        "name": "劳动合同期限类型",
+        "latin": null,
+        "label": "劳动合同期限类型",
+        "description": "合同期限怎么约定？（固定/无固定/任务型）",
+        "example": "固定期限",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "工作内容与岗位",
+        "latin": null,
+        "label": "工作内容与岗位",
+        "description": "员工的岗位和主要工作职责是什么？",
+        "example": "劳动合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "工作地点",
+        "latin": null,
+        "label": "工作地点",
+        "description": "员工主要在哪里上班？",
+        "example": "劳动合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "工作时间制度",
+        "latin": null,
+        "label": "工作时间制度",
+        "description": "工作时间怎么安排？（标准/综合/不定时）",
+        "example": "标准工时",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "休息休假安排",
+        "latin": null,
+        "label": "休息休假安排",
+        "description": "休息日和休假怎么安排？（如每周休几天、法定节假日、年假等）",
+        "example": "劳动合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "劳动报酬数额",
+        "latin": "amount",
+        "label": "劳动报酬数额",
+        "description": "工资是多少元/月？",
+        "example": "100000",
+        "required": true,
+        "source": "employer"
+      },
+      {
+        "name": "工资发放日",
+        "latin": null,
+        "label": "工资发放日",
+        "description": "每月几号发工资？",
+        "example": "劳动合同的具体内容",
+        "required": true,
+        "source": "employer"
+      },
+      {
+        "name": "社会保险缴纳",
+        "latin": null,
+        "label": "社会保险缴纳",
+        "description": "社保怎么缴纳？（依法缴纳五险养老医疗失业工伤生育）",
+        "example": "依法缴纳五险",
+        "required": true,
+        "source": "employer"
+      },
+      {
+        "name": "劳动保护与职业危害防护",
+        "latin": null,
+        "label": "劳动保护与职业危害防护",
+        "description": "岗位有没有职业危害？公司提供哪些劳动保护措施和工作条件？",
+        "example": "劳动合同的具体内容",
+        "required": true,
+        "source": "employer"
+      }
+    ],
+    "source": "masters/labor.yaml"
+  },
+  {
+    "type": "labor_dispatch",
+    "zh": "劳务派遣合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（派遣单位）名称",
+        "description": "请提供劳务派遣单位名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（用工单位）名称",
+        "description": "请提供用工单位名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "派遣岗位",
+        "latin": null,
+        "label": "派遣岗位与性质",
+        "description": "派遣到什么岗位？属于临时性/辅助性/替代性哪类？",
+        "example": "劳务派遣合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "派遣人数",
+        "latin": null,
+        "label": "派遣人数",
+        "description": "派遣多少人？（用工总量10%上限适用）",
+        "example": "劳务派遣合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "派遣期限",
+        "latin": null,
+        "label": "派遣期限",
+        "description": "派遣期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务费",
+        "latin": "amount",
+        "label": "服务费与结算",
+        "description": "服务费标准与结算方式？（含劳动者工资社保如何列支）",
+        "example": "劳务派遣合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "同工同酬",
+        "latin": null,
+        "label": "同工同酬安排",
+        "description": "派遣员工与用工单位同类岗位员工如何做到同工同酬？",
+        "example": "劳务派遣合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/labor-dispatch.yaml"
+  },
+  {
+    "type": "ip_license",
+    "zh": "知识产权许可合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "franchise",
+    "zh": "特许经营（加盟）合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "特许品牌",
+        "latin": null,
+        "label": "特许品牌/商标",
+        "description": "特许的品牌/商标是什么？",
+        "example": "特许经营（加盟）合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "特许经营资源",
+        "latin": null,
+        "label": "特许经营资源",
+        "description": "许可使用的经营资源有哪些？（商标、专利、专有技术、经营模式等）",
+        "example": "特许经营（加盟）合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "加盟费",
+        "latin": null,
+        "label": "加盟费/特许经营费",
+        "description": "加盟费或特许经营费是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "特许经营期限",
+        "latin": null,
+        "label": "特许经营期限",
+        "description": "特许经营期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "经营区域",
+        "latin": null,
+        "label": "经营区域",
+        "description": "特许经营的地域范围是？",
+        "example": "特许经营（加盟）合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/franchise.yaml"
+  },
+  {
+    "type": "real_estate_development",
+    "zh": "房地产开发合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "insurance",
+    "zh": "保险合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "trust",
+    "zh": "信托合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "private_equity_fund",
+    "zh": "私募基金合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "software_development",
+    "zh": "软件开发合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "film_production",
+    "zh": "影视剧合作制作合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "talent_agency",
+    "zh": "演艺经纪合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "ppp_project",
+    "zh": "PPP项目合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方名称",
+        "description": "合同甲方的全称或姓名",
+        "example": "北京甲科技有限公司",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方名称",
+        "description": "合同乙方的全称或姓名",
+        "example": "北京乙贸易有限公司",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "合同标的",
+        "latin": "subject",
+        "label": "合同标的",
+        "description": "本合同的具体标的、事宜或范围描述",
+        "example": "合同的具体标的与内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "价款金额",
+        "latin": "amount",
+        "label": "价款金额",
+        "description": "合同价款或费用金额（数字）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行起始日期",
+        "latin": "term_start",
+        "label": "履行起始日期",
+        "description": "合同履行开始日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "履行结束日期",
+        "latin": "term_end",
+        "label": "履行结束日期",
+        "description": "合同履行结束日期",
+        "example": "2026-12-31",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "甲方义务",
+        "latin": "party_a_duty",
+        "label": "甲方义务",
+        "description": "甲方在本合同项下的主要义务",
+        "example": "按期交付标的物并转移所有权",
+        "required": true,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方义务",
+        "latin": "party_b_duty",
+        "label": "乙方义务",
+        "description": "乙方在本合同项下的主要义务",
+        "example": "按期足额支付价款",
+        "required": true,
+        "source": "party_b"
+      },
+      {
+        "name": "违约金",
+        "latin": "penalty",
+        "label": "违约金",
+        "description": "违约金数额或计算方式",
+        "example": "合同价款的10%",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "争议解决方式",
+        "latin": "jurisdiction",
+        "label": "争议解决方式",
+        "description": "争议解决方式及管辖/仲裁机构",
+        "example": "提交原告所在地人民法院诉讼解决",
+        "required": false,
+        "source": "both"
+      },
+      {
+        "name": "签署日期",
+        "latin": "sign_date",
+        "label": "签署日期",
+        "description": "合同签署日期",
+        "example": "2026-01-01",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "签署地点",
+        "latin": "sign_location",
+        "label": "签署地点",
+        "description": "合同签署地点",
+        "example": "北京市朝阳区",
+        "required": false,
+        "source": "both"
+      }
+    ],
+    "source": "generic-chinese-fallback"
+  },
+  {
+    "type": "tourism_service",
+    "zh": "旅游服务合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "旅游线路",
+        "latin": null,
+        "label": "旅游线路/行程",
+        "description": "旅游的线路和行程安排是什么？",
+        "example": "旅游服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "出发日期",
+        "latin": null,
+        "label": "出发日期",
+        "description": "何时出发？",
+        "example": "2026-06-30",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "行程天数",
+        "latin": null,
+        "label": "行程天数",
+        "description": "行程共几天？",
+        "example": "旅游服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "旅游费用",
+        "latin": "amount",
+        "label": "旅游费用",
+        "description": "旅游费用总额是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "费用包含",
+        "latin": "amount",
+        "label": "费用包含项目",
+        "description": "费用包含哪些项目？（交通、住宿、餐饮、门票、导游等）",
+        "example": "旅游服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/tourism.yaml"
+  },
+  {
+    "type": "service",
+    "zh": "服务合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（委托方）名称",
+        "description": "请提供甲方（委托方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（服务方）名称",
+        "description": "请提供乙方（服务方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "服务内容",
+        "latin": null,
+        "label": "服务内容",
+        "description": "提供的具体服务内容是什么？（咨询、培训、运维、保洁、家政等）",
+        "example": "服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务期限",
+        "latin": null,
+        "label": "服务期限",
+        "description": "服务期限多长？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务费",
+        "latin": "amount",
+        "label": "服务费",
+        "description": "服务费是多少？如何支付？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务标准",
+        "latin": null,
+        "label": "服务标准",
+        "description": "服务应达到什么标准或交付什么成果？",
+        "example": "服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/service.yaml"
+  },
+  {
+    "type": "land_transfer",
+    "zh": "土地流转合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（承包方）姓名",
+        "description": "请提供承包方姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（流入方）姓名/名称",
+        "description": "请提供流入方姓名或名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "土地信息",
+        "latin": null,
+        "label": "土地信息",
+        "description": "土地坐落、面积、四至、承包经营权证号？",
+        "example": "土地流转合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "流转方式",
+        "latin": null,
+        "label": "流转方式",
+        "description": "以什么方式流转？（出租/转包/互换/入股）",
+        "example": "出租",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "流转期限",
+        "latin": null,
+        "label": "流转期限",
+        "description": "流转期限多长？（不得超过承包期剩余年限）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "流转价款",
+        "latin": "amount",
+        "label": "流转价款",
+        "description": "流转价款多少？如何支付？",
+        "example": "土地流转合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "土地用途",
+        "latin": null,
+        "label": "土地用途",
+        "description": "流转后土地用于什么？（不得改变农业用途）",
+        "example": "土地流转合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/rural-land.yaml"
+  },
+  {
+    "type": "mortgage",
+    "zh": "抵押合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "抵押物",
+        "latin": "subject",
+        "label": "抵押物",
+        "description": "抵押的财产是什么？（房屋、土地使用权、设备等）",
+        "example": "抵押合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "被担保债权",
+        "latin": null,
+        "label": "被担保的主债权",
+        "description": "抵押担保的主债权是什么？（借款金额、履行义务等）",
+        "example": "抵押合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "担保范围",
+        "latin": null,
+        "label": "担保范围",
+        "description": "担保范围包括哪些？（本金、利息、违约金、实现债权费用等）",
+        "example": "抵押合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "抵押物价值",
+        "latin": "subject",
+        "label": "抵押物价值",
+        "description": "抵押物的评估价值是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "抵押登记",
+        "latin": null,
+        "label": "抵押登记",
+        "description": "是否需要办理抵押登记？（不动产抵押必须登记）",
+        "example": "需办理登记",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/mortgage.yaml"
+  },
+  {
+    "type": "pledge",
+    "zh": "质押合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "质押物",
+        "latin": null,
+        "label": "质押物/质押权利",
+        "description": "质押的动产或权利是什么？（股权、存单、应收账款、知识产权等）",
+        "example": "质押合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "被担保债权",
+        "latin": null,
+        "label": "被担保的主债权",
+        "description": "质押担保的主债权是什么？",
+        "example": "质押合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "担保范围",
+        "latin": null,
+        "label": "担保范围",
+        "description": "担保范围包括哪些？",
+        "example": "质押合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "质押物价值",
+        "latin": null,
+        "label": "质押物价值",
+        "description": "质押物的评估价值是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "交付登记",
+        "latin": "party_a_duty",
+        "label": "交付或登记方式",
+        "description": "动产质押的交付方式 / 权利质押的登记机关？",
+        "example": "质押合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/pledge.yaml"
+  },
+  {
+    "type": "will",
+    "zh": "遗嘱",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "立遗嘱人",
+        "latin": null,
+        "label": "立遗嘱人",
+        "description": "立遗嘱人的姓名、身份证号？",
+        "example": "遗嘱的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "遗嘱形式",
+        "latin": null,
+        "label": "遗嘱形式",
+        "description": "采用什么形式的遗嘱？（自书/代书/打印/录音录像/口头/公证）",
+        "example": "自书遗嘱",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "遗产清单",
+        "latin": null,
+        "label": "遗产清单",
+        "description": "遗嘱处分的遗产有哪些？（房产、存款、股权等）",
+        "example": "遗嘱的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "继承人",
+        "latin": null,
+        "label": "继承人/受遗赠人",
+        "description": "遗产由谁继承或受遗赠？（姓名、与立遗嘱人关系、份额）",
+        "example": "遗嘱的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/will.yaml"
+  },
+  {
+    "type": "prenup",
+    "zh": "婚前财产协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "男方信息",
+        "latin": null,
+        "label": "男方信息",
+        "description": "男方姓名、身份证号？",
+        "example": "婚前财产协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "女方信息",
+        "latin": null,
+        "label": "女方信息",
+        "description": "女方姓名、身份证号？",
+        "example": "婚前财产协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "婚前财产清单",
+        "latin": null,
+        "label": "各自婚前财产清单",
+        "description": "双方各自的婚前财产有哪些？（房产、车辆、存款、股权等）",
+        "example": "婚前财产协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "婚前财产归属",
+        "latin": null,
+        "label": "婚前财产归属约定",
+        "description": "婚前财产约定归各自所有还是共有？",
+        "example": "各自所有",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "婚后财产制度",
+        "latin": null,
+        "label": "婚后财产制度",
+        "description": "婚姻关系存续期间所得财产约定如何归属？",
+        "example": "分别财产制",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/prenup.yaml"
+  },
+  {
+    "type": "marital-property",
+    "zh": "婚内财产协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "男方姓名",
+        "description": "男方姓名及身份证号",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "女方姓名",
+        "description": "女方姓名及身份证号",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "财产归属约定",
+        "latin": null,
+        "label": "财产归属约定",
+        "description": "婚内所得如何归属？（各自所有/共同所有/部分各自所有，具体财产清单）",
+        "example": "婚内财产协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "婚前财产",
+        "latin": null,
+        "label": "婚前财产确认",
+        "description": "双方各自婚前财产有哪些？（房产/存款/车辆等）",
+        "example": "婚内财产协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "债务承担",
+        "latin": null,
+        "label": "债务承担",
+        "description": "婚内债务如何承担？",
+        "example": "婚内财产协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/marital-property.yaml"
+  },
+  {
+    "type": "divorce",
+    "zh": "离婚协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "男方姓名",
+        "description": "男方姓名及身份证号",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "女方姓名",
+        "description": "女方姓名及身份证号",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "自愿离婚",
+        "latin": null,
+        "label": "自愿离婚声明",
+        "description": "双方是否均自愿离婚？（协议离婚以双方自愿为前提）",
+        "example": "双方自愿离婚",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "子女抚养安排",
+        "latin": null,
+        "label": "子女抚养安排",
+        "description": "子女由哪方直接抚养？（如无子女请写\"无子女\"）",
+        "example": "离婚协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "抚养费",
+        "latin": null,
+        "label": "抚养费",
+        "description": "抚养费金额、支付方式与期限？（无子女写\"无\"）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "财产分割",
+        "latin": null,
+        "label": "财产分割方案",
+        "description": "房产、车辆、存款等共同财产怎么分？",
+        "example": "离婚协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "债务处理",
+        "latin": null,
+        "label": "债务处理",
+        "description": "共同债务由谁承担？（如无共同债务写\"无共同债务\"）",
+        "example": "离婚协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/divorce.yaml"
+  },
+  {
+    "type": "adoption",
+    "zh": "收养协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（送养人）姓名",
+        "description": "请提供送养人姓名（或福利机构名称）",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（收养人）姓名",
+        "description": "请提供收养人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "被收养人",
+        "latin": null,
+        "label": "被收养人信息",
+        "description": "被收养人姓名、出生日期、与送养人关系？",
+        "example": "收养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "收养人条件",
+        "latin": null,
+        "label": "收养人条件确认",
+        "description": "收养人是否符合法定条件？（无子女或只有一名、有抚养能力、无不宜疾病、无犯罪记录、年满30周岁）",
+        "example": "收养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "送养人信息",
+        "latin": null,
+        "label": "送养依据",
+        "description": "送养人与被收养人的关系及送养原因？（孤儿/查找不到生父母/生父母有特殊困难无力抚养）",
+        "example": "收养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "收养登记",
+        "latin": null,
+        "label": "收养登记安排",
+        "description": "何时到民政部门办理收养登记？",
+        "example": "收养协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/adoption.yaml"
+  },
+  {
+    "type": "legacy-support",
+    "zh": "遗赠扶养协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（遗赠人）姓名",
+        "description": "请提供遗赠人（被扶养的老人）姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（扶养人）姓名",
+        "description": "请提供扶养人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "扶养内容",
+        "latin": null,
+        "label": "扶养内容",
+        "description": "扶养人承担哪些义务？（生活照料、医疗陪护、养老送终等）",
+        "example": "遗赠扶养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "遗赠财产",
+        "latin": null,
+        "label": "遗赠财产",
+        "description": "遗赠人去世后哪些财产归扶养人？（房产、存款等，须具体明确）",
+        "example": "遗赠扶养协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/legacy-support.yaml"
+  },
+  {
+    "type": "elderly-support",
+    "zh": "赡养协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（被赡养人）姓名",
+        "description": "请提供老人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（赡养人一）姓名",
+        "description": "请提供赡养人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "被赡养人",
+        "latin": null,
+        "label": "被赡养人（老人）",
+        "description": "被赡养的老人姓名、与赡养人的关系？",
+        "example": "赡养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "赡养人",
+        "latin": null,
+        "label": "赡养人及分工",
+        "description": "几个子女？各自承担什么？（出钱/出力/轮流照顾）",
+        "example": "赡养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "赡养费",
+        "latin": null,
+        "label": "赡养费标准",
+        "description": "每人每月出多少赡养费？何时支付？",
+        "example": "赡养协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "居住安排",
+        "latin": null,
+        "label": "居住与照料安排",
+        "description": "老人跟谁住？如何轮流照料？",
+        "example": "赡养协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/elderly-support.yaml"
+  },
+  {
+    "type": "estate-division",
+    "zh": "遗产分割协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（继承人一）姓名",
+        "description": "请提供继承人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（继承人二）姓名",
+        "description": "请提供继承人姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "被继承人",
+        "latin": null,
+        "label": "被继承人与死亡事实",
+        "description": "被继承人姓名、死亡时间？",
+        "example": "遗产分割协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "继承人范围",
+        "latin": null,
+        "label": "全部继承人",
+        "description": "有哪些继承人？（配偶/子女/父母，须列全——遗漏继承人的协议可被撤销）",
+        "example": "遗产分割协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "遗产范围",
+        "latin": null,
+        "label": "遗产范围",
+        "description": "遗产有哪些？（房产/存款/车辆/股权等，须列明）",
+        "example": "遗产分割协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "分割方案",
+        "latin": null,
+        "label": "分割方案",
+        "description": "各项遗产分别归谁？",
+        "example": "遗产分割协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/estate-division.yaml"
+  },
+  {
+    "type": "debt-transfer",
+    "zh": "债权转让协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "被转让债权",
+        "latin": null,
+        "label": "被转让的债权",
+        "description": "转让的债权是什么？（债务人、金额、到期日、依据的合同）",
+        "example": "债权转让协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "债务人",
+        "latin": null,
+        "label": "债务人",
+        "description": "债务人是谁？",
+        "example": "债权转让协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "转让对价",
+        "latin": null,
+        "label": "转让对价",
+        "description": "债权转让的对价是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "通知债务人",
+        "latin": null,
+        "label": "通知债务人",
+        "description": "由谁通知债务人？（未通知对债务人不发生效力）",
+        "example": "由转让方通知",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/debt-transfer.yaml"
+  },
+  {
+    "type": "debt-restructuring",
+    "zh": "债务重组协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "原债务",
+        "latin": null,
+        "label": "原债务",
+        "description": "需要重组的原债务是什么？（本金、利息、到期日、依据）",
+        "example": "债务重组协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "债权人",
+        "latin": null,
+        "label": "债权人",
+        "description": "债权人是谁？",
+        "example": "债务重组协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "债务人",
+        "latin": null,
+        "label": "债务人",
+        "description": "债务人是谁？",
+        "example": "债务重组协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "重组方式",
+        "latin": null,
+        "label": "重组方式",
+        "description": "采用什么方式重组债务？",
+        "example": "延期还款",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "重组方案",
+        "latin": null,
+        "label": "重组方案",
+        "description": "具体的重组方案是什么？（新的还款金额、期限、方式）",
+        "example": "债务重组协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/debt-restructuring.yaml"
+  },
+  {
+    "type": "settlement",
+    "zh": "和解协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "争议事项",
+        "latin": "jurisdiction",
+        "label": "争议事项",
+        "description": "双方因何事发生争议？（纠纷的起因、经过）",
+        "example": "和解协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "和解方案",
+        "latin": null,
+        "label": "和解方案",
+        "description": "双方达成的和解方案是什么？（各自让步、履行义务）",
+        "example": "和解协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "支付期限",
+        "latin": "party_b_duty",
+        "label": "支付/履行期限",
+        "description": "何时履行完毕？",
+        "example": "和解协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "放弃权利",
+        "latin": null,
+        "label": "放弃其他权利声明",
+        "description": "双方是否声明放弃就该争议的其他一切权利主张？",
+        "example": "和解协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/settlement.yaml"
+  },
+  {
+    "type": "accident-settlement",
+    "zh": "交通事故赔偿协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（赔偿方）姓名",
+        "description": "请提供赔偿方姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（受偿方）姓名",
+        "description": "请提供受偿方姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "事故事实",
+        "latin": null,
+        "label": "事故事实",
+        "description": "事故发生时间、地点、经过？（有交警认定书的一并写明编号）",
+        "example": "交通事故赔偿协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "责任划分",
+        "latin": null,
+        "label": "责任划分",
+        "description": "责任怎么划分？（全责/主次责/同等责任，以交警认定为准）",
+        "example": "交通事故赔偿协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "赔偿明细",
+        "latin": null,
+        "label": "赔偿项目明细",
+        "description": "赔偿哪些项目、各多少？（医疗费/误工费/护理费/营养费/交通费/伤残赔偿金/车辆损失等）",
+        "example": "交通事故赔偿协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "赔偿总额",
+        "latin": "amount",
+        "label": "赔偿总额与支付",
+        "description": "赔偿总额多少？何时以何种方式支付？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/accident-settlement.yaml"
+  },
+  {
+    "type": "nda",
+    "zh": "保密协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（信息披露方）名称",
+        "description": "请提供甲方（披露信息的一方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（信息接收方）名称",
+        "description": "请提供乙方（接收信息的一方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "保密信息范围",
+        "latin": null,
+        "label": "保密信息范围",
+        "description": "哪些信息属于保密信息？（技术资料、客户名单、报价、源代码等，尽量列举）",
+        "example": "保密协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "保密期限",
+        "latin": null,
+        "label": "保密期限",
+        "description": "保密义务持续多久？（如\"合同期内及终止后3年\"）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "违约责任",
+        "latin": "penalty",
+        "label": "违约责任",
+        "description": "违反保密义务的责任？（违约金数额或损失赔偿方式）",
+        "example": "保密协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/nda.yaml"
+  },
+  {
+    "type": "non-compete",
+    "zh": "竞业限制协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（用人单位）名称",
+        "description": "请提供用人单位名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（劳动者）姓名",
+        "description": "请提供劳动者姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "限制人员",
+        "latin": null,
+        "label": "被限制人员",
+        "description": "对谁进行竞业限制？（限高管、高级技术人员和其他负有保密义务的人员）",
+        "example": "竞业限制协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "限制范围",
+        "latin": null,
+        "label": "限制范围",
+        "description": "限制去哪些单位/做什么业务？（竞争单位范围、地域、业务领域）",
+        "example": "竞业限制协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "限制期限",
+        "latin": null,
+        "label": "限制期限",
+        "description": "离职后限制多久？（最长不得超过2年）",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "经济补偿",
+        "latin": null,
+        "label": "经济补偿",
+        "description": "每月经济补偿多少？（通常为离职前工资的30%-50%，不给补偿员工可主张解除）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/non-compete.yaml"
+  },
+  {
+    "type": "internship",
+    "zh": "实习协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（实习单位）名称",
+        "description": "请提供实习单位名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（实习生）姓名",
+        "description": "请提供实习生姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "实习岗位",
+        "latin": null,
+        "label": "实习岗位与内容",
+        "description": "实习岗位和主要工作内容？",
+        "example": "实习协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "实习期限",
+        "latin": null,
+        "label": "实习期限",
+        "description": "实习多长时间？起止日期？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "实习补贴",
+        "latin": null,
+        "label": "实习补贴",
+        "description": "实习补贴多少？如何发放？（无补贴写\"无补贴\"）",
+        "example": "实习协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/internship.yaml"
+  },
+  {
+    "type": "training",
+    "zh": "培训合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "培训项目",
+        "latin": null,
+        "label": "培训项目/课程",
+        "description": "培训的项目或课程是什么？",
+        "example": "培训合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "培训内容",
+        "latin": null,
+        "label": "培训内容",
+        "description": "培训的具体内容和课时安排？",
+        "example": "培训合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "培训期限",
+        "latin": null,
+        "label": "培训期限",
+        "description": "培训期限多长？",
+        "example": "培训合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "培训费用",
+        "latin": "amount",
+        "label": "培训费用",
+        "description": "培训费用是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "退费规则",
+        "latin": null,
+        "label": "退费规则",
+        "description": "学员中途退出的退费规则是什么？",
+        "example": "培训合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/training.yaml"
+  },
+  {
+    "type": "labor-service",
+    "zh": "劳务合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（用工方）名称",
+        "description": "请提供甲方（用工方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（劳务提供方）姓名",
+        "description": "请提供乙方（劳务提供方）的姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "劳务内容",
+        "latin": null,
+        "label": "劳务内容",
+        "description": "提供什么劳务？（工作内容、要求）",
+        "example": "劳务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "劳务报酬",
+        "latin": "amount",
+        "label": "劳务报酬",
+        "description": "劳务报酬多少？（按次/按月/按项目）",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "报酬支付方式",
+        "latin": "amount",
+        "label": "报酬支付方式",
+        "description": "报酬如何支付？（支付时间、方式）",
+        "example": "劳务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务期限",
+        "latin": null,
+        "label": "服务期限",
+        "description": "劳务服务多长时间？",
+        "example": "12个月",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/labor-service.yaml"
+  },
+  {
+    "type": "housekeeping",
+    "zh": "家政服务合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（雇主）姓名",
+        "description": "请提供雇主姓名",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（家政人员/家政公司）名称",
+        "description": "请提供家政人员姓名或家政公司名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "服务内容",
+        "latin": null,
+        "label": "服务内容",
+        "description": "家政服务内容？（保洁/做饭/育儿/照护老人等，具体职责范围）",
+        "example": "家政服务合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务报酬",
+        "latin": "amount",
+        "label": "服务报酬",
+        "description": "报酬多少？按月还是按次？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "服务方式",
+        "latin": null,
+        "label": "服务方式",
+        "description": "住家还是钟点工？",
+        "example": "住家",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/housekeeping.yaml"
+  },
+  {
+    "type": "shareholders",
+    "zh": "股东协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（股东一）名称",
+        "description": "甲方股东的姓名/名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（股东二）名称",
+        "description": "乙方股东的姓名/名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "公司与持股",
+        "latin": null,
+        "label": "目标公司与持股比例",
+        "description": "哪家公司？各股东持股比例？",
+        "example": "股东协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "出资安排",
+        "latin": null,
+        "label": "出资金额与期限",
+        "description": "各股东出资额、出资方式、缴付期限？",
+        "example": "股东协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "治理安排",
+        "latin": null,
+        "label": "治理与表决安排",
+        "description": "重大事项表决机制？（董事会席位、一票否决事项等）",
+        "example": "股东协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "分红安排",
+        "latin": null,
+        "label": "利润分配",
+        "description": "利润怎么分配？（按持股比例还是另有约定）",
+        "example": "股东协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/shareholders.yaml"
+  },
+  {
+    "type": "investment",
+    "zh": "投资协议",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（出租方）名称",
+        "description": "请提供甲方（出租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（承租方）名称",
+        "description": "请提供乙方（承租方）的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "投资标的",
+        "latin": "subject",
+        "label": "投资标的公司",
+        "description": "投资的目标公司是哪家？",
+        "example": "投资协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "投资方式",
+        "latin": null,
+        "label": "投资方式",
+        "description": "以增资还是受让股权方式投资？",
+        "example": "增资扩股",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "投资金额",
+        "latin": "amount",
+        "label": "投资金额",
+        "description": "投资金额是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "投后估值",
+        "latin": null,
+        "label": "投后估值",
+        "description": "投资后公司估值是多少？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "股权比例",
+        "latin": null,
+        "label": "获得股权比例",
+        "description": "投资后投资人获得的股权比例是多少？",
+        "example": "投资协议的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "交割条件",
+        "latin": null,
+        "label": "交割条件",
+        "description": "投资交割的条件是什么？（尽调通过、董事会批准等）",
+        "example": "投资协议的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/investment.yaml"
+  },
+  {
+    "type": "shop-transfer",
+    "zh": "店铺转让合同",
+    "slots": [
+      {
+        "name": "甲方名称",
+        "latin": "party_a",
+        "label": "甲方（转让方）名称",
+        "description": "请提供转让方的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_a"
+      },
+      {
+        "name": "乙方名称",
+        "latin": "party_b",
+        "label": "乙方（受让方）名称",
+        "description": "请提供受让方的名称",
+        "example": "北京甲科技有限公司",
+        "required": false,
+        "source": "party_b"
+      },
+      {
+        "name": "店铺信息",
+        "latin": null,
+        "label": "店铺信息",
+        "description": "店铺地址、面积、经营项目？",
+        "example": "店铺转让合同的具体内容",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "转让价款",
+        "latin": "amount",
+        "label": "转让价款",
+        "description": "转让总价款多少？如何支付？",
+        "example": "100000",
+        "required": true,
+        "source": "both"
+      },
+      {
+        "name": "转让范围",
+        "latin": null,
+        "label": "转让范围",
+        "description": "转让包含什么？（装修、设备、存货、经营权、会员资源等）",
+        "example": "店铺转让合同的具体内容",
+        "required": true,
+        "source": "both"
+      }
+    ],
+    "source": "masters/shop-transfer.yaml"
+  }
+]

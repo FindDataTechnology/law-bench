@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}{{ t.review.title }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+{% if request.query_params.get('flash') %}
+  <div class="flash error" role="alert">{{ tr(request.query_params.get('flash')) }}</div>
+{% endif %}
+
+{% if not task %}
+  <div class="toolbar between">
+    <h1>{{ t.review.not_found_h1 }}</h1>
+    <a class="btn btn-sm btn-ghost" href="{{ url_for('page_review') }}">{{ t.review.back_list }}</a>
+  </div>
+  <p class="muted">{{ tr('review.not_found_body', id=task_id) }}</p>
+{% else %}
+<div class="toolbar between">
+  <h1>#{{ task.id }}</h1>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_review') }}?batch={{ task.batch_id }}">{{ t.review.back_list }}</a>
+</div>
+
+<p class="muted small">
+  {{ t.review.meta_batch }} <code>{{ task.batch_id }}</code> ·
+  {{ t.review.validity if task.batch_type == 'validity' else t.review.gold }} ·
+  {{ t.review.meta_slot }} {{ task.slot }} ·
+  {{ t.review.meta_ct }} {{ task.contract_type or '—' }} ·
+  {{ t.review.meta_rubric }} <code>{{ task.rubric_name }}</code> ·
+  {{ t.review.meta_judge }} {{ task.judge_model or '—' }}{% if pending_ids %} ·
+  <strong>{{ tr('review.pos_suffix', k=pending_ids.index(task.id) + 1, n=pending_ids|length) }}</strong>{% endif %}
+</p>
+
+<div class="panel">
+  <h3 style="margin-top:0">{{ tr('review.criterion_h2', name=task.criterion_title or task.criterion_id) }}</h3>
+  {% if task.criterion_description %}
+    <p class="muted small">{{ task.criterion_description }}</p>
+  {% endif %}
+  {% if task.criterion_guidance %}
+    <p><strong>{{ t.review.guidance_label }}</strong> {{ task.criterion_guidance }}</p>
+  {% else %}
+    <p class="muted small">{{ t.review.no_guidance }}</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h3 style="margin-top:0">{{ t.review.draft_h2 }}</h3>
+  <pre style="max-height:24em;overflow:auto;white-space:pre-wrap">{{ task.draft_text or t.review.no_draft }}</pre>
+</div>
+
+{% if task.blind %}
+  <div class="panel">
+    <p class="muted" style="margin:0">
+      {{ t.review.blind_note }}
+    </p>
+  </div>
+{% elif task.status == 'pending' %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ t.review.model_verdict_h2 }}</h3>
+    <p>{{ t.review.verdict_label }}<code>{{ task.model_verdict }}</code></p>
+    {% if task.model_reasoning %}
+      <p class="muted small">{{ t.review.reasoning }}{{ task.model_reasoning }}</p>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% if task.status == 'decided' %}
+  <div class="panel">
+    <h3 style="margin-top:0">{{ t.review.decided_h2 }}</h3>
+    <p>{{ t.review.annotator }}{{ task.annotator }} · {{ t.review.verdict_label }}<code>{{ task.annotator_verdict }}</code> ·
+       <span class="muted small">{{ task.reviewed_at }}</span></p>
+    {% if task.note %}<p class="muted small">{{ t.review.note_label }}{{ task.note }}</p>{% endif %}
+    <p class="muted small">{{ t.review.model_verdict_colon }}<code>{{ task.model_verdict }}</code>
+      {% if task.model_verdict and task.annotator_verdict %}
+        — {{ t.review.agree if (task.model_verdict == 'pass' and task.annotator_verdict == 'pass')
+                      or (task.model_verdict == 'fail' and task.annotator_verdict == 'fail')
+                      or (task.model_verdict == 'pass' and task.annotator_verdict == 'approved')
+                      or (task.model_verdict == 'fail' and task.annotator_verdict == 'rejected')
+             else t.review.disagree }}
+      {% endif %}
+    </p>
+    {% if task.model_reasoning %}<p class="muted small">{{ t.review.model_reasoning }}{{ task.model_reasoning }}</p>{% endif %}
+  </div>
+{% else %}
+<form method="post" action="{{ url_for('page_review_decide', task_id=task.id) }}">
+  <div class="panel">
+    <h3 style="margin-top:0">{{ t.review.your_verdict_h2 }}</h3>
+    <div class="inline">
+      {% for value in task.allowed_verdicts %}
+        <label class="inline" style="margin-right:1.2em">
+          <input type="radio" name="verdict" value="{{ value }}" required>
+          {{ t.review.verdict[task.batch_type].get(value, value) }}{{ tr('review.press_n', n=loop.index) }}
+        </label>
+      {% endfor %}
+    </div>
+    <p><textarea name="note" rows="3" placeholder="{{ t.review.note_ph }}"></textarea></p>
+    <button type="submit" class="btn btn-primary">{{ t.review.submit }}</button>
+    <span class="muted small">{{ t.review.irreversible }}</span>
+  </div>
+</form>
+<script>
+// 数字键 1..n 按渲染顺序选中判定项——只选中、不提交：不可逆动作必须显式
+// 确认（按钮或 Enter 原生提交）。备注输入与其它文本框内的击键不受影响。
+(function () {
+  var radios = Array.prototype.slice.call(
+    document.querySelectorAll('input[name="verdict"][type="radio"]'));
+  if (!radios.length) return;
+  document.addEventListener('keydown', function (e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    var el = e.target, tag = el && el.tagName;
+    if (tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (tag === 'INPUT' && el.type !== 'radio') return;
+    var n = parseInt(e.key, 10);
+    if (!(n >= 1 && n <= radios.length)) return;
+    radios[n - 1].checked = true;
+    radios[n - 1].focus();
+  });
+})();
+</script>
+{% endif %}
+{% endif %}
+{% endblock %}

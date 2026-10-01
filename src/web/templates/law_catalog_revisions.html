@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ t.catalog.rev_h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.catalog.rev_h1 }}</h1>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_law_catalog_audit') }}">{{ t.catalog.back_audit }}</a>
+</div>
+<p class="muted">
+  {{ t.catalog.rev_note }}
+</p>
+<div class="inline">
+  <a class="btn btn-sm {{ 'btn-ghost' if batch else '' }}" href="{{ url_for('page_law_catalog_revisions') }}">{{ t.catalog.all }}</a>
+  {% for b in batches %}
+  <a class="btn btn-sm {{ 'btn-ghost' if batch != b.batch else '' }}"
+     href="{{ url_for('page_law_catalog_revisions') }}?batch={{ b.batch }}">{{ b.batch }}（{{ b.n }}）</a>
+  {% endfor %}
+</div>
+<table>
+  <thead>
+    <tr><th>#</th><th>{{ t.catalog.col_clause }}</th><th>{{ t.catalog.col_type }}</th><th>{{ t.catalog.col_cited_before_after }}</th><th>{{ t.catalog.col_evidence }}</th><th>{{ t.catalog.col_disposition }}</th><th>{{ t.catalog.col_rule }}</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td><a href="{{ url_for('page_clauses_edit', contract_type=r.contract_type, clause_id=r.clause_id) }}">#{{ r.clause_id }}</a></td>
+      <td>{{ zh.get(r.contract_type, r.contract_type or '—') }}</td>
+      <td><code>{{ r.cited_before }}</code> → <code>{{ r.cited_after or '—' }}</code></td>
+      <td class="small">
+        {{ r.dead_title }}［{{ r.dead_status }}］
+        {% if r.authority_title %} {{ t.catalog.per_authority }} {{ r.authority_title }}{% endif %}
+        → {{ r.successor_title or t.catalog.pending_manual }}{% if r.successor_status %}［{{ r.successor_status }}］{% endif %}
+      </td>
+      <td><code>{{ r.disposition }}</code></td>
+      <td class="small">{{ r.rule_version or '—' }} @{{ r.git_sha or '?' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

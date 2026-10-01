@@ -1,0 +1,19 @@
+{
+  "name": "lawbench-copilot-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted CopilotKit runtime for the law-bench admin assistant. Bridges the CopilotPopup island (proxied by law-bench /copilotkit, admin-gated) to the dedicated law-bench MCP instance over streamable HTTP.",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@copilotkit/runtime": "1.71.1",
+    "@modelcontextprotocol/sdk": "1.13.0",
+    "openai": "4.104.0"
+  }
+}

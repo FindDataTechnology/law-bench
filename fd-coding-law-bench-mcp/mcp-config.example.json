@@ -1,0 +1,9 @@
+{
+  "_comment": "Copy the 'law-bench' entry below into your project's .mcp.json to expose this server to an MCP client (e.g. Claude Code). Adjust --project to your law-template path. JSON has no comments — remove this _comment key when you copy.",
+  "mcpServers": {
+    "law-bench": {
+      "command": "uv",
+      "args": ["run", "--project", "<repo-root>", "python", "-m", "fd_coding_law_bench_mcp"]
+    }
+  }
+}

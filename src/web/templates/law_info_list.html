@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ t.law_info.h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.law_info.h1 }}</h1>
+</div>
+<p class="muted">{{ t.law_info.references_hint }}</p>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{{ t.col.name }}</th>
+        <th>Doubao</th>
+        <th>DeepSeek</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ct in types %}
+      <tr>
+        <td class="muted">{{ loop.index }}</td>
+        <td>
+          <a href="{{ url_for('page_law_info_detail', contract_type=ct.key) }}"><strong>{{ ct.zh_name }}</strong></a>
+          <div class="muted"><code>{{ ct.key }}</code></div>
+        </td>
+        <td>{% if 'doubao' in ct.sources %}<span class="badge local">✓</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+        <td>{% if 'deepseek' in ct.sources %}<span class="badge local">✓</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      {% if not types %}
+      <tr><td colspan="4" class="muted">{{ t.law_info.empty }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

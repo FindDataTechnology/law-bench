@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav.rubrics }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.h1.evaluation_rubrics }}</h1>
+  {% if has_scope('content:write') %}<a class="btn btn-primary" href="{{ url_for('page_new_rubric') }}">{{ t.nav.new_local_rubric }}</a>{% endif %}
+</div>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t.col.name }}</th>
+        <th>{{ t.col.context }}</th>
+        <th>{{ t.col.source }}</th>
+        <th>{{ t.col.criteria }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rubrics %}
+      <tr>
+        <td><a href="{{ url_for('page_rubric_detail', name=r.name) }}"><strong>{{ title_for_rubric(r.name) }}</strong></a>
+          {% if r.description %}<div class="muted">{{ r.description[:80] }}{% if r.description|length > 80 %}…{% endif %}</div>{% endif %}
+        </td>
+        <td><code>{{ label_for('context', r.context) }}</code></td>
+        <td>
+          {% if r.is_harbor %}<span class="badge harbor">{{ source_label(r.source) }}</span>
+          {% else %}<span class="badge local">{{ t.badge.local }}</span>{% endif %}
+        </td>
+        <td>{{ r.criterion_count }}</td>
+      </tr>
+      {% endfor %}
+      {% if not rubrics %}
+      <tr><td colspan="4" class="muted">{{ t.empty.rubrics }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<p class="hint">{{ t.hint.rubrics_list|safe }}</p>
+{% endblock %}

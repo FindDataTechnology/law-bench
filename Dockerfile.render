@@ -1,0 +1,63 @@
+# syntax=docker/dockerfile:1
+#
+# Shared document-rendering service (extract-render-service): headless
+# LibreOffice behind a tiny HTTP API (src/render_service/app.py).
+#
+#   POST /convert  multipart .docx -> application/pdf
+#   GET  /health   readiness probe
+#
+# Consumed in-cluster by the web / assistant-MCP / review-backend pods via
+# DOCS_PDF_BACKEND=http + RENDER_SERVICE_URL — those images no longer carry
+# LibreOffice (this is where it moved). No auth: in-cluster Service plus an
+# ops NodePort (30920), never exposed through the public edge.
+#
+#   docker build -t law-render -f Dockerfile.render .
+
+ARG BASE_IMAGE=python:3.12-slim
+FROM ${BASE_IMAGE}
+
+# Headless LibreOffice + CJK fonts, same layer the web Dockerfile dropped:
+# libreoffice-writer pulls in `soffice`; fonts-noto-cjk substitutes 宋体/黑体
+# (SimSun/SimHei, proprietary) so Chinese PDFs don't render as boxes. Mirror
+# ARGs + Acquire::* bounds carried over for the in-cluster Jenkins fallback
+# builder (the GitHub-hosted runner uses the defaults).
+#
+# The two installs are separate RUN layers deliberately (tcr-image-pipeline
+# image-build policy): one giant ~350MB apt layer wedges transpacific registry
+# pushes; ~150MB layers complete.
+ARG DEBIAN_MIRROR=http://deb.debian.org/debian
+ARG DEBIAN_SECURITY_MIRROR=http://deb.debian.org/debian-security
+RUN set -eux; \
+    for f in /etc/apt/sources.list /etc/apt/sources.list.d/debian.sources; do \
+        [ -f "$f" ] || continue; \
+        sed -i -e "s|https\?://deb\.debian\.org/debian-security|${DEBIAN_SECURITY_MIRROR}|g" \
+               -e "s|https\?://deb\.debian\.org/debian|${DEBIAN_MIRROR}|g" "$f"; \
+    done; \
+    apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update; \
+    apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends libreoffice-writer; \
+    rm -rf /var/lib/apt/lists/*
+RUN set -eux; \
+    apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update; \
+    apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends fonts-noto-cjk; \
+    rm -rf /var/lib/apt/lists/*
+
+# Pinned to the versions in uv.lock so the service behaves like the app venv.
+RUN pip install --no-cache-dir \
+    fastapi==0.139.2 \
+    uvicorn==0.51.0 \
+    python-multipart==0.0.32
+
+# The service is standalone (no src.* imports): only its own package ships.
+WORKDIR /app
+COPY src/render_service ./src/render_service
+
+RUN useradd --create-home --uid 1001 appuser && chown -R appuser:appuser /app
+USER appuser
+
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 8090
+# One worker: conversions are soffice subprocesses in per-request temp
+# workspaces; scale by replicas, not workers.
+CMD ["uvicorn", "src.render_service.app:app", "--host", "0.0.0.0", "--port", "8090"]

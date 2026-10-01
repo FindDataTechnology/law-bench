@@ -1,0 +1,78 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# trust is the 信托合同 type (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: trust
+tags:
+  - name: beneficiary_return_type
+    values: [固定收益, 浮动收益, 优先劣后结构]
+    why: 信托核心在于受人之托代人理财，收益分配结构直接决定法律关系是债权还是股权性质，通用风险标签无法区分法律上的收益确定性
+  - name: trust_asset_isolation
+    values: [破产隔离有效, 债务隔离有效, 混合账户风险]
+    why: 信托财产独立性是信托法基石（区别于普通委托），涉及资产是否独立于委托人/受托人破产风险，通用风险标签无法体现法律上的隔离状态
+  - name: trustee_management_mode
+    values: [主动管理, 被动通道, 指令执行]
+    why: 决定受托人信义义务的边界及责任承担方式，通用强度标签无法界定法律上对投资决策的裁量权来源
+clauses:
+  - family: 信托财产独立性声明
+    section: 权利义务
+    body: >
+      本信托项下信托财产独立于委托人、受托人的固有财产。如委托人或受托人依法解散、被宣告破产，信托财产不属于其清算财产或破产财产。
+      信托财产产生的债权不得与受托人固有财产产生的债务相互抵销。
+      （《中华人民共和国信托法》第十五条、第十六条）
+    stance: balanced
+    strength: standard
+    why: 通用模板常忽略破产隔离的具体表述，仅笼统提及财产交付；此条款是信托区别于借贷的核心法律特征，防止债权人追索
+    verdict: real
+  - family: 受益人登记与变更机制
+    section: 当事人
+    body: >
+      受益人享有信托受益权。受益人持有份额的转让、继承或变更需经受托人审核并办理信托登记。
+      未办理登记的，不得对抗善意第三人。
+      （《中华人民共和国信托法》第四十八条、第十条）
+    stance: balanced
+    strength: standard
+    why: 通用模板多关注委托人与受托人，常漏掉受益人作为实际权利人的确权流程；信托受益权流转规则特殊，非普通债权转让；登记对抗效力属合同约定，信托法第10条为登记生效主义
+    verdict: real
+  - family: 信托终止时剩余财产归属
+    section: 附则
+    body: >
+      信托终止后，扣除应付税费及费用后的剩余信托财产，按以下顺序处理：1. {{residual_recipient}}；2. 返还给委托人（如适用）；3. 依据法律规定处理。
+      （《中华人民共和国信托法》第五十四条）
+    slot_instructions:
+      - name: residual_recipient
+        label: 剩余财产首顺位归属
+        description: 信托终止后剩余财产的第一顺位归属安排，如归受益人按份额分配
+        example: 归受益人按信托份额分配
+        required: true
+    stance: pro_a
+    strength: standard
+    why: 示范文本常只写分配本金利息，漏写剩余财产的兜底归属；信托终止时的财产清算顺序直接影响最终回款，易引发纠纷
+    verdict: real
+  - family: 受托人报酬调整机制
+    section: 价款及支付
+    body: >
+      受托人报酬原则上为{{remuneration_amount}}。如遇市场重大波动或政策调整导致成本显著变化，双方同意启动复核程序，调整幅度不超过{{percent}}%。
+      （《中华人民共和国信托法》第三十五条）
+    slot_instructions:
+      - name: remuneration_amount
+        label: 受托人报酬
+        description: 受托人的基础报酬金额或费率，可为固定金额或按信托财产比例
+        example: 信托财产的1%/年
+        required: true
+      - name: percent
+        label: 调整幅度上限（%）
+        description: 报酬调整的最大幅度百分比
+        example: "20"
+        required: true
+    stance: pro_b
+    strength: standard
+    why: 通用模板常写固定管理费；信托业务周期长，缺乏动态调整机制会导致显失公平或合规风险，需明确触发条件
+    verdict: real
+skipped:
+  - item: 不可抗力条款
+    reason: 属于通用合同基础条款，已在违约责任或附则 base 中覆盖，无信托特有化必要
+  - item: 保密义务条款
+    reason: 属于商业合作通用条款，信托虽敏感但无超出一般商业秘密范畴的特殊法定保密要求
+  - item: 争议解决管辖地
+    reason: 属于通用诉讼程序条款，通常约定仲裁或原告所在地，无信托法特别规定
+  - item: 一般违约责任
+    reason: 已有 base 条文，除非涉及违反信义义务的特有赔偿计算，否则通用违约金条款已足够

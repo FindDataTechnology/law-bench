@@ -1,0 +1,97 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# employment is the PILOT (consulted Kimi 2026-07-30); other types mirror this format.
+contract_type: employment
+tags:
+  - name: special_restriction_period
+    values: [probation, service_period, non_compete, declassification, none]
+    why: 《劳动合同法》第二十五条严格限制违约金合法范围（仅服务期/竞业/保密），此维度是违约金合法性闸门，通用4维无法表达
+  - name: working_hours_system
+    values: [standard, comprehensive, flexible, part_time]
+    why: 决定加班费计算基数与行政审批要求（《劳动法》第三十九条+劳部发〔1994〕503号），劳动合同特有
+clauses:
+  - family: 专项培训与服务期
+    section: 权利义务
+    body: >
+      甲方为乙方提供专项培训费用{{training_cost}}，对其进行专业技术培训。乙方同意在培训结束后为甲方服务{{service_period}}年。
+      若乙方违反服务期约定，应向甲方支付违约金，违约金数额不得超过甲方提供的培训费用，且不得超过服务期尚未履行部分所应分摊的培训费用。
+      （《中华人民共和国劳动合同法》第二十二条）
+    slot_instructions:
+      - name: training_cost
+        label: 专项培训费用
+        description: 甲方为乙方提供专项培训所支付的费用总额
+        example: 50,000元
+        required: true
+      - name: service_period
+        label: 服务期年限
+        description: 乙方培训结束后须为甲方服务的年数
+        example: "3"
+        required: true
+    stance: pro_a
+    strength: strong
+    why: 非全员适用，仅针对高管或核心技术/销售人员；标准示范文本通常不预设
+    verdict: real
+  - family: 竞业限制与经济补偿
+    section: 权利义务
+    body: >
+      乙方在离职后{{non_compete_months}}个月内（最长不超过24个月），不得到与甲方生产或者经营同类产品、从事同类业务的有竞争关系的其他用人单位任职，也不自己开业生产或者经营同类产品、从事同类业务。
+      甲方在竞业限制期限内按月给予乙方经济补偿{{compensation_amount}}元。乙方违反约定的，应支付违约金{{liquidated_damages_amount}}元。
+      （《中华人民共和国劳动合同法》第二十三条、第二十四条）
+    slot_instructions:
+      - name: non_compete_months
+        label: 竞业限制月数
+        description: 乙方离职后竞业限制的月数，最长不超过24个月
+        example: "12"
+        required: true
+      - name: compensation_amount
+        label: 经济补偿金额
+        description: 甲方在竞业限制期内按月给予乙方的经济补偿金额（元）
+        example: "5,000"
+        required: true
+      - name: liquidated_damages_amount
+        label: 违约金金额
+        description: 乙方违反竞业限制约定时应支付的违约金金额（元）
+        example: "100,000"
+        required: true
+    stance: pro_a
+    strength: strong
+    why: 仅针对高管、高级技术人员和负有保密义务的人员，非通用大路货
+    verdict: real
+  - family: 特殊工时制度
+    section: 合同标的
+    body: >
+      因生产特点/工作性质特殊，乙方所在岗位实行{{working_hours_type}}（不定时工作制/综合计算工时工作制）。甲方应依法报经劳动行政部门批准，并保障乙方的休息休假权利。
+      （《中华人民共和国劳动法》第三十九条；劳部发〔1994〕503号第三、四条）
+    slot_instructions:
+      - name: working_hours_type
+        label: 工时制度类型
+        description: 乙方所在岗位实行的工时制度类型，如不定时工作制或综合计算工时工作制
+        example: 综合计算工时工作制
+        required: true
+    stance: balanced
+    strength: standard
+    why: 需要行政审批前置，且仅针对特定岗位，标准示范文本默认标准工时
+    verdict: real
+  - family: 规章制度确认与送达
+    section: 附则
+    body: >
+      乙方确认已充分阅读、理解并同意遵守甲方依法制定的各项规章制度（包括但不限于员工手册、考勤管理、奖惩制度等，清单见附件）。甲方通过上述规章制度对乙方进行管理，乙方确认提供的通讯地址{{address}}为各项通知及法律文书的有效送达地址。
+      （《中华人民共和国劳动合同法》第四条）
+    slot_instructions:
+      - name: address
+        label: 通讯送达地址
+        description: 乙方确认的用于接收各项通知及法律文书的有效送达地址
+        example: 北京市朝阳区XX路XX号
+        required: true
+    stance: pro_a
+    strength: standard
+    why: 示范文本往往只写"遵守规章制度"，缺乏"已阅读确认"的强举证信号和失联送达地址确认，单方解除时易败诉
+    verdict: real
+skipped:
+  - item: 试用期条款
+    reason: 《劳动合同法》第十九条至第二十条法定强制规则，不约定也依法自动适用；base"履行期限"已覆盖，无额外起草信号
+  - item: 劳动报酬与支付条款
+    reason: base"价款及支付"已完全覆盖，冗余
+  - item: 社会保险与福利条款
+    reason: 《社会保险法》第五十八条法定义务，合同约定不能免除或变更法定标准，无实质起草信号
+  - item: 劳动保护与职业危害防护条款
+    reason: 《劳动合同法》第十七条法定必备条款，示范文本通常已包含，冗余

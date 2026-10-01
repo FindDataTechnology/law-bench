@@ -1,0 +1,77 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# guarantee (保证合同) consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: guarantee
+tags:
+  - name: guarantee_mode
+    values: [一般保证, 连带责任保证, 未约定]
+    why: 《民法典》第六百八十六条规定未约定视为一般保证，直接决定债权人是否需先起诉债务人并强制执行不能后方可追索保证人；通用risk标签无法量化此程序性差异
+  - name: guarantee_period_nature
+    values: [固定期间, 自主债务履行期届满后, 未约定]
+    why: 保证期间是除斥期间，不适用中止中断，届满即免责，与普通诉讼时效完全不同且直接决定债权人行权策略；通用期限标签无法区分除斥期间与诉讼时效
+  - name: debt_modification_sensitivity
+    values: [需书面同意, 仅加重部分免责, 自动延续]
+    why: 依《民法典》第六百九十五条主合同变更可致保证责任免除或缩减，为保证合同特有从属性体现，通用权利义务标签无法覆盖此法定抗辩点
+clauses:
+  - family: 保证方式明确化
+    section: 合同标的
+    body: >
+      本合同项下保证方式为：{{guarantee_mode}}。若双方未在本条明确勾选，根据《中华人民共和国民法典》第六百八十六条，视为一般保证。
+    stance: pro_b
+    strength: strong
+    why: 旧《担保法》默认连带、新《民法典》默认一般保证，示范文本常留白或沿用旧习惯，极易引发重大责任争议；默认一般保证利于保证人
+    verdict: real
+    slot_instructions:
+      - name: guarantee_mode
+        label: 保证方式
+        description: 保证合同的具体方式，可选"一般保证"或"连带责任保证"
+        example: 连带责任保证
+        required: true
+  - family: 保证期间具体化
+    section: 履行期限
+    body: >
+      保证期间为本合同生效之日起至主债务履行期限届满之日后 {{guarantee_months}} 个月止。若未约定或约定不明，依法为六个月（《民法典》第六百九十二条）。
+    stance: balanced
+    strength: standard
+    why: 示范文本常写"直至本息还清为止"，该表述无效（最高法解释认定为约定不明）；需明确具体月数避免被认定为约定不明
+    verdict: real
+    slot_instructions:
+      - name: guarantee_months
+        label: 保证期间月数
+        description: 保证期间持续的月数，自主债务履行期限届满之日后起算
+        example: "6"
+        required: true
+  - family: 债权人主张权利方式
+    section: 权利义务
+    body: >
+      债权人应在保证期间内以书面形式向保证人主张权利（包括但不限于发送催收函、提起诉讼或仲裁）。仅向债务人催收不视为向保证人主张权利（《民法典》第六百九十三条）。
+    stance: pro_b
+    strength: strong
+    why: 通用模板多只写"催收"未区分对谁催收，保证期间届满前未向保证人主张则责任直接消灭，此为保证合同关键风控点
+    verdict: real
+  - family: 主债务变更同意机制
+    section: 权利义务
+    body: >
+      未经保证人书面同意，债权人与债务人协议变更主合同内容（包括延长履行期限、增加本金等），保证人对加重部分不承担责任（《民法典》第六百九十五条）。
+    stance: pro_b
+    strength: strong
+    why: 商业实践中主合同变更频繁，若无此条款保证人易因不知情而丧失抗辩权，属高价值补充条款
+    verdict: real
+  - family: 公司决议文件交付
+    section: 签署信息
+    body: >
+      乙方（如为公司）承诺已依《中华人民共和国公司法》第十五条取得内部有权机构关于本担保的决议文件，并作为本合同附件提交甲方。
+    stance: pro_a
+    strength: strong
+    why: 涉及对外担保效力核心问题，无决议可能导致担保无效；通用模板极少要求提供决议作为生效条件
+    verdict: real
+skipped:
+  - item: 管辖法院/仲裁地
+    reason: 已包含在base「争议解决」章节，属通用条款，无保证合同特异性
+  - item: 不可抗力
+    reason: 属所有合同通用免责事由，非保证合同特有，无需单独抽取
+  - item: 利息计算标准
+    reason: 通常依附于主合同借款利率，保证合同仅约定范围，具体标准不应重复定义以避免冲突
+  - item: 送达地址确认
+    reason: 已包含在base「附则」或「签署信息」中，属通用程序性条款
+  - item: 保密义务
+    reason: 属通用商业合同条款，不涉及保证法律关系的核心从属性特征

@@ -1,0 +1,73 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# vam_agreement (估值调整/对赌协议) consulted Kimi 2026-07-30; all 《法条》 citations verified.
+contract_type: vam_agreement
+tags:
+  - name: obligor_nature
+    values: [natural_person_shareholder, target_company, mixed_entity]
+    why: 直接决定对赌效力（《全国法院民商事审判工作会议纪要》第5条：与目标公司对赌须先完成减资程序方可履行回购），通用risk维度无法表达法律层面的履行不能风险
+  - name: accounting_basis
+    values: [net_profit, adjusted_net_profit, ebitda, agreed_adjustments]
+    why: 对赌核心在于估值调整，利润定义模糊是最大争议点，通用strength维度无法量化财务核算口径的精确度
+  - name: funding_source_limit
+    values: [own_funds, distributable_profit, external_financing]
+    why: 涉及公司资本维持原则（《公司法》第一百六十二条股份回购、第二百二十四条减资程序），资金来源不合法将导致判决无法执行，通用risk/价款维度不关注资金来源合法性
+clauses:
+  - family: 业绩核算与审计确认机制
+    section: 权利义务
+    body: >
+      乙方应在每年度结束后{{days}}日内提供经甲方认可的会计师事务所审计的财务报告。若双方对净利润认定有争议，以{{auditor_name}}出具的审计报告为准。
+      （《中华人民共和国民法典》第五百零九条；《中华人民共和国公司法》第五十七条）
+    stance: pro_a
+    strength: standard
+    why: 通用模板仅约定"未达标即赔偿"，未约定"如何认定达标"；财务口径差异（如是否扣除股权激励费用）常引发纠纷，非投资类合同无此需求
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 审计报告提供期限（日）
+        description: 乙方在每年度结束后提供经审计财务报告的期限，单位为日历日
+        example: 90
+        required: true
+      - name: auditor_name
+        label: 争议解决审计机构
+        description: 双方对净利润认定有争议时出具最终审计报告的会计师事务所名称
+        example: XX会计师事务所
+        required: true
+  - family: 公司回购的减资程序配合
+    section: 违约责任
+    body: >
+      若触发回购且义务人为目标公司，各方同意启动减资程序。目标公司应在收到通知后{{days}}日内召开股东会并通过减资决议，配合办理工商变更。
+      （《中华人民共和国公司法》第一百六十二条、第二百二十四条；《全国法院民商事审判工作会议纪要》第5条）
+    stance: pro_a
+    strength: strong
+    why: 通用"违约责任"仅写赔钱，未处理"公司作为回购方时的法定减资障碍"，这是《九民纪要》后最核心的实操痛点，非投资合同不存在
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 减资决议期限（日）
+        description: 目标公司收到回购通知后召开股东会并通过减资决议的期限，单位为日历日
+        example: 30
+        required: true
+  - family: 税务负担与性质界定
+    section: 价款及支付
+    body: >
+      因本协议产生的补偿款或回购款，其纳税性质由收款方自行申报。若被税务机关认定为"股息红利"或"财产转让所得"，相关税费由{{tax_party}}承担。
+      （《中华人民共和国个人所得税法》第二条；《中华人民共和国企业所得税法》第六条）
+    stance: balanced
+    strength: standard
+    why: 通用"价款"默认含税，但VAM款项性质（借款利息、违约金还是投资收益）直接影响税负率，此为投融资特有争议点
+    verdict: real
+    slot_instructions:
+      - name: tax_party
+        label: 税费承担方
+        description: 补偿款或回购款被税务机关重新定性后相关税费的承担方
+        example: 乙方
+        required: true
+skipped:
+  - item: 保密条款
+    reason: 属于所有商业合同的通用基础条款，无VAM特异性，归入通用"附则"
+  - item: 不可抗力
+    reason: 适用于所有合同类型，非VAM特有风险点，归入通用"违约责任"
+  - item: 争议解决管辖
+    reason: 仲裁/诉讼选择为通用配置，VAM虽重要但不构成特有条款，归入通用"争议解决"
+  - item: 陈述与保证
+    reason: 虽在投资中重要，但通常包含在"鉴于"或"权利义务"通用段落中，若无特定财务造假描述则视为通用

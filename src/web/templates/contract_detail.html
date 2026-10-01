@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}{% if template %}{{ template.zh_name }}{% else %}{{ contract_type }}{% endif %} · {{ t.contracts.h1 }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{% if template %}{{ template.zh_name }}{% else %}{{ contract_type }}{% endif %}</h1>
+    <a href="{{ url_for('page_contracts') }}">{{ t.contract.back }}</a>
+  </div>
+  <div>
+    {% if template %}
+    <a class="btn btn-sm" href="{{ url_for('page_contract_download', contract_type=contract_type, format='docx') }}">{{ t.gen.download_docx }}</a>
+    <a class="btn btn-sm" href="{{ url_for('page_contract_download', contract_type=contract_type, format='pdf') }}">{{ t.gen.download_pdf }}</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if not_found %}
+  <div class="flash error">{{ t.contract.not_found }}：<code>{{ contract_type }}</code></div>
+{% else %}
+<div class="law-info-grid">
+  <section class="panel">
+    <h2>{{ t.contract.template_h2 }}</h2>
+    <div class="muted"><code>{{ template.type }}</code> · {{ tr('contract.fields_count', n=instructions|length) }}</div>
+    <article class="markdown-body">
+      {{ body_html|safe }}
+    </article>
+  </section>
+
+  <section class="panel">
+    <h2>{{ t.contract.slots_h2 }}</h2>
+    <table>
+      <thead>
+        <tr><th>{{ t.contract.col_field }}</th><th>{{ t.contract.col_desc }}</th><th>{{ t.contract.col_example }}</th><th>{{ t.contract.col_required }}</th></tr>
+      </thead>
+      <tbody>
+        {% for si in instructions %}
+        <tr>
+          <td><strong>{{ si.label }}</strong><div class="muted"><code>{{ si.name }}</code></div></td>
+          <td>{{ si.description }}</td>
+          <td class="muted">{{ si.example }}</td>
+          <td>{{ t.contract.yes if si.required else t.contract.no }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>{{ t.contract.law_h2 }}</h2>
+    {% for g in grouped %}
+    <h3>{{ g.category_zh }}</h3>
+    <ul>
+      {% for r in g.refs %}
+      <li>{{ r.name }} <span class="muted">（{{ r.sources|join(t.contract.sep_sources) }}）</span></li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+    {% if not grouped %}
+    <p class="muted">{{ t.contract.law_empty }}</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="panel" id="generation-panel" data-contract-type="{{ contract_type }}">
+  <h2>{{ t.contract.gen_h2 }}</h2>
+  <div class="muted">{{ t.contract.gen_intro }}</div>
+
+  <form id="generation-form">
+    <fieldset class="gen-modes">
+      <legend>{{ t.contract.mode_legend }}</legend>
+      <label class="check"><input type="radio" name="mode" value="A" checked> {{ t.contract.mode_a }}</label>
+      <label class="check"><input type="radio" name="mode" value="B"> {{ t.contract.mode_b }}</label>
+      <label class="check"><input type="radio" name="mode" value="C"> {{ t.contract.mode_c }}</label>
+      <label class="check"><input type="radio" name="mode" value="D"> {{ t.contract.mode_d }}</label>
+      <label class="check"><input type="radio" name="mode" value="E"> {{ t.contract.mode_e }}</label>
+      <label class="check"><input type="radio" name="mode" value="F"> {{ t.contract.mode_f }}</label>
+      <label class="check"><input type="radio" name="mode" value="G"> {{ t.contract.mode_g }}</label>
+    </fieldset>
+
+    <div class="gen-grid">
+      <div class="row">
+        <label>{{ t.contract.stance }}</label>
+        <select name="stance">
+          <option value="">{{ t.contract.stance_default }}</option>
+          <option value="balanced">balanced</option>
+          <option value="pro_a">pro_a</option>
+          <option value="pro_b">pro_b</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>{{ t.contract.scenario }}</label>
+        <input type="text" name="scenario" placeholder="{{ t.contract.scenario_ph }}">
+      </div>
+    </div>
+
+    <div class="gen-grid">
+      <div class="row">
+        <label>{{ t.contract.format }}</label>
+        <select name="format">
+          <option value="docx">docx</option>
+          <option value="pdf">pdf</option>
+          <option value="both">both</option>
+          <option value="markdown">markdown</option>
+        </select>
+      </div>
+      <div class="row">
+        <label>{{ t.contract.custom_ids }}</label>
+        <input type="text" name="custom_clause_ids" placeholder="{{ t.contract.custom_ids_ph }}">
+      </div>
+    </div>
+
+    <div class="gen-extra" data-mode="D">
+      <div class="row">
+        <label>{{ t.contract.batch_label }}</label>
+        <textarea name="tag_combinations" placeholder='[{"stance":"balanced"},{"scenario":"农产品买卖"}]'></textarea>
+      </div>
+      <label class="check"><input type="checkbox" name="enumerate_all"> {{ t.contract.enumerate }}</label>
+    </div>
+
+    <div class="gen-extra" data-mode="EF">
+      <div class="gen-grid">
+        <div class="row">
+          <label>{{ t.contract.rubric_label }}</label>
+          <input type="text" name="rubric" placeholder="contract_sale_v1">
+        </div>
+        <div class="row">
+          <label>{{ t.contract.max_iter }}</label>
+          <input type="number" name="max_iterations" value="3" min="1" max="10">
+        </div>
+      </div>
+      <div class="row">
+        <label>{{ t.contract.task_desc }}</label>
+        <textarea name="task_desc" placeholder="{{ t.contract.task_desc_ph }}"></textarea>
+      </div>
+      <div class="row">
+        <label>{{ t.contract.temperature }}</label>
+        <input type="number" name="temperature" value="0" step="0.1" min="0" max="2">
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button type="submit" class="btn btn-primary" id="gen-submit">{{ t.contract.generate }}</button>
+      <span id="gen-status" class="muted"></span>
+    </div>
+  </form>
+
+  <div id="gen-result" class="gen-result"></div>
+</section>
+
+<section class="panel">
+  <h2>{{ t.contract.principle_h2 }}</h2>
+  <ol>
+    <li>{{ t.contract.principle_1|safe }}</li>
+    <li>{{ t.contract.principle_2|safe }}</li>
+    <li>{{ t.contract.principle_3|safe }}</li>
+    <li>{{ t.contract.principle_4|safe }}</li>
+    <li>{{ t.contract.principle_5|safe }}</li>
+  </ol>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='generation-panel.js') }}"></script>
+{% endblock %}

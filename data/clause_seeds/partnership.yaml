@@ -1,0 +1,79 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# partnership (合伙合同) - consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: partnership
+tags:
+  - name: contribution_form
+    values: [现金, 实物, 知识产权, 劳务]
+    why: 劳务出资是合伙合同区别于公司/买卖合同的显著特征（《民法典》第968条），直接影响债务承担能力与税务处理；通用"风险"维度无法量化劳务出资的估值不确定性及法律限制
+  - name: profit_loss_hierarchy
+    values: [约定优先, 按实缴比例, 平均分配]
+    why: 合伙合同有法定的三级默认顺位（《民法典》第972条：约定->协商->实缴比例->平均），这是商业组织特有的法定兜底逻辑，非单纯利益倾向；通用"强度"无法体现法律规定的强制顺位
+  - name: transfer_restriction
+    values: [内部自由, 外部需全体同意]
+    why: 人合性是合伙核心，对外转让须其他合伙人一致同意（《民法典》第974条），不同于股权或债权的自由流转；通用"风险"未涵盖"人合性"这一特定法律属性
+  - name: withdrawal_notice
+    values: [定期, 不定期, 合理期限前通知]
+    why: 不定期合伙可随时解除但需提前合理期限通知（《民法典》第976条），此条款直接决定合作稳定性，非通用违约范畴；通用"履行期限"通常指项目交付，而非合伙人身份存续期限
+clauses:
+  - family: 劳务出资特别约定
+    section: 合同标的
+    body: >
+      若一方以劳务出资，应明确劳务内容、评估标准及折算金额：{{labor_description}}；该部分出资不享有合伙财产所有权，仅享有收益分配权。
+      （《中华人民共和国民法典》第九百六十八条）
+    stance: pro_a
+    strength: standard
+    why: 通用模板多假设"金钱出资"，易忽略劳务出资的不可强制执行性及价值波动风险；该条限制劳务出资方的财产权，偏护资本出资方（甲方）
+    verdict: real
+    slot_instructions:
+      - name: labor_description
+        label: 劳务内容描述
+        description: 以劳务出资时的劳务内容、评估标准及折算金额
+        example: 提供技术开发服务，折算出资额10万元
+        required: true
+  - family: 损益分配法定兜底
+    section: 权利义务
+    body: >
+      合伙的利润分配与亏损分担按以下顺序确定：1.按合伙合同约定办理；2.约定不明确的，由合伙人协商决定；3.协商不成的，按实缴出资比例分配、分担；4.无法确定出资比例的，由合伙人平均分配、分担。
+      （《中华人民共和国民法典》第九百七十二条）
+    stance: balanced
+    strength: mild
+    why: 示范文本常留白或仅写"按约定"，未提示法定三级兜底规则，易在无约定时引发分配纠纷；仅为法定默认顺位提示，无单方偏向
+    verdict: real
+  - family: 对外连带债务确认与内部追偿
+    section: 权利义务
+    body: >
+      合伙人对合伙债务承担无限连带责任。一方对外清偿合伙债务超过其应当承担份额的，有权就超过部分向其他合伙人追偿。
+      （《中华人民共和国民法典》第九百七十三条）
+    stance: balanced
+    strength: standard
+    why: 通用"违约责任"侧重违约赔偿，未明确合伙特有的"先对外连带、后对内追偿"结构；该条为法定强制性规则，双向均衡
+    verdict: real
+  - family: 份额对外转让同意权与优先购买权
+    section: 权利义务
+    body: >
+      合伙人向合伙人以外的人转让其财产份额的，须经其他合伙人一致同意；同等条件下，其他合伙人享有优先购买权。
+      （《中华人民共和国民法典》第九百七十四条）
+    stance: balanced
+    strength: standard
+    why: 通用模板常遗漏"人合性"保护条款，导致外部人员强行进入合伙关系；该条保护全体现有合伙人，无单方偏向
+    verdict: real
+  - family: 不定期合伙解除通知
+    section: 附则
+    body: >
+      合伙期限约定不明确的，视为不定期合伙。任一合伙人可随时解除合伙合同，但应当在合理期限之前通知其他合伙人。
+      （《中华人民共和国民法典》第九百七十六条）
+    stance: balanced
+    strength: standard
+    why: 通用"履行期限"多指固定工期，未覆盖"随时解除但需通知"的特殊终止权；该条赋予全体合伙人对称的退出权
+    verdict: real
+skipped:
+  - item: 不可抗力条款
+    reason: 属于通用合同基础条款，已包含在「违约责任」或「附则」中，无合伙特异性
+  - item: 保密义务
+    reason: 虽重要，但属通用商业合同标配，除非涉及特定商业秘密，否则无合伙特异性起草信号
+  - item: 管辖法院选择
+    reason: 属于「争议解决」章节通用内容，不因合伙性质改变管辖逻辑（除专属管辖外）
+  - item: 注册资本登记
+    reason: 民事合伙合同无需工商注册资本登记，此为「合伙企业」行政法概念，易混淆且非合同核心
+  - item: 财务审计周期
+    reason: 通用财务管理条款，虽合伙需核算，但频率与方式可由双方自定，非法律强制性特有结构

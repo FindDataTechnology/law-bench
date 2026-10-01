@@ -1,0 +1,102 @@
+# capital_increase consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: capital_increase
+tags:
+  - name: anti_dilution_type
+    values: [full_ratchet, weighted_average, none]
+    why: 直接决定投资人未来股权价值是否因低价增发受损，是股权投资核心风控点，买卖/租赁合同无此概念；通用risk维度只能标高低，无法量化稀释保护的数学逻辑
+  - name: capital_contribution_term
+    values: [subscription, paid_in, installment]
+    why: 《公司法》2023修订要求5年内实缴，直接影响现金流与违约判定，区别于普通合同的付款节点；通用payment维度只关注时间，不关注法律强制的资本充实义务属性
+  - name: governance_control
+    values: [board_seat, veto_right, observer]
+    why: 增资往往伴随控制权重组，涉及股东会/董事会权限变更，买卖合同不涉及公司组织法权利；通用rights维度仅描述一般权利义务，无法体现公司法的特殊治理架构
+clauses:
+  - family: 原股东优先认购权放弃
+    section: 合同标的
+    body: >
+      本次增资前，公司全体原股东确认：已知悉本次增资方案，并自愿放弃根据《公司法》（2023修订）第二百二十七条享有的优先认缴新增注册资本的权利，同意由投资方按本协议约定比例认购。
+    stance: pro_a
+    strength: strong
+    why: 示范文本常默认"各方同意"而省略明确放弃声明，导致后续工商登记被原股东异议；仅涉股权变动，非买卖/租赁通用条款
+    verdict: real
+    slot_instructions: []
+  - family: 出资实缴期限承诺
+    section: 价款及支付
+    body: >
+      投资方应于本协议生效后{{days}}日内将增资款汇入公司验资账户。双方确认，本次增资符合《公司法》第四十七条关于股东认缴出资期限的规定（最长不超过五年）。
+    stance: balanced
+    strength: standard
+    why: 旧模板多写"一次性付清"，未结合2023新《公司法》5年限期要求，存在合规瑕疵
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 缴款期限（日）
+        description: 投资方自协议生效后将增资款汇入验资账户的期限，单位为日历日
+        example: 15
+        required: true
+  - family: 投后信息知情权
+    section: 权利义务
+    body: >
+      投资方有权每{{quarter}}查阅公司财务会计报告、会计账簿。公司应在收到书面请求后{{days}}日内提供。违反本条视为根本违约。
+    stance: pro_a
+    strength: standard
+    why: 通用模板仅写"配合检查"，未明确财务知情权的频率和范围，易引发小股东纠纷
+    verdict: real
+    slot_instructions:
+      - name: quarter
+        label: 查阅频率
+        description: 投资方查阅公司财务会计报告及会计账簿的频率，如季度、半年度
+        example: 季度
+        required: true
+      - name: days
+        label: 提供期限（日）
+        description: 公司收到书面请求后提供财务资料的期限，单位为日历日
+        example: 10
+        required: true
+  - family: 股权变更登记义务
+    section: 履行期限
+    body: >
+      公司应于收到全部增资款后{{days}}日内完成股东名册变更及市场监督管理部门变更登记。因未及时办理导致投资方权益受损的，公司应赔偿损失。
+    stance: pro_a
+    strength: standard
+    why: 通用模板常归入"附则"，但增资核心效力在于登记对抗，需独立强调时效与责任
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 变更登记期限（日）
+        description: 公司收到全部增资款后完成股东名册变更及工商变更登记的期限，单位为日历日
+        example: 30
+        required: true
+  - family: 估值调整机制
+    section: 违约责任
+    body: >
+      若公司{{year}}年度净利润低于{{target_amount}}万元，原股东应向投资方补偿股份或现金，计算公式为{{formula}}。该条款依据《全国法院民商事审判工作会议纪要》第五条执行。
+    stance: pro_a
+    strength: strong
+    why: 示范文本常因合规顾虑删除对赌条款，但实务中极高频且关键，属隐性需求
+    verdict: real
+    slot_instructions:
+      - name: year
+        label: 考核年度
+        description: 估值调整机制所考核的财务年度
+        example: 2025
+        required: true
+      - name: target_amount
+        label: 目标净利润（万元）
+        description: 触发估值调整的净利润门槛值，单位为万元
+        example: 500
+        required: true
+      - name: formula
+        label: 补偿计算公式
+        description: 业绩未达标时原股东向投资方补偿股份或现金的计算公式
+        example: (目标利润-实际利润)÷目标利润×投资款×8%
+        required: true
+skipped:
+  - item: 保密条款
+    reason: 属所有商业合同通用条款，已包含在通用知识库base中，无增资特异性
+  - item: 不可抗力
+    reason: 属标准法律通用条款，增资扩股无特殊定义，无需单独抽取
+  - item: 争议解决管辖
+    reason: 通用模板已有仲裁/诉讼选项，增资协议无特殊管辖偏好（除非涉及外资审批）
+  - item: 生效条件
+    reason: 通常表述为"签字盖章生效"或"政府审批生效"，属通用附则范畴，非特有

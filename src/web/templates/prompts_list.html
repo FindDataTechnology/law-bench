@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav.prompts }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.h1.generation_prompts }}</h1>
+  {% if has_scope('content:write') %}<a class="btn btn-primary" href="{{ url_for('page_new_prompt') }}">{{ t.btn.new_prompt }}</a>{% endif %}
+</div>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t.col.name }}</th>
+        <th>{{ t.col.contract_type }}</th>
+        <th>{{ t.col.purpose }}</th>
+        <th>{{ t.col.type }}</th>
+        <th>{{ t.col.source }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in prompts %}
+      <tr>
+        <td><a href="{{ url_for('page_prompt_detail', name=p.name) }}"><strong>{{ title_for_prompt(p.name) }}</strong></a>
+          {% if p.description %}<div class="muted">{{ p.description[:80] }}{% if p.description|length > 80 %}…{% endif %}</div>{% endif %}
+        </td>
+        <td><code>{{ label_for('contract_type', p.contract_type) }}</code></td>
+        <td><code>{{ label_for('purpose', p.purpose) }}</code></td>
+        <td>{% if p.prompt_type %}<span class="badge">{{ label_for('prompt_type', p.prompt_type) }}</span>{% else %}<span class="muted">-</span>{% endif %}</td>
+        <td><span class="badge local">{{ t.badge.local }}</span></td>
+      </tr>
+      {% endfor %}
+      {% if not prompts %}
+      <tr><td colspan="5" class="muted">{{ t.empty.prompts|safe }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<p class="hint">{{ t.hint.prompts_list|safe }}</p>
+{% endblock %}

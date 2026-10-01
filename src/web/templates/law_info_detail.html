@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{% if info %}{{ info.zh_name }}{% else %}{{ contract_type }}{% endif %} · {{ t.law_info.h1 }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{% if info %}{{ info.zh_name }}{% else %}{{ contract_type }}{% endif %}</h1>
+    <a href="{{ url_for('page_law_info') }}">{{ t.law_info.back }}</a>
+  </div>
+</div>
+
+{% if not_found %}
+  <div class="flash error">{{ t.law_info.not_found }}: <code>{{ contract_type }}</code></div>
+{% else %}
+<div class="law-info-grid">
+  <section class="panel">
+    <h2>{{ t.law_info.source_doubao }}</h2>
+    <div class="muted"><code>{{ info.type }}</code></div>
+    <article class="markdown-body">
+      {{ doubao_html|safe }}
+    </article>
+  </section>
+  <section class="panel">
+    <h2>{{ t.law_info.source_deepseek }}</h2>
+    <div class="muted"><code>{{ info.type }}</code></div>
+    <article class="markdown-body">
+      {{ deepseek_html|safe }}
+    </article>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

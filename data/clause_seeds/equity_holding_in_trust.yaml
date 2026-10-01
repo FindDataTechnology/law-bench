@@ -1,0 +1,71 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# equity_holding_in_trust consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: equity_holding_in_trust
+tags:
+  - name: compliance_access_restriction
+    values: [allowed, restricted, prohibited]
+    why: 股权代持常涉及外资准入负面清单、公务员禁业等特定主体资格限制，直接影响合同效力，通用"风险"维度无法区分"商业风险"与"法律禁止"
+  - name: preconditions_for_nominalization
+    values: [none, majority, unanimous]
+    why: 隐名股东转为显名需经公司其他股东半数以上同意（《公司法司法解释三》第二十四条第三款），是代持特有的法定确权门槛，通用维度无法量化此程序要求
+  - name: nominee_risk_trigger_source
+    values: [personal_debt, death_inheritance, marital_change]
+    why: 代持核心风险在于名义股东人身或财产状况变化导致股权被冻结或分割，通用"风险"标签过宽，无法锁定此类特定人身依附风险
+clauses:
+  - family: 显名化同意权
+    section: 权利义务
+    body: >
+      若甲方（实际出资人）拟将乙方（名义股东）名下股权变更登记至甲方名下，乙方应配合签署相关文件；根据《最高人民法院关于适用〈中华人民共和国公司法〉若干问题的规定（三）》第二十四条第三款，甲方需取得公司其他股东半数以上同意，乙方应协助获取该等同意。
+    stance: pro_a
+    strength: strong
+    why: 示范文本多关注"持有期间"，常忽略"退出显名"的法定程序障碍，此为代持特有的确权难点
+    verdict: real
+    slot_instructions: []
+  - family: 名义股东债务隔离与执行异议
+    section: 权利义务
+    body: >
+      若因乙方个人债务导致代持股权被法院查封、冻结或执行，乙方应在收到通知后{{notify_days}}日内书面告知甲方；甲方有权依法提出案外人执行异议，乙方应提供代持协议作为证据。
+    stance: pro_a
+    strength: standard
+    why: 通用模板无"第三人债权冲击股权"的应对机制，针对代持核心痛点（名义股东资产混同）（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: notify_days
+        label: 告知期限（日）
+        description: 乙方收到法院查封/冻结/执行通知后书面告知甲方的期限，单位为日历日
+        example: 5
+        required: true
+  - family: 名义股东身故与婚姻变动处置
+    section: 权利义务
+    body: >
+      若乙方发生身故、离婚或丧失民事行为能力，其继承人、配偶或监护人应继续承认本协议效力，不得主张继承或分割该部分股权；乙方应在签署本协议前将其配偶纳入知情范围并签署确认函（见附件）。
+    stance: pro_a
+    strength: standard
+    why: 示范文本极少考虑名义股东人身变故对股权稳定性的影响，属高价值风控条款
+    verdict: real
+    slot_instructions: []
+  - family: 表决权指令与留痕
+    section: 权利义务
+    body: >
+      乙方在行使股东表决权前，须提前{{inquiry_days}}个工作日向甲方发出征询函，严格按照甲方的书面指示投票；所有表决指令及反馈应通过邮件或书面形式留存，作为乙方已履行忠实义务的证明。
+    stance: pro_a
+    strength: strong
+    why: 通用模板仅写"配合行使权利"，未规定"指令流程"和"留痕"，易导致代持期间决策权失控
+    verdict: real
+    slot_instructions:
+      - name: inquiry_days
+        label: 征询提前期（工作日）
+        description: 乙方行使表决权前提前向甲方发出征询函的工作日数
+        example: 3
+        required: true
+skipped:
+  - item: 保密条款
+    reason: 属买卖/租赁等合同通用大路货，虽代持需要保密但无特殊法律构造意义，归入通用条款库即可
+  - item: 不可抗力
+    reason: 标准通用条款，不涉及股权代持特有的法律关系，重复增加无实质增益
+  - item: 通知送达地址
+    reason: 程序性通用条款，不改变代持协议实体权利义务结构，归入签署信息或附则通用项
+  - item: 税费承担
+    reason: 通常归入"价款及支付"章节通用表述，除非涉及特殊税务筹划，否则不作独立特有条款
+  - item: 竞业限制
+    reason: 竞业限制属劳动合同特有维度（《劳动合同法》第二十三条），与股权代持协议无直接关联，不适用本类型

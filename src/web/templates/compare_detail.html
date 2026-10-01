@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ t.h1.compare_label }} #{{ compare_id }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.h1.compare_label }} #{{ compare_id }}</h1>
+    <a href="{{ url_for('page_list_compares') }}">{{ t.detail.back_to_compares }}</a>
+  </div>
+  <div id="compare-meta" class="muted" role="status" aria-live="polite"></div>
+</div>
+
+<div class="panel" id="compare-loading">{{ tr('detail.loading_compare', id=compare_id) }}</div>
+<div class="panel" id="compare-error" style="display:none"></div>
+
+<div class="panel" id="compare-result" style="display:none">
+  <h2 id="compare-headline"></h2>
+  <div class="matrix-scroll" role="region" aria-label="{{ t.matrix.caption }}">
+    <table class="matrix" id="compare-matrix"></table>
+  </div>
+  <p class="hint" id="compare-legend"></p>
+</div>
+
+<div class="panel" id="compare-reasoning" style="display:none">
+  <div class="toolbar between">
+    <h2 id="compare-reasoning-title"></h2>
+    <button type="button" class="btn btn-sm" id="compare-reasoning-close">{{ t.detail.close }}</button>
+  </div>
+  <p id="compare-reasoning-text" class="muted"></p>
+</div>
+
+<div class="panel" id="compare-draft" style="display:none">
+  <div class="toolbar between">
+    <h2 id="compare-draft-title"></h2>
+    <button type="button" class="btn btn-sm" id="compare-draft-close">{{ t.detail.close }}</button>
+  </div>
+  <pre class="prompt-content" id="compare-draft-text"></pre>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>window.LAWCMP_COMPARE_ID = {{ compare_id }};</script>
+{% endblock %}

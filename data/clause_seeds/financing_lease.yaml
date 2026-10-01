@@ -1,0 +1,85 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# financing_lease (融资租赁合同) - consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: financing_lease
+tags:
+  - name: ownership_perfection
+    values: [registered, unregistered, pending]
+    why: 融资租赁核心风险在于"所有权与使用权分离"。根据《民法典》第745条，所有权未经登记不得对抗善意第三人，这是担保物权公示的特殊要求，普通买卖/租赁不涉及此登记对抗效力问题
+  - name: buyout_price_structure
+    values: [nominal, fair_market, zero, offset]
+    why: 融资租赁期末涉及资产残值处理，且税务处理（如增值税）与会计确认高度依赖留购价设定。普通租赁通常直接归还，买卖则无"留购"概念
+clauses:
+  - family: 出租人所有权登记义务
+    section: 权利义务
+    body: >
+      出租人应于本合同签署后{{days}}日内，在中国人民银行征信中心动产融资统一登记公示系统办理租赁物所有权登记。因未登记导致租赁物被善意第三人主张权利的，出租人应承担赔偿责任。（依据：《民法典》第七百四十五条）
+    slot_instructions:
+      - name: days
+        label: 登记期限（日）
+        description: 出租人签署合同后办理所有权登记的日数
+        example: "15"
+        required: true
+    stance: pro_b
+    strength: standard
+    why: 示范文本常忽略"登记对抗"这一新法要求，多沿用旧版格式，误以为交付即完权。此为融资租赁区别于普通租赁的核心风控点。
+    verdict: real
+  - family: 承租人直接向供应商索赔权
+    section: 权利义务
+    body: >
+      若租赁物出现质量瑕疵或违约情形，承租人有权直接向出卖人索赔，出租人应提供必要协助。出租人不得以租赁关系为由拒绝配合或阻碍承租人索赔。（依据：《民法典》第七百四十一条）
+    stance: pro_b
+    strength: standard
+    why: 传统租赁模型中出租人需先验货再转租，故索赔路径不同。融资租赁是"承租人选定"，索赔权直接转移给承租人，通用模板常遗漏此三方联动机制。经复核，《民法典》第741条正属承租人对出卖人索赔权及出租人协助义务的规定，原引条号正确
+    verdict: real
+  - family: 租金支付独立性（拒付抗辩限制）
+    section: 价款及支付
+    body: >
+      承租人支付租金的义务独立于租赁物质量。除因出租人原因导致承租人无法占有使用外，承租人不得以租赁物瑕疵、延误交付等理由拒绝或延迟支付租金。（依据：《民法典》第七百四十七条）
+    stance: pro_a
+    strength: strong
+    why: 普通租赁中承租人可因质量问题抗辩租金。融资租赁具有"融资"属性，租金实为本金加利息，质量风险由承租人承担，此条款常被通用模板混淆。
+    verdict: real
+  - family: 逾期租金加速到期
+    section: 违约责任
+    body: >
+      承租人逾期支付租金达{{days}}日或累计{{times}}次，出租人有权宣布全部未付租金立即到期，并要求承租人一次性支付全部剩余租金及利息。（依据：《民法典》第七百五十二条）
+    slot_instructions:
+      - name: days
+        label: 逾期天数
+        description: 承租人逾期支付租金达到触发加速到期的日数
+        example: "30"
+        required: true
+      - name: times
+        label: 累计逾期次数
+        description: 承租人累计逾期支付租金的次数，达到即触发加速到期
+        example: "3"
+        required: true
+    stance: pro_a
+    strength: strong
+    why: 普通租赁多为分期解除，但融资租赁强调资金回收安全，允许"加速到期"是金融债权保护的关键，通用模板多写"解除合同"，未明确加速到期权。
+    verdict: real
+  - family: 租赁期满所有权归属
+    section: 附则
+    body: >
+      租赁期满，租赁物所有权按以下方式处理：□归出租人 □归承租人（需支付留购价{{amount}}元）。双方未约定的，租赁物所有权归出租人。（依据：《民法典》第七百五十七条）
+    slot_instructions:
+      - name: amount
+        label: 留购价金额（元）
+        description: 租赁期满承租人选择留购时需支付的价款
+        example: "1000"
+        required: false
+    stance: balanced
+    strength: standard
+    why: 示范文本常模糊处理期末去向。融资租赁涉及残值管理，必须明确约定归属及留购价，否则易引发税务与产权纠纷。
+    verdict: real
+skipped:
+  - item: 不可抗力条款
+    reason: 属于通用合同基础条款，买卖/租赁均适用，无融资租赁特异性。
+  - item: 保密条款
+    reason: 属于商业通用条款，不涉及融资租赁特有的法律关系。
+  - item: 保险购买义务
+    reason: 虽重要，但通常已包含在"权利义务"Base 条文中，无需单独作为特有标签提取。
+  - item: 管辖法院/仲裁
+    reason: 属于争议解决通用条款，无融资租赁特殊管辖规则（除不动产租赁外）。
+  - item: 租赁物描述
+    reason: 属于"合同标的"Base 条文范畴，仅需补充规格参数，无需新增特有结构。

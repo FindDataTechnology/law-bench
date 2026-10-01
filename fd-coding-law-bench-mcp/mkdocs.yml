@@ -1,0 +1,67 @@
+site_name: Law Bench API Docs
+site_description: Async REST API for generating legal contracts via tag-driven assembly.
+site_url: https://law-bench-api-docs.netlify.app/
+repo_url: https://github.com/law-ai-official/law-bench
+repo_name: law-ai-official/law-bench
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Noto Sans SC
+    code: JetBrains Mono
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+
+nav:
+  - Home: index.md
+  - API Reference: api-reference.md
+  - Tag Vocabulary: tag-vocabulary.md
+  - Server Setup: api-server.md
+  - MCP Tools: async-contract-api.md
+
+plugins:
+  - search
+  - tags
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/law-ai-official/law-bench

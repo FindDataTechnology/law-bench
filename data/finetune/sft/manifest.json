@@ -1,0 +1,123 @@
+{
+  "counts": {
+    "drafter_a": {
+      "contract_type_breakdown": {
+        "accident-settlement": 1,
+        "adoption": 1,
+        "bailment": 8,
+        "brokerage": 4,
+        "capital_increase": 3,
+        "company_formation": 4,
+        "construction": 36,
+        "debt-restructuring": 1,
+        "debt-transfer": 1,
+        "divorce": 1,
+        "elderly-support": 1,
+        "employment": 13,
+        "entrustment": 19,
+        "equity_holding_in_trust": 6,
+        "equity_incentive": 5,
+        "equity_transfer": 13,
+        "estate-division": 1,
+        "factoring": 8,
+        "film_production": 4,
+        "financing_lease": 9,
+        "franchise": 15,
+        "gift": 6,
+        "guarantee": 7,
+        "housekeeping": 1,
+        "insurance": 3,
+        "intermediation": 6,
+        "internship": 1,
+        "investment": 1,
+        "ip_license": 4,
+        "labor-service": 1,
+        "labor_dispatch": 9,
+        "land_transfer": 16,
+        "lease": 34,
+        "legacy-support": 1,
+        "loan": 8,
+        "marital-property": 1,
+        "merger_acquisition": 5,
+        "mortgage": 1,
+        "nda": 1,
+        "non-compete": 1,
+        "partnership": 6,
+        "pledge": 1,
+        "ppp_project": 5,
+        "prenup": 1,
+        "private_equity_fund": 5,
+        "property_service": 8,
+        "real_estate_development": 6,
+        "real_estate_lease": 15,
+        "real_estate_sale": 6,
+        "sale": 77,
+        "service": 14,
+        "settlement": 1,
+        "shareholders": 1,
+        "shop-transfer": 1,
+        "software_development": 4,
+        "talent_agency": 6,
+        "technology": 7,
+        "tourism_service": 20,
+        "training": 1,
+        "transport": 26,
+        "trust": 4,
+        "utilities_supply": 21,
+        "vam_agreement": 4,
+        "warehousing": 4,
+        "will": 1,
+        "work": 20
+      },
+      "score_ratio_bands": {
+        "<0.5": 129,
+        ">=0.8": 2
+      },
+      "source_breakdown": {
+        "contract_artifacts": 395,
+        "pipeline_runs": 131
+      },
+      "stance_breakdown": {
+        "(untagged)": 203,
+        "balanced": 262,
+        "pro_a": 32,
+        "pro_b": 29
+      },
+      "synthetic_count": 395,
+      "tier_breakdown": {
+        "silver": 526
+      },
+      "total": 526,
+      "train": 471,
+      "val": 55
+    },
+    "judge_c": {
+      "confidence_bands": {
+        "0.5-0.6": 220,
+        "0.6-0.8": 801,
+        ">=0.8": 53
+      },
+      "reviewer_breakdown": {
+        "ai_reviewer": 2571
+      },
+      "tier_breakdown": {
+        "gold": 2571
+      },
+      "total": 2571,
+      "train": 2314,
+      "val": 257,
+      "verdict_breakdown": {
+        "fail": 1250,
+        "pass": 1321
+      }
+    }
+  },
+  "format": "ChatML {system, user, assistant}",
+  "generated_at": "2026-08-29T19:55:27+00:00",
+  "seed": 42,
+  "sources": {
+    "drafter_a": "data\\finetune\\drafter-a\\drafter_a_silver.jsonl",
+    "judge_c": "data\\finetune\\judge-c\\judge_c_gold.grounded.jsonl"
+  },
+  "val_fraction": 0.1
+}

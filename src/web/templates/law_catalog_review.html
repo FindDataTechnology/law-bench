@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ t.catalog.review_h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.catalog.review_h1 }}</h1>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_law_catalog_audit') }}">{{ t.catalog.back_audit }}</a>
+</div>
+{% if request.query_params.get('msg') %}
+<div class="flash ok" role="status">{{ tr(request.query_params.get('msg')) }}</div>
+{% endif %}
+<p class="muted">
+  {{ t.catalog.review_note }}
+</p>
+
+{% for r in pending %}
+<div class="panel">
+  <h3 style="margin-top:0">《{{ r.cited_name }}》 <span class="muted small">× {{ r.occurrences }}</span></h3>
+  {% if suggestions.get(r.cited_name) %}
+  <p class="small">{{ t.catalog.candidates }}</p>
+  <div class="inline">
+    {% for s in suggestions[r.cited_name] %}
+    <form method="post" action="{{ url_for('law_catalog_confirm_alias') }}" class="inline">
+      <input type="hidden" name="alias" value="{{ r.cited_name }}">
+      <input type="hidden" name="law_id" value="{{ s.id }}">
+      <button type="submit" class="btn btn-sm">{{ s.title }} ({{ '%.2f'|format(s.sim) }})</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="muted small">{{ t.catalog.no_candidates }}</p>
+  {% endif %}
+  <div class="inline">
+    <form method="post" action="{{ url_for('law_catalog_confirm_alias') }}" class="inline">
+      <input type="hidden" name="alias" value="{{ r.cited_name }}">
+      <input type="text" name="law_id" placeholder="law_id" style="width:8em">
+      <button type="submit" class="btn btn-sm">{{ t.catalog.confirm_mapping }}</button>
+    </form>
+    <form method="post" action="{{ url_for('law_catalog_non_match') }}" class="inline">
+      <input type="hidden" name="alias" value="{{ r.cited_name }}">
+      <button type="submit" class="btn btn-sm btn-ghost">{{ t.catalog.mark_non_match }}</button>
+    </form>
+  </div>
+</div>
+{% else %}
+<p class="muted">{{ t.catalog.review_empty }}</p>
+{% endfor %}
+
+{% if suppressed %}
+<h2>{{ t.catalog.suppressed_h2 }}</h2>
+<ul class="muted">
+  {% for s in suppressed %}
+  <li>《{{ s.alias }}》 <span class="small">{{ s.created_at }}</span></li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

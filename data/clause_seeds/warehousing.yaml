@@ -1,0 +1,81 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# warehousing consulted Kimi 2026-07-30; mirrors employment.yaml format.
+# Party convention assumed: 甲方 = 保管人 (warehousekeeper/service provider), 乙方 = 存货人 (depositor/customer).
+contract_type: warehousing
+tags:
+  - name: storage_environment_grade
+    values: [常温, 冷藏2-8℃, 冷冻-18℃, 恒温恒湿, 危险品专用仓]
+    why: 通用"风险"仅指损失承担，无法量化物理存储条件（如温度失控导致的变质），这是仓储区别于租赁的核心履约标准
+  - name: inventory_variance_tolerance
+    values: ["0%", "±0.1%", "±0.5%", 按行业标准]
+    why: 通用"违约责任"通常笼统约定赔偿，但仓储实务中需明确自然损耗或计量误差的免责阈值，否则极易引发纠纷
+  - name: lien_trigger_fee_type
+    values: [仅限仓储费, 含运费, 含保险费, 含垫付款]
+    why: 通用"违约责任"不区分具体债权性质，而留置权需基于同一法律关系，需明确哪些欠款可触发扣货
+  - name: hazardous_material_compliance
+    values: [普通, 危化品一级, 危化品二级, 剧毒, 放射性]
+    why: 涉及行政监管红线，通用标签无法覆盖特定货物的法定准入资质要求，一旦违规可能导致合同无效或行政处罚
+clauses:
+  - family: 危险品申报义务
+    section: 权利义务
+    body: >
+      存货人交付易燃、易爆、有毒、有腐蚀性、有放射性等危险物品或者易变质物品的，应当按照国家有关危险物品运输的规定对危险物品妥善包装，做出危险物品标志和标签，并将有关危险物品的名称、性质和防范措施的书面材料提交保管人。未提交的，保管人可以拒收或采取相应措施，由此产生的费用由存货人承担。《民法典》第 906 条
+    stance: pro_a
+    strength: strong
+    why: 通用模板常忽略"书面材料提交"的具体动作，导致保管人不知情下收货后的责任不清；费用由存货人承担并赋予拒收权，倾向保管人
+    verdict: real
+  - family: 入库验收异议期
+    section: 权利义务
+    body: >
+      保管人应当在收到仓储物后 {{days}} 日内进行验收。验收发现仓储物品种、数量、质量不符合约定的，应当及时通知存货人。逾期未提出异议的，视为仓储物符合约定。《民法典》第 907 条
+    stance: pro_a
+    strength: standard
+    why: 示范文本多写"验收"，但未设定异议期限（默示验收），易导致后续索赔时效争议；默示验收条款倾向保管人
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 验收天数
+        description: 保管人收到仓储物后进行验收的期限（日）
+        example: 3
+        required: true
+  - family: 易腐货物紧急通知
+    section: 权利义务
+    body: >
+      储存易燃、易爆、有毒、有腐蚀性、有放射性等危险物品或者易变质物品的，存货人应当说明该物品的性质，提供有关资料。保管人发现仓储物有变质或者其他损坏的，应当及时通知存货人或者仓单持有人。《民法典》第 912 条
+    stance: balanced
+    strength: standard
+    why: 针对易腐品，通用条款无"及时通知"的时限要求，易造成损失扩大，此条为减损义务核心
+    verdict: real
+  - family: 留置权行使范围
+    section: 违约责任
+    body: >
+      存货人未按照约定支付仓储费和其他费用的，保管人对相应的仓储物享有留置权，但当事人另有约定的除外。保管人行使留置权前，应给予存货人不少于 {{days}} 日的履行宽限期。《民法典》第 903 条（经第918条准用）
+    stance: pro_a
+    strength: standard
+    why: 通用违约条款只谈违约金，未明确"扣货"这一仓储特有的自力救济手段及其限制条件；仓储合同章未设留置权专条，经第918条准用保管合同第903条
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 履行宽限期天数
+        description: 保管人行使留置权前给予存货人的履行宽限期（日）
+        example: 15
+        required: true
+  - family: 第三方查库权利
+    section: 权利义务
+    body: >
+      存货人或其指定的第三方有权在合理时间内进入仓库查验仓储物状况，保管人应予配合，但不得影响正常作业秩序。
+    stance: pro_b
+    strength: standard
+    why: 通用文本极少约定"查库权"，易导致存货人无法监控货物状态，引发信任危机；该权利倾向存货人
+    verdict: real
+skipped:
+  - item: 不可抗力条款
+    reason: 属于所有合同类型的通用条款，非仓储特有，已包含在通用"违约责任"或"附则"中
+  - item: 法律适用与管辖
+    reason: 通用争议解决条款，不涉及仓储业务特性，无需单独提取
+  - item: 保密条款
+    reason: 商业合同通用条款，除非涉及特殊商业秘密，否则不作为仓储特有核心要素
+  - item: 合同解除权
+    reason: 《民法典》合同编通则已有规定，除非针对仓储物特定灭失情形，否则无需重复
+  - item: 通知送达地址
+    reason: 通用程序性条款，适用于所有合同类型，不具备仓储业务特异性

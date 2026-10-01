@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ t.catalog.audit_h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.catalog.audit_h1 }}</h1>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_law_catalog_review') }}">{{ t.catalog.to_review }}</a>
+</div>
+<p class="muted">
+  {{ tr('catalog.snapshot_line', rows=result.snapshot.rows, max_id=result.snapshot.max_id, imported=result.snapshot.imported_at or '—') }}
+  {{ t.catalog.snapshot_note }}
+</p>
+
+<div class="panel">
+  <h3 style="margin-top:0">{{ tr('catalog.overview_h2', n=result.total) }}</h3>
+  <ul>
+    <li><strong style="color:var(--danger)">{{ tr('catalog.count_repealed', n=result.summary.repealed) }}</strong></li>
+    <li><strong>{{ tr('catalog.count_amended', n=result.summary.amended) }}</strong></li>
+    <li><strong>{{ tr('catalog.count_fallback', n=result.summary.fallback) }}</strong></li>
+    <li>{{ tr('catalog.count_ok', n=result.summary.ok) }}</li>
+  </ul>
+</div>
+
+{% set sections = [
+  ('repealed', t.catalog.cat_repealed),
+  ('amended', t.catalog.cat_amended)
+] %}
+{% for cat, label in sections %}
+<div class="panel">
+  <h3 style="margin-top:0">{{ label }}（{{ result.summary[cat] }}）</h3>
+  {% if result.findings[cat] %}
+  <table>
+    <thead>
+      <tr><th>{{ t.catalog.col_type }}</th><th>{{ t.catalog.col_clause }}</th><th>{{ t.catalog.col_cited }}</th><th>{{ t.catalog.col_title }}</th><th>{{ t.catalog.col_status }}</th><th>{{ t.catalog.col_via }}</th></tr>
+    </thead>
+    <tbody>
+      {% for it in result.findings[cat] %}
+      <tr>
+        <td>{{ zh.get(it.contract_type, it.contract_type or '—') }}</td>
+        <td><a href="{{ url_for('page_clauses_edit', contract_type=it.contract_type, clause_id=it.clause_id) }}">#{{ it.clause_id }} {{ it.section or '' }}</a></td>
+        <td>《{{ it.cited_name }}》</td>
+        <td>{{ it.title or '—' }}</td>
+        <td>{{ it.law_status or '—' }}</td>
+        <td><code>{{ it.resolved_via }}</code></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ t.catalog.none }}</p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endblock %}

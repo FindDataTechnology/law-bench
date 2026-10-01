@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ t.clauses.h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.clauses.h1 }}</h1>
+  <div class="inline">
+    <form method="get" action="{{ url_for('page_clauses') }}" class="inline">
+      <input type="text" name="q" value="{{ q }}" placeholder="{{ t.clauses.search_ph }}" style="width:16em">
+      <select name="stance" style="width:9em">
+        <option value="">{{ t.clauses.all_stances }}</option>
+        {% for v in tag_vocab.stance %}<option value="{{ v }}" {% if active_tags.get('stance') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-sm btn-ghost">{{ t.clauses.search }}</button>
+    </form>
+    <form method="post" action="{{ url_for('page_clauses_extract') }}" class="inline">
+      <label class="muted">{{ t.clauses.extract_limit }}</label>
+      <input type="number" name="limit" value="5" min="0" max="50" style="width:5em">
+      <button type="submit" class="btn btn-sm">{{ t.clauses.extract }}</button>
+    </form>
+  </div>
+</div>
+<p class="muted">{{ t.clauses.intro|safe }}</p>
+
+{% if flash %}
+<div class="flash" role="status">{{ flash }}</div>
+{% endif %}
+
+{% if results is not none %}
+<div class="panel">
+  <h2 style="margin-top:0">{{ tr('clauses.results_count', n=results|length) }}</h2>
+  {% for c in results %}
+  <details>
+    <summary>{{ c.section }} · {{ c.category }}{% if c.tags.scenario %} · {{ c.tags.scenario }}{% endif %} · {{ zh.get(c.contract_type, c.contract_type) }}</summary>
+    <div class="muted small">#{{ c.id }} · <code>{{ c.contract_type }}</code>{% if c.source_path %} · {{ c.source_path }}{% endif %}</div>
+    <div>{{ c.body[:200] }}…</div>
+    <a href="{{ url_for('page_clauses_edit', contract_type=c.contract_type, clause_id=c.id) }}">{{ t.clauses.edit }}</a>
+  </details>
+  {% else %}
+  <p class="muted">{{ t.clauses.no_match }}</p>
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel">
+  <p>{{ tr('clauses.counts_line', total=counts.total, base=counts.base, tagged=counts.tagged, custom=counts.custom)|safe }}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>{{ t.clauses.col_type }}</th>
+        <th>{{ t.clauses.col_base }}</th>
+        <th>{{ t.clauses.col_tagged }}</th>
+        <th>{{ t.clauses.col_custom }}</th>
+        <th>{{ t.clauses.col_scenario }}</th>
+        <th>{{ t.clauses.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="muted">{{ loop.index }}</td>
+        <td>
+          <a href="{{ url_for('page_clauses_detail', contract_type=r.contract_type) }}"><strong>{{ r.zh }}</strong></a>
+          <div class="muted"><code>{{ r.contract_type }}</code></div>
+        </td>
+        <td>{{ r.base }}</td>
+        <td>{{ r.tagged }}</td>
+        <td>{{ r.custom }}</td>
+        <td class="muted">{{ r.scenarios | join(t.clauses.sep) }}</td>
+        <td>
+          <a href="{{ url_for('page_clauses_detail', contract_type=r.contract_type) }}">{{ t.clauses.view }}</a>
+          ·
+          <a href="{{ url_for('page_clauses_generate', contract_type=r.contract_type) }}?format=docx">{{ t.clauses.generate }}</a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="muted">{{ t.clauses.empty|safe }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

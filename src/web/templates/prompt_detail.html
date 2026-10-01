@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ title_for_prompt(prompt.name) }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{{ title_for_prompt(prompt.name) }} <span class="badge local">{{ t.badge.local }}</span></h1>
+    <a href="{{ url_for('page_list_prompts') }}">{{ t.detail.back_to_prompts }}</a>
+  </div>
+  <div class="toolbar">
+    {% if has_scope('content:write') %}
+      <a class="btn" href="{{ url_for('page_edit_prompt', name=prompt.name) }}">{{ t.detail.edit_prompt }}</a>
+    {% endif %}
+    {% if has_scope('admin') %}
+      <form method="post" action="{{ url_for('page_delete_prompt', name=prompt.name) }}"
+            data-confirm="{{ tr('detail.delete_prompt_confirm', name=prompt.name) }}">
+        <button type="submit" class="btn btn-danger">{{ t.detail.delete_prompt }}</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="panel">
+  <dl class="meta">
+    <dt>{{ t.col.contract_type }}</dt><dd><code>{{ label_for('contract_type', prompt.contract_type) }}</code></dd>
+    <dt>{{ t.col.purpose }}</dt><dd><code>{{ label_for('purpose', prompt.purpose) }}</code></dd>
+    <dt>{{ t.form.prompt_type }}</dt><dd>{% if prompt.prompt_type %}<span class="badge">{{ label_for('prompt_type', prompt.prompt_type) }}</span>{% else %}-{% endif %}</dd>
+    <dt>{{ t.col.source }}</dt><dd>{% if prompt.source == 'local' %}<span class="badge local">{{ t.badge.local }}</span>{% else %}{{ prompt.source }}{% endif %}</dd>
+    <dt>{{ t.form.description }}</dt><dd>{{ prompt.description or '-' }}</dd>
+    <dt>{{ t.col.created }}</dt><dd class="muted">{{ prompt.created_at }}</dd>
+  </dl>
+</div>
+
+<div class="panel">
+  <h2>{{ t.h1.content }}</h2>
+  <pre class="prompt-content">{{ prompt.content }}</pre>
+</div>
+{% endblock %}

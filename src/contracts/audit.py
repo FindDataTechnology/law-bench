@@ -1,0 +1,250 @@
+"""Deterministic slot-coverage evaluator for contract 母版.
+
+Audits a contract template body for slot completeness against the canonical
+``REQUIRED_SLOTS`` set - the same set the seeder and LLM generator normalize
+against. For each required slot the evaluator classifies it as:
+
+- ``present``   - the ``{{slot}}`` token appears in the body **proper** (before
+  the ``## 签署信息`` heading).
+- ``tail_only`` - the token appears **only** at or after the ``## 签署信息``
+  heading (i.e. it was appended by ``normalize_body`` rather than placed where
+  it belongs). For ``sign_date`` / ``sign_location`` this is acceptable; for
+  every other required slot it is a defect.
+- ``missing``   - the token does not appear in the body at all.
+
+It also reports ``extra_slots`` (body slots with no instruction) and
+``orphan_instructions`` (instructions for slots absent from the body), a
+pass/fail ``status``, and a ``coverage`` ratio.
+
+No LLM, no database - hermetic and fast. Exposed as a Python API
+(``audit_template`` / ``audit_body`` / ``audit_all``) and a CLI
+(``python -m src.contracts audit``).
+
+Boundary note: this is the **contract-template** audit — slot completeness of
+the 母版 skeleton, deterministic and hermetic. The sibling
+:mod:`src.clauses.audit` is the **clause-library** audit — an LLM-driven
+per-row quality pass (region leak / missing-slot / extraction-artifact). The
+two share a name but operate at different layers (template vs. clause) and
+must not be merged.
+"""
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+
+from src.generator import SLOT_PATTERN
+from src.contracts.slots import (
+    REQUIRED_SLOTS,
+    get_slot_instructions,
+    required_slots_for_type,
+    slot_instructions_for_type,
+    tail_allowed_slots_for_type,
+)
+from src.contracts.templates import get_template, list_contract_types
+from src.eval.errors import NotFoundError
+
+# Slots the skeleton seeder intentionally places in the trailing ``## 签署信息``
+# block. For these, ``tail_only`` is acceptable and does NOT fail the template.
+# Everything else in ``REQUIRED_SLOTS`` must appear in the body proper.
+TAIL_ALLOWED_SLOTS = ("sign_date", "sign_location")
+# Derived from REQUIRED_SLOTS so it can never drift from the canonical set.
+BODY_PROPER_SLOTS = tuple(s for s in REQUIRED_SLOTS if s not in TAIL_ALLOWED_SLOTS)
+
+# The trailing block heading written by ``normalize_body`` / the skeleton seeder.
+_SIGNING_SECTION_RE = re.compile(r"^##\s*签署信息", re.M)
+
+
+@dataclass
+class TemplateAudit:
+    """Slot-coverage result for a single contract 母版."""
+
+    key: str
+    zh: str
+    status: str  # "pass" | "fail"
+    coverage: float  # present body-proper slots / total body-proper slots
+    present: list[str] = field(default_factory=list)
+    tail_only: list[str] = field(default_factory=list)
+    missing: list[str] = field(default_factory=list)
+    extra_slots: list[str] = field(default_factory=list)
+    orphan_instructions: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "key": self.key,
+            "zh": self.zh,
+            "status": self.status,
+            "coverage": round(self.coverage, 4),
+            "present": self.present,
+            "tail_only": self.tail_only,
+            "missing": self.missing,
+            "extra_slots": self.extra_slots,
+            "orphan_instructions": self.orphan_instructions,
+        }
+
+
+@dataclass
+class AuditReport:
+    """Aggregate audit over every contract class in the registry."""
+
+    templates: list[TemplateAudit] = field(default_factory=list)
+    aggregate: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return {
+            "templates": [t.to_dict() for t in self.templates],
+            "aggregate": self.aggregate,
+        }
+
+
+def _split_body(body: str) -> tuple[set[str], set[str]]:
+    """Return ``(head_slots, tail_slots)`` split at the ``## 签署信息`` heading.
+
+    When the heading is absent the whole body is treated as head (no tail) -
+    a safe default that still flags truly missing slots.
+    """
+    m = _SIGNING_SECTION_RE.search(body)
+    if m is None:
+        return set(SLOT_PATTERN.findall(body)), set()
+    return (
+        set(SLOT_PATTERN.findall(body[: m.start()])),
+        set(SLOT_PATTERN.findall(body[m.start():])),
+    )
+
+
+def audit_body(
+    body: str,
+    slot_instructions: list[dict],
+    *,
+    key: str = "",
+    zh: str = "",
+    required: tuple[str, ...] | list[str] | None = None,
+    tail_allowed: tuple[str, ...] | list[str] | None = None,
+) -> TemplateAudit:
+    """Audit an arbitrary contract body for slot completeness.
+
+    ``slot_instructions`` is the template's ``[{name, label, ...}]`` manifest,
+    used only to compute ``extra_slots`` and ``orphan_instructions``.
+
+    ``required`` / ``tail_allowed`` override the universal Latin
+    :data:`REQUIRED_SLOTS` / :data:`TAIL_ALLOWED_SLOTS` so a per-type Chinese
+    skeleton (regenerated by ``generate_contract_templates_llm.py``, mode G)
+    is audited against its own slot set. When omitted the Latin universal set
+    is used, keeping the legacy Latin skeleton audit green across the
+    Latin->Chinese migration.
+    """
+    req = tuple(required) if required is not None else REQUIRED_SLOTS
+    tail_ok = set(tail_allowed) if tail_allowed is not None else set(TAIL_ALLOWED_SLOTS)
+    body_proper = tuple(s for s in req if s not in tail_ok)
+
+    head, tail = _split_body(body)
+    instr_names = {si["name"] for si in slot_instructions}
+    body_slots = head | tail
+
+    present: list[str] = []
+    tail_only: list[str] = []
+    missing: list[str] = []
+    for slot in req:
+        if slot in head:
+            present.append(slot)
+        elif slot in tail:
+            tail_only.append(slot)
+        else:
+            missing.append(slot)
+
+    extra_slots = sorted(body_slots - instr_names)
+    orphan_instructions = sorted(instr_names - body_slots)
+
+    # A template fails iff a body-proper required slot is missing or only in the
+    # 签署信息 tail. Tail-allowed slots (sign_date/sign_location, or their
+    # per-type 签署日期/签署地点 bridge) never fail.
+    failing = any(s in missing or s in tail_only for s in body_proper)
+    present_body_proper = sum(1 for s in body_proper if s in head)
+    coverage = present_body_proper / len(body_proper) if body_proper else 1.0
+
+    return TemplateAudit(
+        key=key,
+        zh=zh,
+        status="fail" if failing else "pass",
+        coverage=coverage,
+        present=present,
+        tail_only=tail_only,
+        missing=missing,
+        extra_slots=extra_slots,
+        orphan_instructions=orphan_instructions,
+    )
+
+
+def audit_template(contract_type: str) -> TemplateAudit:
+    """Audit the registered template for ``contract_type``.
+
+    Uses the per-type Chinese slot set (from the masters manifest) when the
+    skeleton has been regenerated Chinese (mode G) — detected by the body
+    actually carrying per-type slot tokens — and falls back to the universal
+    Latin set for the legacy Latin skeleton, so the audit stays green across
+    the Latin->Chinese migration. Raises :class:`NotFoundError` for an
+    unknown type (delegated to :func:`get_template`).
+    """
+    tmpl = get_template(contract_type)
+    body = tmpl["body"]
+    per_type = required_slots_for_type(contract_type)
+    body_slots = set(SLOT_PATTERN.findall(body))
+    has_manifest = bool(per_type) and per_type != list(REQUIRED_SLOTS)
+    if has_manifest and (set(per_type) & body_slots):
+        # Chinese skeleton: audit against its per-type slot set + instructions.
+        return audit_body(
+            body,
+            slot_instructions_for_type(contract_type, tmpl["zh_name"]),
+            key=tmpl["type"],
+            zh=tmpl["zh_name"],
+            required=per_type,
+            tail_allowed=tail_allowed_slots_for_type(contract_type),
+        )
+    # Legacy Latin skeleton (or no per-type manifest): universal Latin set.
+    return audit_body(
+        body,
+        get_slot_instructions(contract_type),
+        key=tmpl["type"],
+        zh=tmpl["zh_name"],
+    )
+
+
+def build_aggregate(templates: list[TemplateAudit]) -> dict:
+    """Compute the aggregate summary over a list of per-template audits.
+
+    ``by_slot`` counts, for every slot seen missing across the templates, how
+    many templates missed it. This is union-based (not keyed to a fixed Latin
+    set) so it stays meaningful once skeletons migrate to per-type Chinese
+    slots whose names are not in :data:`REQUIRED_SLOTS`.
+    """
+    failing = [t.key for t in templates if t.status == "fail"]
+    all_missing: set[str] = set()
+    for t in templates:
+        all_missing.update(t.missing)
+    by_slot = {s: sum(1 for t in templates if s in t.missing) for s in sorted(all_missing)}
+    return {
+        "total": len(templates),
+        "passed": len(templates) - len(failing),
+        "failed": len(failing),
+        "failing_templates": failing,
+        "by_slot": by_slot,
+    }
+
+
+def audit_all() -> AuditReport:
+    """Audit every registered contract 母版.
+
+    Types listed in :func:`list_contract_types` that have no registered template
+    are recorded in ``aggregate["missing_templates"]`` (not counted as failures)
+    so catalog/registry drift is surfaced without crashing the audit.
+    """
+    templates: list[TemplateAudit] = []
+    missing_templates: list[str] = []
+    for t in list_contract_types():
+        try:
+            templates.append(audit_template(t["key"]))
+        except NotFoundError:
+            missing_templates.append(t["key"])
+    aggregate = build_aggregate(templates)
+    aggregate["missing_templates"] = missing_templates
+    return AuditReport(templates=templates, aggregate=aggregate)

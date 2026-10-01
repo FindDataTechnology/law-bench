@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ tr('clauses.new_h1', name=zh) }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ tr('clauses.new_h1', name=zh) }}</h1>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_clauses_detail', contract_type=contract_type) }}">{{ t.clauses.back }}</a>
+</div>
+<p class="muted">{{ tr('clauses.new_hint', type=contract_type)|safe }}</p>
+
+<form method="post" action="{{ url_for('page_clauses_new', contract_type=contract_type) }}" class="panel">
+  <p>
+    <label>{{ t.clauses.section }}</label>
+    <input type="text" name="section" value="附则" required style="width:12em">
+    <span class="muted small">{{ t.clauses.section_hint }}</span>
+  </p>
+  <p>
+    <label>{{ t.clauses.category }}</label>
+    <select name="category">
+      {% for c in categories %}
+      <option value="{{ c }}" {% if c == 'custom' %}selected{% endif %}>{{ category_zh[c] }}（{{ c }}）</option>
+      {% endfor %}
+    </select>
+    <span class="muted small">{{ t.clauses.category_hint }}</span>
+  </p>
+  <p>
+    <label>{{ t.clauses.body }}</label>
+    <textarea name="body" rows="12" style="width:100%" placeholder="{{ t.clauses.body_ph }}" required></textarea>
+  </p>
+  <p>
+    <label>{{ t.clauses.tags }}</label>
+    <span class="inline">
+      {% for dim in tag_filters %}
+      <select name="{{ dim }}" style="width:9em">
+        <option value="">{{ dim }}{{ t.clauses.untagged }}</option>
+        {% for v in tag_vocab[dim] %}<option value="{{ v }}">{{ v }}</option>{% endfor %}
+      </select>
+      {% endfor %}
+    </span>
+    <span class="muted small">{{ t.clauses.tags_hint }}</span>
+  </p>
+  <button type="submit" class="btn">{{ t.clauses.create }}</button>
+</form>
+{% endblock %}

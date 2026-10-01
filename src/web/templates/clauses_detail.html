@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ tr('clauses.clauses_of', name=zh) }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+{% if not_found %}
+<div class="toolbar between"><h1>{{ t.clauses.not_found_h1 }}</h1></div>
+<p class="muted">{{ t.clauses.unknown_type }} <code>{{ contract_type }}</code>。</p>
+{% else %}
+<div class="toolbar between">
+  <h1>{{ tr('clauses.clauses_of', name=zh) }}</h1>
+  <div class="inline">
+    <a class="btn btn-sm" href="{{ url_for('page_clauses_new', contract_type=contract_type) }}">{{ t.clauses.new_custom }}</a>
+    <a class="btn btn-sm btn-ghost" href="{{ url_for('page_clauses') }}">{{ t.clauses.back_lib }}</a>
+  </div>
+</div>
+<p class="muted">{{ tr('clauses.detail_intro', type=contract_type, n=grouped|length)|safe }}</p>
+
+{% if flash %}
+<div class="flash" role="status">{{ flash }}</div>
+{% endif %}
+
+<form method="get" class="inline" style="margin:0 0 1em">
+  <label class="muted">{{ t.clauses.filter }}</label>
+  <input type="text" name="q" value="{{ q }}" placeholder="{{ t.clauses.filter_ph }}" style="width:14em">
+  <select name="scenario">
+    <option value="">{{ t.clauses.all_scenarios }}</option>
+    {% for p in scenarios %}
+    <option value="{{ p }}" {% if p == scenario_filter %}selected{% endif %}>{{ p }}</option>
+    {% endfor %}
+  </select>
+  <select name="category">
+    <option value="">{{ t.clauses.all_categories }}</option>
+    {% for c in ['base','tagged','custom'] %}
+    <option value="{{ c }}" {% if c == category_filter %}selected{% endif %}>{{ c }}</option>
+    {% endfor %}
+  </select>
+  <select name="stance" style="width:9em">
+    <option value="">{{ t.clauses.all_stances }}</option>
+    {% for v in tag_vocab.stance %}<option value="{{ v }}" {% if active_tags.get('stance') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}
+  </select>
+  <button type="submit" class="btn btn-sm btn-ghost">{{ t.clauses.filter }}</button>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_clauses_detail', contract_type=contract_type) }}">{{ t.clauses.reset }}</a>
+</form>
+
+{% for g in grouped %}
+<div class="panel">
+  <h2 style="margin-top:0">{{ g.section }}</h2>
+  {% for c in g.clauses %}
+  <details {% if loop.first %}open{% endif %}>
+    <summary>
+      {{ c.category }}{% if c.tags.scenario %} · {{ c.tags.scenario }}{% endif %}
+      · {{ tr('clauses.laws_slots', laws=c.law_refs|length, slots=c.slot_instructions|length) }}
+      {% for d, v in c.tags.items() %} <code>{{ d }}={{ v }}</code>{% endfor %}
+      {% if c.manual %} <span class="badge local">manual</span>{% endif %}
+      <span class="inline" style="margin-left:1em">
+        <a href="{{ url_for('page_clauses_edit', contract_type=contract_type, clause_id=c.id) }}">{{ t.clauses.edit }}</a>
+      </span>
+    </summary>
+    <div class="muted small">{{ t.clauses.source }}{{ c.source_doc_title or c.source_path or t.clauses.source_custom }} · #{{ c.id }}</div>
+    <div>{{ c.body_html }}</div>
+    <form method="post" action="{{ url_for('page_clauses_delete', contract_type=contract_type, clause_id=c.id) }}" class="inline" data-confirm="{{ t.clauses.delete_confirm }}">
+      <button type="submit" class="btn btn-sm btn-ghost">{{ t.clauses.delete }}</button>
+    </form>
+    {% if c.slot_instructions %}
+    <div class="muted small">{{ t.clauses.slots_prefix }}
+      {% for s in c.slot_instructions %}<code>{{ s.name }}</code>{% if not loop.last %}{{ t.clauses.sep }}{% endif %}{% endfor %}
+    </div>
+    {% endif %}
+  </details>
+  {% endfor %}
+</div>
+{% else %}
+<div class="panel muted">{{ t.clauses.empty_detail|safe }}</div>
+{% endfor %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,87 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# transport consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: transport
+tags:
+  - name: transport_mode
+    values: [公路, 铁路, 水路, 航空, 多式联运]
+    why: 不同运输方式适用法律体系不同（如《民法典》运输合同章 vs《海商法》），直接影响管辖法院、归责原则及赔偿限额标准，通用4维无法表达法律适用差异
+  - name: declared_value_status
+    values: [未保价, 已保价, 按重量计]
+    why: 直接决定货损赔偿的计算基数（市场价 vs 声明价值 vs 重量限额），是运输合同特有的责任限制核心依据；通用"价款"仅指运费，不涉及货物本身价值的申报机制
+  - name: special_cargo_qualification
+    values: [普通, 危险品, 冷链, 超大件]
+    why: 涉及强制性行政许可与操作规范，承运人需具备特定资质方可承接，否则合同可能无效或违法；通用"强度"无法量化法定合规门槛
+clauses:
+  - family: 危险品申报义务
+    section: 权利义务
+    body: >
+      托运人托运{{dangerous_goods_category}}等危险物品的，应当按照国家有关危险物品运输的规定对危险物品妥善包装，做出危险物品标志和标签，并将有关名称、性质及防范措施书面通知承运人。托运人未如实申报的，承运人可在任何时间、地点将货物卸下、销毁或使之不能为害，由此产生的费用由托运人负担，承运人不承担赔偿责任。
+      （《中华人民共和国民法典》第八百二十八条）
+    slot_instructions:
+      - name: dangerous_goods_category
+        label: 危险品类别
+        description: 托运的危险物品的具体类别名称
+        example: "易燃液体"
+        required: true
+    stance: pro_b
+    strength: strong
+    why: 通用模板常忽略"通知义务"的具体形式及"擅自处置免责"的法律后果，易引发纠纷；赋予承运人单方处置权与免责，属强风险分配条款
+    verdict: real
+  - family: 未保价货损赔偿限额
+    section: 违约责任
+    body: >
+      货物在运输过程中因不可抗力、货物本身的自然性质或者合理损耗以及托运人、收货人的过错造成毁损、灭失的，承运人不承担赔偿责任。货物毁损、灭失的赔偿额，当事人有约定的按照约定；未约定且未办理保价运输的，按照交付或者应当交付时货物到达地的市场价格计算，但承运人赔偿总额最高不超过运费的{{liability_cap_multiple}}倍（双方另有约定的从其约定）。
+      （《中华人民共和国民法典》第八百三十二条、第八百三十三条）
+    slot_instructions:
+      - name: liability_cap_multiple
+        label: 赔偿限额倍数
+        description: 承运人赔偿总额不超过运费的倍数
+        example: "3"
+        required: true
+    stance: pro_b
+    strength: strong
+    why: 示范文本常笼统写"依法赔偿"，未明确《民法典》第833条关于限额的具体触发条件，导致索赔预期模糊；以运费倍数硬性封顶承运人责任，属关键责任限制条款
+    verdict: real
+  - family: 收货人逾期提货处置
+    section: 价款及支付
+    body: >
+      收货人收到提货通知后未在{{pickup_period}}期限内提货的，承运人有权按照{{storage_fee_rate}}收取保管费；超过{{retention_period}}仍不提货且无法联系的，承运人可依法提存货物或拍卖、变卖，所得价款扣除运费、保管费等费用后退还托运人。
+      （《中华人民共和国民法典》第八百三十五条、第八百三十六条）
+    slot_instructions:
+      - name: pickup_period
+        label: 提货期限
+        description: 收货人收到提货通知后应提货的期限
+        example: "7日"
+        required: true
+      - name: storage_fee_rate
+        label: 保管费费率
+        description: 逾期提货期间承运人收取保管费的费率标准
+        example: "每日50元"
+        required: true
+      - name: retention_period
+        label: 滞留处置期限
+        description: 超过该期限仍不提货且无法联系时承运人可处置货物的期限
+        example: "30日"
+        required: true
+    stance: pro_b
+    strength: standard
+    why: 通用模板多关注"交付"，常遗漏"无人提货"时的费用承担及处置权，易产生滞留费争议
+    verdict: real
+  - family: 中途停运请求权
+    section: 权利义务
+    body: >
+      在承运人将货物交付收货人之前，托运人可以要求承运人中止运输、返还货物、变更到达地或者将货物交给其他收货人，但应当赔偿承运人因此受到的损失。
+      （《中华人民共和国民法典》第八百二十九条）
+    stance: pro_a
+    strength: standard
+    why: 此为运输合同特有的托运人单方变更权，通用模板极少包含其行使规则与补偿义务
+    verdict: real
+skipped:
+  - item: 不可抗力条款
+    reason: 属于通用基础条款，已在「违约责任」或「附则」base 中覆盖，无需重复定制
+  - item: 保密义务
+    reason: 属于商业合同通用条款，非运输行业特有核心风险点，归入通用标签层即可
+  - item: 争议解决管辖
+    reason: 已在「争议解决」base 章节统一配置，运输合同无特殊地域管辖强制要求（除海事外），无需单独拆分
+  - item: 车辆/船舶所有权保证
+    reason: 属于「当事人」资质审查范畴，通常通过附件资质文件体现，不宜作为主合同正文冗长条款

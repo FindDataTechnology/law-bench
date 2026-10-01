@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ t.clauses.review_h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.clauses.review_h1 }}</h1>
+  <a class="btn btn-sm btn-ghost" href="{{ url_for('page_clauses') }}">{{ t.clauses.back_lib }}</a>
+</div>
+<p class="muted">{{ t.clauses.review_intro }}</p>
+
+{% for c in pending %}
+<div class="panel">
+  <h3 style="margin-top:0">{{ zh.get(c.contract_type, c.contract_type) }} · {{ c.section }} · #{{ c.id }}</h3>
+  <div class="muted small">{{ c.body[:150] }}…</div>
+  <p>{{ t.clauses.tags_label }}
+    {% for dim, val in c.tags.items() %}
+      <code>{{ dim }}={{ val }}</code>
+      {% set st = c.tag_review.get(dim, '—') %}
+      <span class="muted small">({{ st }})</span>
+    {% endfor %}
+  </p>
+  <div class="inline">
+    <form method="post" action="{{ url_for('page_clauses_review_tag_route', contract_type=c.contract_type, clause_id=c.id) }}" class="inline">
+      <select name="dim" style="width:10em">
+        {% for dim in c.tags %}<option value="{{ dim }}">{{ dim }}</option>{% endfor %}
+      </select>
+      <select name="status" style="width:7em">
+        <option value="approved">{{ t.clauses.approve }}</option>
+        <option value="rejected">{{ t.clauses.reject }}</option>
+        <option value="pending">{{ t.clauses.reset_pending }}</option>
+      </select>
+      <button type="submit" class="btn btn-sm">{{ t.clauses.review_btn }}</button>
+    </form>
+    <form method="post" action="{{ url_for('page_clauses_review_all_route', contract_type=c.contract_type, clause_id=c.id) }}" class="inline">
+      <button type="submit" name="status" value="approved" class="btn btn-sm">{{ t.clauses.approve_all }}</button>
+    </form>
+    <a href="{{ url_for('page_clauses_edit', contract_type=c.contract_type, clause_id=c.id) }}">{{ t.clauses.edit }}</a>
+  </div>
+</div>
+{% else %}
+<p class="muted">{{ t.clauses.review_empty }}</p>
+{% endfor %}
+{% endblock %}

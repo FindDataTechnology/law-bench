@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}{{ t.dashboard.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<h1>{{ t.dashboard.h1 }}</h1>
+<p class="hint">{{ t.dashboard.source_hint }}</p>
+
+<!-- Overall Stats -->
+<section class="stats-overview">
+  <h2>{{ t.dashboard.overview }}</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <span class="stat-value">{{ overall.total_runs if overall else 0 }}</span>
+      <span class="stat-label">{{ t.dashboard.stat_runs }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ total_types }}</span>
+      <span class="stat-label">{{ t.dashboard.stat_types }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ "%.1f"|format((overall.avg_pass_rate or 0) * 100) }}%</span>
+      <span class="stat-label">{{ t.dashboard.stat_avg_pass }}</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-value">{{ overall.all_pass_count if overall else 0 }}</span>
+      <span class="stat-label">{{ t.dashboard.stat_all_pass }}</span>
+    </div>
+  </div>
+</section>
+
+<!-- Version Comparison -->
+{% if version_comparison %}
+<section class="version-comparison">
+  <h2>{{ t.dashboard.version_comparison }}</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.dashboard.col_version }}</th>
+        <th>{{ t.dashboard.col_runs }}</th>
+        <th>{{ t.dashboard.col_avg_pass }}</th>
+        <th>{{ t.dashboard.col_all_pass }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in version_comparison %}
+      <tr>
+        <td><strong>{{ v.rubric_version }}</strong></td>
+        <td>{{ v.run_count }}</td>
+        <td>{{ "%.1f"|format((v.avg_pass_rate or 0) * 100) }}%</td>
+        <td>{{ v.all_pass_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<!-- Per-Type Breakdown -->
+<section class="by-type">
+  <h2>{{ t.dashboard.by_type }}</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.dashboard.col_type }}</th>
+        <th>{{ t.dashboard.col_rubric }}</th>
+        <th>{{ t.dashboard.col_pass_rate }}</th>
+        <th>{{ t.dashboard.col_passed_total }}</th>
+        <th>{{ t.dashboard.col_iterations }}</th>
+        <th>{{ t.dashboard.col_all_pass }}</th>
+        <th>{{ t.dashboard.col_time }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in by_type %}
+      <tr class="{{ 'pass-row' if r.all_pass else ('high-pass' if (r.pass_pct or 0) >= 80 else ('mid-pass' if (r.pass_pct or 0) >= 50 else 'low-pass')) }}">
+        <td><strong>{{ r.zh_name }}</strong><br><span class="muted">{{ r.contract_type }}</span></td>
+        <td>{{ r.rubric_zh }}</td>
+        <td>
+          <div class="pass-bar">
+            <div class="pass-bar-fill" style="width: {{ r.pass_pct or 0 }}%"></div>
+            <span class="pass-bar-text">{{ r.pass_pct or 0 }}%</span>
+          </div>
+        </td>
+        <td>{{ r.n_passed }}/{{ r.n_criteria }}</td>
+        <td>{{ r.iteration }}</td>
+        <td>{{ '✓' if r.all_pass else '✗' }}</td>
+        <td>{{ r.local_time }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-row">{{ t.dashboard.empty_by_type }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- Recent Runs -->
+<section class="recent-runs">
+  <h2>{{ t.dashboard.recent_runs }}</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>{{ t.dashboard.col_type }}</th>
+        <th>{{ t.dashboard.col_rubric }}</th>
+        <th>{{ t.dashboard.col_passed }}</th>
+        <th>{{ t.dashboard.col_all_pass }}</th>
+        <th>{{ t.dashboard.col_iterations }}</th>
+        <th>{{ t.dashboard.col_time }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in recent %}
+      <tr>
+        <td>{{ r.id }}</td>
+        <td>{{ r.zh_name }}<br><span class="muted">{{ r.contract_type }}</span></td>
+        <td>{{ r.rubric_zh }}</td>
+        <td>{{ r.n_passed }}/{{ r.n_criteria }}</td>
+        <td>{{ '✓' if r.all_pass else '✗' }}</td>
+        <td>{{ r.iteration }}</td>
+        <td>{{ r.local_time }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="empty-row">{{ t.dashboard.empty_recent }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<style>
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.stat-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+}
+.stat-value {
+  display: block;
+  font-size: 2em;
+  font-weight: 700;
+  color: var(--accent);
+}
+.stat-label {
+  display: block;
+  font-size: 0.85em;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+.muted { color: var(--muted); font-size: 0.78rem; }
+/* Ordinary data tables: row rules only — full ruling is reserved for the
+   verdict matrix per DESIGN.md. */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+  font-size: 0.9em;
+}
+.data-table th { background: #f5f7fa; font-weight: 700; }
+/* Status rows speak in the verdict tint family, by meaning: all-pass = pass
+   tint, high = no fill, mid = rate tint (partial), low = fail tint (weak). */
+.pass-row { background: #ecfdf5; }
+.mid-pass { background: #eff6ff; }
+.low-pass { background: #fef2f2; }
+.pass-bar {
+  position: relative;
+  width: 7.5rem;
+  height: 1.25rem;
+  background: #f5f7fa;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.pass-bar-fill {
+  height: 100%;
+  background: var(--accent);
+}
+.pass-bar-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.25rem;
+  color: var(--text);
+  font-weight: 600;
+}
+.empty-row { text-align: center; color: var(--muted); padding: 1rem 0.6rem; }
+section { margin-bottom: 2rem; }
+h2 { border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+</style>
+{% endblock %}

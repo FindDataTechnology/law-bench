@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav.compare }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.h1.prompt_compares }}</h1>
+  {% if has_scope('content:write') %}<a class="btn btn-primary" href="{{ url_for('page_new_compare') }}">{{ t.btn.new_compare }}</a>{% endif %}
+</div>
+
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t.col.num }}</th>
+        <th>{{ t.col.label }}</th>
+        <th>{{ t.col.contract_type }}</th>
+        <th>{{ t.col.rubric }}</th>
+        <th>{{ t.col.mode }}</th>
+        <th>{{ t.col.n }}</th>
+        <th>{{ t.col.created }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in compares %}
+      <tr>
+        <td><a href="{{ url_for('page_compare_detail', compare_id=c.id) }}"><strong>#{{ c.id }}</strong></a></td>
+        <td>{{ c.label or '-' }}
+          {% if c.task_desc %}<div class="muted">{{ c.task_desc[:80] }}{% if c.task_desc|length > 80 %}…{% endif %}</div>{% endif %}
+        </td>
+        <td><code>{{ label_for('contract_type', c.contract_type or '-') }}</code></td>
+        <td><code>{{ title_for_rubric(c.rubric_name or '-') }}</code></td>
+        <td><code>{{ label_for('mode', c.gen_mode or '-') }}</code></td>
+        <td>{{ c.n_drafts or 0 }}</td>
+        <td class="muted">{{ c.created_at }}</td>
+      </tr>
+      {% endfor %}
+      {% if not compares %}
+      <tr><td colspan="7" class="muted">{{ t.empty.compares }}
+        {% if has_scope('content:write') %}<a href="{{ url_for('page_new_compare') }}">{{ t.btn.new_compare }}</a>{{ t.empty.compares_suffix }}{% endif %}
+      </td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<p class="hint">{{ t.hint.compare_list|safe }}</p>
+{% endblock %}

@@ -1,0 +1,81 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# sale (买卖合同) consulted Kimi 2026-07-30; mirrors employment.yaml format.
+# Convention for stance: 甲方 = 出卖人 (seller); pro_a favors the seller, pro_b the buyer.
+contract_type: sale
+tags:
+  - name: risk_transfer_node
+    values: [on_delivery, at_port_of_shipment, at_destination, delivered_to_carrier]
+    why: 买卖合同核心在于"交付"导致风险从卖方移转至买方，需精确界定物理节点；租赁合同风险随占有转移、服务合同无实物风险，通用Risk标签仅标记有无风险，无法区分风险在发货还是收货时转移
+  - name: quality_objection_type
+    values: [appearance_defect, hidden_defect, performance_failure]
+    why: 仅买卖合同存在法定的短期检验期与长期质量保证期之分，及"怠于通知视为合格"的除斥期间法律后果；其他合同多为服务成果验收，无此机制，通用Risk无法体现程序性法律后果
+  - name: retention_of_title_status
+    values: [unregistered, registered, not_applicable]
+    why: 仅买卖合同涉及"先交货后付款"场景下的物权保留作为非典型担保；租赁物所有权始终归出租人，通用Mandatory或Strength无法体现该条款对抗第三人的特殊效力层级
+clauses:
+  - family: 风险转移特别约定
+    section: 权利义务
+    body: >
+      标的物毁损、灭失的风险，在标的物{{delivery_point}}之前由出卖人承担，之后由买受人承担。双方另有约定的除外（参见《民法典》第604条）。
+    stance: balanced
+    strength: standard
+    why: 示范文本常仅写"交付后风险转移"，但在国际贸易或特定物流条款下（如FOB）风险转移点可能早于实际交付，需明确约定物理节点
+    verdict: real
+    slot_instructions:
+      - name: delivery_point
+        label: 交付节点
+        description: 标的物风险转移的物理节点，如"买受人签收时""货物到达目的地时"等
+        example: 买受人签收时
+        required: true
+  - family: 隐蔽瑕疵异议期
+    section: 合同标的
+    body: >
+      买受人应当在收到标的物之日起{{inspection_days}}日内完成检验；发现隐蔽瑕疵的，应在发现后{{notice_days}}日内书面通知出卖人。怠于通知的，视为标的物数量或质量符合约定（参见《民法典》第621条）。
+    stance: pro_a
+    strength: strong
+    why: 示范文本常省略"怠于通知视为合格"的后果，导致买方丧失索赔权；此为买卖特有的除斥期间条款，非通用验收标准
+    verdict: real
+    slot_instructions:
+      - name: inspection_days
+        label: 检验期限
+        description: 买受人收到标的物后完成检验的日数
+        example: "7"
+        required: true
+      - name: notice_days
+        label: 瑕疵通知期限
+        description: 发现隐蔽瑕疵后书面通知出卖人的日数
+        example: "3"
+        required: true
+  - family: 权利瑕疵担保承诺
+    section: 权利义务
+    body: >
+      出卖人保证对标的物享有完整的所有权，且未设置任何抵押、质押。若因第三人主张权利致使买受人无法使用，出卖人应赔偿全部损失（参见《民法典》第612条）。
+    stance: pro_b
+    strength: standard
+    why: 简易模板常忽略第三方权利排查（如二手设备被抵押），此条款是保障交易安全的核心，非单纯履约义务
+    verdict: real
+  - family: 所有权保留登记提示
+    section: 价款及支付
+    body: >
+      本合同采取所有权保留方式。出卖人应在{{system_name}}办理动产担保登记，否则不得对抗善意第三人。买受人付清全款前，所有权仍归出卖人（参见《民法典》第641条）。
+    stance: pro_a
+    strength: standard
+    why: 信用销售模板常遗漏"登记对抗效力"提示；若不登记，买方转卖时卖方可能失去追索权，属买卖特有融资风控点
+    verdict: real
+    slot_instructions:
+      - name: system_name
+        label: 登记系统名称
+        description: 办理动产担保登记的系统名称，通常为中国人民银行征信中心动产融资统一登记公示系统
+        example: 中国人民银行征信中心动产融资统一登记公示系统
+        required: true
+skipped:
+  - item: 不可抗力条款
+    reason: 通用条款，适用于租赁、服务、承揽等所有合同类型，非买卖合同特有
+  - item: 保密义务条款
+    reason: 通用商业条款，不涉及买卖合同的物权转移或货物特性，附则已覆盖
+  - item: 送达地址确认书
+    reason: 通用程序性条款，用于诉讼文书送达，非买卖合同实体权利义务特有
+  - item: 违约金计算方式
+    reason: base「违约责任」章节已覆盖，重复抽取会导致知识库冗余
+  - item: 争议解决管辖
+    reason: base「争议解决」章节已覆盖，属通用配置项

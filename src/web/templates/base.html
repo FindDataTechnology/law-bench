@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ t.nav.brand }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('page_list_rubrics') }}">{{ t.nav.brand }}</a>
+    <nav>
+      {% if has_scope('content:read') %}
+      {% set nav_items = [
+        (url_for('page_list_rubrics'), '/rubrics', t.nav.rubrics),
+        (url_for('page_list_prompts'), '/prompts', t.nav.prompts),
+        (url_for('page_list_compares'), '/compare', t.nav.compare),
+        (url_for('page_law_info'), '/law-info', t.nav.law_info),
+        (url_for('page_law_references'), '/law-references', t.nav.law_references),
+        (url_for('page_contracts'), '/contracts', t.nav.contracts),
+        (url_for('page_samples'), '/samples', t.nav.samples),
+        (url_for('page_clauses'), '/clauses', t.nav.clauses),
+        ('/dashboard', '/dashboard', t.nav.dashboard),
+        (url_for('page_review'), '/review', t.nav.review),
+        (url_for('page_search'), '/search', t.nav.search),
+      ] %}
+      {% set current_path = request.url.path %}
+      {% for href, prefix, label in nav_items %}
+      <a href="{{ href }}"{% if current_path.startswith(prefix) %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
+      {% endif %}
+      <span class="lang-switch">
+        <a href="{{ request.url.path }}?lang=en"{% if lang == 'en' %} aria-current="true"{% endif %}>{{ t.switch.en }}</a>
+        <span class="muted">|</span>
+        <a href="{{ request.url.path }}?lang=zh"{% if lang == 'zh' %} aria-current="true"{% endif %}>{{ t.switch.zh }}</a>
+      </span>
+      {% if user and user.sub %}
+      <span class="identity">
+        <span class="muted">{{ t.auth.signed_in_as }}</span>
+        <span class="identity-name">{{ user.name or user.email or user.sub }}</span>
+        <a href="/auth/logout">{{ t.auth.logout }}</a>
+      </span>
+      {% else %}
+      <span class="identity">
+        <a href="/auth/login">{{ t.auth.login }}</a>
+      </span>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="container">
+    {% if request.query_params.get('msg') %}
+      <div class="flash {{ 'error' if request.query_params.get('err') else 'ok' }}" role="{{ 'alert' if request.query_params.get('err') else 'status' }}">
+        {{ tr(request.query_params.get('msg'), name=request.query_params.get('name') or '', detail=request.query_params.get('detail') or '') }}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <script>window.__LOCALE__ = {{ t_json|safe }}; window.__LABELS__ = {{ labels_json|safe }}; window.__LANG__ = "{{ lang }}";</script>
+  <script src="{{ url_for('static', path='app.js') }}"></script>
+  {% if assistant_enabled %}
+  {# Admin assistant (change add-admin-copilot-assistant): floating CopilotKit
+     chat island. The script self-mounts on #lawbench-assistant-root and talks
+     to the same-origin /copilotkit proxy (admin-scope enforced server-side —
+     this include is UX only, never the enforcement). #}
+  <link rel="stylesheet" href="{{ url_for('static', path='assistant/style.css') }}">
+  <div id="lawbench-assistant-root"></div>
+  <script type="module" src="{{ url_for('static', path='assistant/assistant.js') }}"></script>
+  {% endif %}
+  {% block scripts %}{% endblock %}
+<!-- impeccable-live-start -->
+<script src="http://localhost:8400/live.js?token=7412bfa7-231e-48a1-be56-02135326050e"></script>
+<!-- impeccable-live-end -->
+</body>
+</html>

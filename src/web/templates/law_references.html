@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ t.law_info.references_h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.law_info.references_h1 }}</h1>
+</div>
+<p class="muted">{{ t.law_info.references_hint }}</p>
+
+<form method="get" action="{{ url_for('page_law_references') }}" class="toolbar">
+  <label>{{ t.law_info.filter_source }}:
+    <select name="source" onchange="this.form.submit()">
+      <option value="">{{ t.law_info.all }}</option>
+      <option value="doubao" {% if source_filter == 'doubao' %}selected{% endif %}>Doubao</option>
+      <option value="deepseek" {% if source_filter == 'deepseek' %}selected{% endif %}>DeepSeek</option>
+    </select>
+  </label>
+  <label>{{ t.law_info.filter_type }}:
+    <select name="contract_type" onchange="this.form.submit()">
+      <option value="">{{ t.law_info.all }}</option>
+      {% for tk in all_types %}
+      <option value="{{ tk }}" {% if type_filter == tk %}selected{% endif %}>{{ tk }}</option>
+      {% endfor %}
+    </select>
+  </label>
+</form>
+
+<p class="muted">{{ total }} · {{ t.law_info.appears_in }}</p>
+
+{% for group in grouped %}
+<div class="panel">
+  <h2>{{ group.refs[0].category_zh }} · {{ group.category }} <span class="muted">({{ group.refs|length }})</span></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>{{ t.law_info.name }}</th>
+        <th>{{ t.law_info.appears_in }}</th>
+        <th>{{ t.col.source }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in group.refs %}
+      <tr>
+        <td><strong>{{ r.name }}</strong></td>
+        <td>{{ r.contract_types|length }} {{ t.law_info.types_unit }}
+          <div class="muted">{{ r.contract_types|join(', ') }}</div>
+        </td>
+        <td>
+          {% for s in r.sources %}<span class="badge">{{ s }}</span> {% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% endblock %}

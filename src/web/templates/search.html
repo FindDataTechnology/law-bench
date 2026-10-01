@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}{{ t.search.h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<h1>{{ t.search.h1 }}</h1>
+<p class="muted">{{ t.search.intro }}</p>
+<form method="get" action="{{ url_for('page_search') }}" class="search-form">
+  <input type="text" name="q" value="{{ q }}" placeholder="{{ t.search.ph }}" autofocus
+         style="min-width:60%">
+  <button type="submit" class="btn">{{ t.search.submit }}</button>
+</form>
+
+{% if error %}
+  <div class="flash error">{{ t.search.backend_down }}: {{ error }}</div>
+{% elif q %}
+  <p class="muted">{{ tr('search.results', n=results|length) }}</p>
+  <ol class="search-results">
+  {% for r in results %}
+    <li>
+      <div class="src">
+        <code>{{ r.source_path }}</code>
+        {% if r.score is not none %}<span class="muted">(score {{ '%.3f'|format(r.score) }})</span>{% endif %}
+      </div>
+      <pre>{{ r.text }}</pre>
+    </li>
+  {% endfor %}
+  </ol>
+{% endif %}
+{% endblock %}

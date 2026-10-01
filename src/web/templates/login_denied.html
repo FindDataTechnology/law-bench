@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ t.auth.denied_title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <div class="panel denied">
+      <h1>{{ t.auth.denied_h1 }}</h1>
+      <p>{{ t.auth.denied_body }}</p>
+      {% if email %}<p class="muted">{{ t.auth.signed_in_as }} {{ email }}</p>{% endif %}
+      <p><a class="btn btn-primary" href="/auth/login">{{ t.auth.denied_login_again }}</a></p>
+    </div>
+  </main>
+</body>
+</html>

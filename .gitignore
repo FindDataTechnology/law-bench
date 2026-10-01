@@ -1,0 +1,127 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+.env.*
+!.env.example
+.venv/
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Project
+*.log
+output/
+# generated contract docx/pdf artifacts (regenerable via scripts/generate_all_types_stored.py,
+# also persisted to MinIO + the contract_artifacts DB table - never commit the local copies)
+output/contracts/
+
+# contract template LLM-draft cache (regenerable; contracts.json is committed)
+src/contracts/data/_llm_bodies/
+
+# clause extraction LLM cache (regenerable; re-run `python -m src.clauses extract`)
+src/clauses/data/_extracted/
+
+# finetune data-prep: generated material is regenerable from the warehouse
+# via scripts/finetune/extract_warehouse.py (run in-pod). Schemas (*.json)
+# and docs are source and ARE committed; generated JSONL is not.
+data/finetune/warehouse/
+data/finetune/opensource/*_index.json
+data/finetune/judge-c/*.jsonl
+data/finetune/drafter-a/*.jsonl
+data/finetune/manifests/*.jsonl
+# SFT-ready export (regenerable via scripts/finetune/export_sft_dataset.py all);
+# manifest.json IS tracked (small, stable, useful in PR review).
+data/finetune/sft/*.jsonl
+# trained LoRA adapters (324MB each — artifacts, not source; kept on the box)
+data/finetune/adapters/
+# pre-bump snapshot of judge_c_gold at conf>=0.6 (kept locally as a rollback point)
+data/finetune/judge-c/judge_c_gold.0.6.jsonl
+# review batches + manifest are regenerable via prepare_review_batches.py prepare;
+# review/done/ (human annotations) IS tracked — it is the source of truth for gold.
+data/finetune/review/inbox/
+data/finetune/review/manifest.json
+data/finetune/review/bootstrap_manifest.json
+
+# Local tooling / caches (not project source)
+.deepeval/
+.claude/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+**/.DS_Store
+
+# local MCP config (contains SSH creds)
+.mcp.json
+# local SSH connection config (plaintext passwords — never commit)
+ssh-config.json
+# real external business contracts (client-facing documents — never commit)
+/contracts/
+# unpublished paper manuscripts and figures (never commit)
+/paper/
+# local SSH exec helper (reads ssh-config.json; box access tooling, not source)
+scripts/_ssh_exec.py
+# root-level venv (has its own internal .gitignore with "*", but ignore by name too)
+list/
+# local agent tooling configs (.zcode/config.json references ssh-config.json)
+.zcode/
+.codex/
+# scratch window-tree dump
+testpsyautochrome_tree.txt
+# offline backup scratch (PG dumps, minio tgz, relay creds with plaintext passwords — never commit)
+.impeccable/
+# Windows NUL-redirect artifact
+nul
+# scratch/smoke-test scripts from finetune exploration sessions
+.firecrawl/
+fd-coding-law-bench-mcp/site/
+contract-review-agent/frontend/node_modules/
+contract-review-agent/.venv/
+contract-review-agent/frontend/.next/
+
+# box rescue + eval outputs (regenerable artifacts: eval jsonl, training logs, sft runs)
+data/finetune/box_rescue/
+data/finetune/eval_out/
+
+# cloned external contract-generator source (referenced by-path at runtime
+# via src/clauses/generator_import.py; not our code — never commit)
+contract-generator/
+
+# Node islands
+copilot-runtime/node_modules/
+assistant-ui/node_modules/
+
+# CopilotKit island build output (rebuilt by the image's node stage)
+src/web/static/assistant/
+
+# third-party impeccable skill content (CC BY-NC-ND — not redistributable;
+# kept locally for the operator's workflow, never committed)
+.agents/skills/impeccable/
+.github/skills/
+.github/agents/
+.github/hooks/

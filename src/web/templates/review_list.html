@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ t.review.h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.review.h1 }}</h1>
+  <span class="muted small">{{ t.review.me_label }}{{ me }}</span>
+</div>
+
+{% if request.query_params.get('flash') %}
+  <div class="flash ok" role="status">{{ tr(request.query_params.get('flash')) }}</div>
+{% endif %}
+
+<p class="muted">{{ t.review.intro|safe }}</p>
+
+<h2>{{ t.review.batches_h2 }}</h2>
+{% if batches %}
+<table>
+  <thead>
+    <tr><th>{{ t.review.col_batch }}</th><th>{{ t.review.col_type }}</th><th>{{ t.review.col_total }}</th><th>{{ t.review.col_decided }}</th><th>{{ t.review.col_pending }}</th><th>{{ t.review.col_annotators }}</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for b in batches %}
+    <tr{% if b.batch_id == selected %} style="font-weight:600"{% endif %}>
+      <td><code>{{ b.batch_id }}</code></td>
+      <td>{{ t.review.validity if b.batch_type == 'validity' else t.review.gold }}</td>
+      <td>{{ b.total }}</td>
+      <td>{{ b.decided }}</td>
+      <td>{{ b.pending }}</td>
+      <td>{{ b.annotators }}</td>
+      <td><a href="{{ url_for('page_review') }}?batch={{ b.batch_id }}">{{ t.review.view }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">{{ t.review.empty_batches|safe }}</p>
+{% endif %}
+
+{% if selected %}
+<h2>{{ tr('review.my_queue_h2', batch=selected)|safe }}</h2>
+{% if tasks %}
+<table>
+  <thead>
+    <tr><th>#</th><th>{{ t.review.col_ct }}</th><th>{{ t.review.col_crit }}</th><th>{{ t.review.col_slot }}</th><th>{{ t.review.col_scored }}</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for task in tasks %}
+    <tr>
+      <td>{{ task.id }}</td>
+      <td>{{ task.contract_type or '—' }}</td>
+      <td>{{ task.criterion_title or task.criterion_id }}</td>
+      <td>{{ task.slot }}</td>
+      <td class="muted small">{{ task.scored_at }}</td>
+      <td><a class="btn btn-sm" href="{{ url_for('page_review_task', task_id=task.id) }}">{{ t.review.go_decide }}</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">{{ t.review.empty_mine }}</p>
+{% endif %}
+{% endif %}
+{% endblock %}

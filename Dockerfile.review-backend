@@ -1,0 +1,58 @@
+# syntax=docker/dockerfile:1
+#
+# contract-review-agent backend image.
+# Serves `api.main:app` on 0.0.0.0:8000 (FastAPI + LangGraph + CopilotKit AG-UI).
+#
+# MUST be built from the repo root (not contract-review-agent/) because the
+# agent imports the parent `src.*` modules (src.eval, src.clauses, src.docs),
+# which pull in the parent project's deps (deepeval, litellm, psycopg, minio,
+# python-docx, ...). We install the parent project as the primary package so
+# all its transitive deps land in the venv, then add the agent's extras
+# (copilotkit, ag-ui-langgraph) on top.
+#
+#   docker build -t review-agent-backend -f Dockerfile.review-backend .
+
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONPATH=/app
+
+# Build deps for psycopg (libpq-dev + gcc). LibreOffice was dropped here
+# (extract-render-service): DOCX->PDF rendering moved to the shared render
+# service, reached via DOCS_PDF_BACKEND=http + RENDER_SERVICE_URL.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq-dev gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1. Install the PARENT project deps (provides src.* transitive deps).
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+# 2. Add the agent's extra deps (copilotkit + ag-ui-langgraph + langgraph-checkpoint-postgres).
+#    These aren't in the parent pyproject, so install them explicitly into the venv.
+RUN uv pip install copilotkit ag-ui-langgraph langgraph-checkpoint-postgres
+
+# 3. Application sources: parent src/ + the agent package.
+COPY src ./src
+COPY contract-review-agent/agent ./agent
+COPY contract-review-agent/api ./api
+COPY contract-review-agent/db ./db
+COPY contract-review-agent/tests ./tests
+
+# Run as non-root.
+RUN useradd --create-home --uid 1001 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Apply the agent_runs migration (idempotent) then serve.
+# --loop asyncio: deepeval calls nest_asyncio.apply(), which cannot patch
+# uvloop ("Can't patch loop of type uvloop.Loop"); the stdlib loop is patchable
+# and plenty fast for this workload.
+CMD ["sh", "-c", "python -m db.apply_migration && uvicorn api.main:app --host 0.0.0.0 --port 8000 --loop asyncio"]
+
+EXPOSE 8000

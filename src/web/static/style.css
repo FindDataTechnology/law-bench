@@ -1,0 +1,358 @@
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --border: #e2e5ea;
+  --text: #1f2933;
+  --muted: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --danger: #dc2626;
+  --danger-hover: #b91c1c;
+  --ok: #047857;
+  --harbor: #7c3aed;
+  --local: #0891b2;
+  --local-deep: #155e75;
+  --radius: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.topbar .brand { font-weight: 700; font-size: 1.05rem; color: var(--text); }
+.topbar nav { display: flex; align-items: center; gap: 0.85rem; row-gap: 0.45rem; margin-left: auto; flex-wrap: wrap; }
+.topbar nav > a { padding-bottom: 0.2rem; border-bottom: 2px solid transparent; }
+.topbar nav > a[aria-current="page"] { color: var(--text); font-weight: 700; border-bottom-color: var(--accent); }
+.topbar nav .inline { margin: 0; }
+.topbar nav .lang-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding-left: 0.85rem;
+  margin-left: 0.25rem;
+  border-left: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.topbar nav .lang-switch a[aria-current="true"] { font-weight: 700; color: var(--text); }
+.topbar nav .lang-switch a:not([aria-current="true"]) { opacity: 0.6; }
+/* Signed-in identity: divided from the language switch by the same 1px rule,
+   flat per the design system (no shadows/gradients). Doubles as the login
+   affordance for a rendered-but-anonymous chrome. */
+.topbar nav .identity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-left: 0.85rem;
+  margin-left: 0.25rem;
+  border-left: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.topbar nav .identity .identity-name { color: var(--text); }
+
+.container { max-width: 980px; margin: 1.5rem auto; padding: 0 1.25rem; }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+h1, h2, h3 { margin: 0 0 0.6rem; }
+h1 { font-size: 1.4rem; }
+.muted { color: var(--muted); }
+code { background: #eef1f5; padding: 0.1rem 0.35rem; border-radius: 4px; }
+
+/* Long prompt/draft bodies: preserve newlines but wrap long lines so they
+   stay inside the panel instead of overflowing the container. */
+.prompt-content {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.flash {
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  background: #eef6ff;
+}
+.flash.error { background: #fef2f2; border-color: #fecaca; color: var(--danger); }
+.flash.ok { background: #ecfdf5; border-color: #a7f3d0; color: var(--ok); }
+
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+tr:last-child td { border-bottom: none; }
+
+.badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: var(--text);
+  white-space: nowrap;
+}
+.badge.harbor { background: var(--harbor); color: #fff; }
+.badge.local { background: var(--local-deep); color: #fff; }
+
+.btn {
+  display: inline-block;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+}
+.btn:hover { text-decoration: none; background: #f0f2f5; }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-danger { color: var(--danger); }
+.btn-danger:hover { background: #fef2f2; }
+.btn-ghost { background: transparent; }
+.btn-sm { padding: 0.2rem 0.5rem; font-size: 0.82rem; }
+.btn:disabled, .btn.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+
+.toolbar { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.toolbar.between { justify-content: space-between; }
+/* Utility row used by filter forms and inline action groups (law-catalog,
+   clauses, review templates). Keeps sibling forms/labels on one wrapping row. */
+.inline { display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.small { font-size: 0.78rem; }
+
+dl.meta { display: grid; grid-template-columns: 9rem 1fr; gap: 0.3rem 0.5rem; margin: 0; }
+dl.meta dt { color: var(--muted); font-size: 0.8rem; }
+dl.meta dd { margin: 0; word-break: break-word; }
+
+form .row { margin-bottom: 0.8rem; }
+form label { display: block; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.2rem; }
+input[type=text], input[type=number], textarea, select {
+  width: 100%;
+  font: inherit;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+}
+textarea { min-height: 4.5rem; resize: vertical; }
+.hint { font-size: 0.78rem; color: var(--muted); }
+
+.criterion-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  margin-bottom: 0.6rem;
+  background: #fbfcfd;
+}
+.criterion-row .crow-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+.criterion-row .grid2 { display: grid; grid-template-columns: 1fr 2fr; gap: 0.6rem; }
+
+.crit-actions { display: flex; gap: 0.25rem; flex-wrap: nowrap; }
+.crit-edit { display: none; margin-top: 0.5rem; }
+.crit-edit.open { display: block; }
+
+.readonly-note {
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  color: var(--harbor);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+/* compare form + matrix */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem;
+  background: #fbfcfd;
+}
+fieldset.checklist { margin: 0; min-width: 0; }
+fieldset.checklist legend { font-size: 0.8rem; color: var(--muted); padding: 0 0.3rem; }
+.checklist-filter { margin-bottom: 0.5rem; }
+.checklist-filter label { margin: 0; }
+.checklist-filter select { width: auto; }
+/* Rubric/type mismatch: the flash-error tint pair (fail tint + deep objection
+   text + the established #fecaca border), scaled down to an inline strip. */
+.rubric-warning {
+  margin-top: 0.3rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  background: #fef2f2;
+  color: var(--danger-hover);
+  font-size: 0.85rem;
+}
+.check { display: flex; align-items: center; gap: 0.4rem; }
+.check input { margin: 0; }
+
+table.matrix { border-collapse: collapse; width: 100%; min-width: 40rem; }
+/* Wide matrices scroll inside the panel instead of breaking the layout. */
+.matrix-scroll { overflow-x: auto; }
+table.matrix thead th span.muted { white-space: normal; overflow-wrap: anywhere; }
+table.matrix caption.matrix-caption {
+  caption-side: top; text-align: left;
+  font-size: 0.78rem; color: var(--muted); padding-bottom: 0.4rem;
+}
+table.matrix th, table.matrix td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.55rem;
+  text-align: left;
+  vertical-align: top;
+  font-size: 0.85rem;
+}
+table.matrix thead th { background: #f5f7fa; white-space: nowrap; color: var(--text); }
+table.matrix td.cell { text-align: center; font-weight: 600; white-space: nowrap; padding: 0; }
+/* The verdict trigger is a real button so cells are keyboard-operable;
+   the tinted cell stays the visual grammar (flat, no shadow). */
+.matrix .cell-btn {
+  display: block; width: 100%; margin: 0; padding: 0.4rem 0.55rem;
+  background: transparent; border: 0; border-radius: inherit;
+  color: inherit; font: inherit; font-weight: 600; cursor: pointer;
+  text-align: center; white-space: nowrap;
+}
+.matrix .cell-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+table.matrix td.cell.pass { color: var(--ok); background: #ecfdf5; }
+table.matrix td.cell.fail { color: var(--danger-hover); background: #fef2f2; }
+table.matrix td.cell.rate { color: var(--accent); background: #eff6ff; }
+
+/* law-info side-by-side detail + rendered markdown */
+.law-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+/* contract-generation panel: mode radios + shared inputs */
+.gen-modes {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.8rem;
+  background: #fbfcfd;
+}
+.gen-modes legend { font-size: 0.8rem; color: var(--muted); padding: 0 0.3rem; }
+.gen-modes .check { margin-bottom: 0.2rem; }
+.gen-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+@media (max-width: 720px) { .gen-grid { grid-template-columns: 1fr; } }
+.gen-extra { margin-top: 0.4rem; }
+.gen-result { margin-top: 0.6rem; }
+.gen-result .toolbar { margin-bottom: 0.4rem; }
+@media (max-width: 900px) { .law-info-grid { grid-template-columns: 1fr; } }
+
+/* ---- Responsive adaptation (change: adapt pass 2026-09-26) ----------------
+   Desktop-first shell, hardened for narrow windows / tablets / phones:
+   nav wraps as whole rows instead of overflowing; wide tables scroll inside
+   their panel; density steps down once. Breakpoints stay content-driven and
+   reuse the established 900/720 steps, plus 1024 (topbar) and 560 (forms). */
+@media (max-width: 1024px) {
+  /* Brand takes the first row alone; nav + identity flow below it. */
+  .topbar { align-items: flex-start; }
+  .topbar .brand { flex-basis: 100%; }
+  .topbar nav { margin-left: 0; }
+}
+@media (max-width: 720px) {
+  .container { padding: 0 0.9rem; }
+  .panel { padding: 0.9rem; }
+  dl.meta { grid-template-columns: 6rem 1fr; }
+  /* Wide data tables become their own horizontal scroll container; row rules
+     and header styling are untouched (flat ledger — the matrix keeps its
+     dedicated .matrix-scroll wrapper, this catches the rest). */
+  .panel table { display: block; overflow-x: auto; }
+}
+@media (max-width: 560px) {
+  .toolbar { flex-direction: column; align-items: flex-start; }
+  .toolbar.between { flex-direction: column; align-items: flex-start; }
+  .topbar nav .lang-switch, .topbar nav .identity { flex-basis: 100%; border-left: none; padding-left: 0; }
+}
+/* Touch: bigger hit areas for the same flat controls; no hover dependence
+   exists in the shell (hovers are fill-darkening only). */
+@media (pointer: coarse) {
+  .btn, .topbar nav > a { min-height: 2.4rem; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; }
+  input[type=text], input[type=number], select, textarea { min-height: 2.4rem; }
+  .check input { min-width: 1.25rem; min-height: 1.25rem; }
+}
+.markdown-body { line-height: 1.6; word-break: break-word; }
+.markdown-body h1, .markdown-body h2, .markdown-body h3 { margin: 0.8rem 0 0.4rem; }
+.markdown-body h1 { font-size: 1.2rem; }
+.markdown-body h2 { font-size: 1.05rem; }
+.markdown-body ul, .markdown-body ol { margin: 0.4rem 0; padding-left: 1.4rem; }
+.markdown-body li { margin: 0.2rem 0; }
+.markdown-body p { margin: 0.5rem 0; }
+.markdown-body code { background: #f3f4f6; padding: 0.05rem 0.3rem; border-radius: 3px; }
+.markdown-body blockquote {
+  border-left: 3px solid var(--border); margin: 0.5rem 0; padding: 0.2rem 0.8rem;
+  color: #555; background: #fafbfc;
+}
+
+/* samples library: cascading filter form + paginated artifact table */
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-end;
+}
+.filter-form .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 10rem;
+  flex: 1 1 10rem;
+}
+.filter-form .filter-group select { width: 100%; }
+@media (max-width: 720px) {
+  .filter-form { flex-direction: column; gap: 0.6rem; }
+  .filter-form .filter-group { min-width: 0; }
+}
+
+table.data-table td.dl-cell { white-space: nowrap; }
+table.data-table td.dl-cell .btn + .btn { margin-left: 0.3rem; }
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.pagination .page-info { color: var(--muted); font-size: 0.9rem; }

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ t.h1.new_compare }} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<h1>{{ t.h1.new_compare }}</h1>
+<p class="hint">{{ t.hint.compare_form }}</p>
+
+<form id="compare-form" class="panel">
+  <div class="row">
+    <label for="f-task">{{ t.form.task }} <span class="muted">{{ t.form.task_hint }}</span></label>
+    <textarea name="task" id="f-task" required rows="3"
+              placeholder="{{ t.form.task_ph }}"></textarea>
+  </div>
+  <div class="grid2">
+    <div class="row">
+      <label for="f-contract_type">{{ t.form.contract_type }}</label>
+      <input type="text" name="contract_type" id="f-contract_type" required
+             list="contract-type-options"
+             placeholder="{% if lang == 'zh' %}如：买卖合同{% else %}e.g. sale{% endif %}">
+      <datalist id="contract-type-options">
+        {% for ct in contract_types %}
+        <option value="{{ ct }}">{{ label_for('contract_type', ct) }}</option>
+        {% endfor %}
+      </datalist>
+    </div>
+    <div class="row">
+      <label for="f-rubric_name">{{ t.form.rubric }}</label>
+      <select name="rubric_name" id="f-rubric_name" required>
+        {% for r in rubrics %}
+        <option value="{{ r.name }}">{{ title_for_rubric(r.name) }} ({{ label_for('context', r.context) }})</option>
+        {% endfor %}
+      </select>
+      <div id="compare-rubric-warning" class="rubric-warning" role="alert" hidden></div>
+    </div>
+  </div>
+  <div class="row">
+    <label for="f-mode">{{ t.form.mode }}</label>
+    <select name="mode" id="f-mode">
+      <option value="drafter-only">{{ label_for('mode', 'drafter-only') }}</option>
+    </select>
+  </div>
+  <div class="row">
+    <label for="f-n_drafts">{{ t.form.drafts_per_prompt }}</label>
+    <input type="number" name="n_drafts" id="f-n_drafts" min="1" max="8" value="1">
+    <span class="muted">{{ t.form.drafts_hint }}</span>
+  </div>
+  <div class="row">
+    <label for="f-concurrency">{{ t.form.compare_concurrency }}</label>
+    <input type="number" name="concurrency" id="f-concurrency" min="1" max="8" value="1">
+    <span class="muted">{{ t.form.compare_concurrency_hint }}</span>
+  </div>
+  <div class="row">
+    <fieldset class="checklist">
+      <legend>{{ t.form.prompts }} <span class="muted">{{ t.form.prompts_hint }}</span>
+        <span id="compare-count" class="muted" aria-live="polite"></span></legend>
+      <div class="toolbar checklist-filter">
+        <label for="f-type-filter">{{ t.form.type_filter }}</label>
+        <select id="f-type-filter">
+          <option value="all">{{ t.form.filter_all }}</option>
+          {% for ct in contract_types %}
+          <option value="{{ ct }}">{{ label_for('contract_type', ct) }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% for p in prompts %}
+      <label class="check">
+        <input type="checkbox" name="prompts" value="{{ p.name }}"
+               data-contract-type="{{ p.contract_type }}">
+        <strong>{{ title_for_prompt(p.name) }}</strong>
+        <span class="muted">[{{ label_for('contract_type', p.contract_type) }}]</span>
+        {% if p.prompt_type %}<span class="badge">{{ label_for('prompt_type', p.prompt_type) }}</span>{% endif %}
+      </label>
+      {% endfor %}
+      {% if not prompts %}
+      <span class="muted">{{ t.hint.no_prompts_compare|safe }}</span>
+      {% endif %}
+    </fieldset>
+  </div>
+  <div class="row">
+    <label for="f-label">{{ t.form.label }} <span class="muted">{{ t.form.label_hint }}</span></label>
+    <input type="text" name="label" id="f-label" placeholder="{{ t.form.label_ph }}">
+  </div>
+
+  <div class="toolbar">
+    <button type="submit" class="btn btn-primary" id="compare-submit">{{ t.form.run_compare }}</button>
+    <button type="button" class="btn" id="compare-cancel" hidden>{{ t.matrix.cancel_run }}</button>
+    <a class="btn" href="{{ url_for('page_list_compares') }}">{{ t.form.cancel }}</a>
+    <span id="compare-status" class="muted" role="status" aria-live="polite"></span>
+    <span id="compare-elapsed" class="muted"></span>
+  </div>
+</form>
+{% endblock %}
