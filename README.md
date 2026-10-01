@@ -150,7 +150,7 @@ tests/           pytest 套件（本地 PG 即可运行，无外部网络依赖�
 
 ## 关于寻数·识律
 
-law-bench 是**寻数·识律**（FindData 法律 AI 产品线）的合同评测与起草基座，由寻数团队（[FindDataTechnology](https://github.com/FindDataTechnology)）维护。识律产品线的对外服务部署于 `*.finddatatech.cloud`；本仓库为其核心引擎与工作台的开源版本，公开镜像位于 [FindDataTechnology/law-bench-oss](https://github.com/FindDataTechnology/law-bench-oss)。
+law-bench 是**寻数·识律**（FindData 法律 AI 产品线）的合同评测与起草基座，由寻数团队（[FindDataTechnology](https://github.com/FindDataTechnology)）维护。识律产品线的对外服务部署于 `*.finddatatech.cloud`；本仓库为其核心引擎与工作台的开源版本，公开镜像位于 [FindDataTechnology/law-bench](https://github.com/FindDataTechnology/law-bench)。
 
 ## License
 
