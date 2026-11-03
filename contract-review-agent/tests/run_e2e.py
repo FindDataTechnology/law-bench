@@ -8,7 +8,7 @@ At each interrupt(), the script resumes with canned test data so no human
 interaction is required. Prints every stage's output + the final metrics.
 
 Usage:
-    cd <repo-root>/contract-review-agent
+    cd /Users/chengsishi/law-template/contract-review-agent
     uv run python tests/run_e2e.py
 """
 from __future__ import annotations

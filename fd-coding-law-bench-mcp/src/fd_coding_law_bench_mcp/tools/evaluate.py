@@ -11,10 +11,11 @@ from pathlib import Path
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"contracts"})
+@mcp.tool(tags={"contracts"}, annotations=annotations_for("contract_evaluate"))
 async def contract_evaluate(
     contract: str,
     rubric: str,
@@ -73,7 +74,7 @@ async def contract_evaluate(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("rubric_list"))
 async def rubric_list(include_counts: bool = False) -> list[dict]:
     """List available evaluation rubrics.
 
@@ -94,7 +95,7 @@ async def rubric_list(include_counts: bool = False) -> list[dict]:
     return await anyio.to_thread.run_sync(_list_rubrics)
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("run_list"))
 async def run_list(limit: int = 20) -> list[dict]:
     """List recent evaluation runs (most recent first)."""
     from src.eval.store import list_runs as _list_runs
@@ -102,7 +103,7 @@ async def run_list(limit: int = 20) -> list[dict]:
     return await anyio.to_thread.run_sync(_list_runs, limit)
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("run_get"))
 async def run_get(run_id: int) -> dict:
     """Fetch a single evaluation run's run-level fields and its per-criterion verdicts.
 

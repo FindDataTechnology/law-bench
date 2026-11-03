@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("compare_run"))
 async def compare_run(
     contract_type: str,
     rubric_name: str,
@@ -67,7 +68,7 @@ async def compare_run(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("compare_list"))
 async def compare_list(limit: int = 20) -> list[dict]:
     """List recent compare runs (compare-level fields only), newest first.
 
@@ -79,7 +80,7 @@ async def compare_list(limit: int = 20) -> list[dict]:
     return await anyio.to_thread.run_sync(_list, limit)
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("compare_get"))
 async def compare_get(compare_id: int) -> dict:
     """Fetch the full grouped result for one compare.
 
@@ -96,7 +97,7 @@ async def compare_get(compare_id: int) -> dict:
     return await anyio.to_thread.run_sync(_get, compare_id)
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("compare_matrix"))
 async def compare_matrix(compare_id: int) -> dict:
     """Fetch a compare's criteria x prompts matrix in one call.
 
@@ -118,7 +119,7 @@ async def compare_matrix(compare_id: int) -> dict:
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"eval"})
+@mcp.tool(tags={"eval"}, annotations=annotations_for("run_draft"))
 async def run_draft(compare_id: int, run_id: int) -> dict:
     """Lazily fetch a single run's ``draft_text`` (verified to belong to the compare).
 

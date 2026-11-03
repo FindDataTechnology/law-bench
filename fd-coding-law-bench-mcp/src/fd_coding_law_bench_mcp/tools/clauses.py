@@ -18,10 +18,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"clauses"})
+@mcp.tool(tags={"clauses"}, annotations=annotations_for("clause_list"))
 async def clause_list(
     contract_type: str | None = None,
     category: str | None = None,
@@ -48,7 +49,7 @@ async def clause_list(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"clauses"})
+@mcp.tool(tags={"clauses"}, annotations=annotations_for("clause_get"))
 async def clause_get(clause_id: int) -> dict | None:
     """Fetch one clause by id (any source: base / tagged / custom).
 
@@ -62,7 +63,7 @@ async def clause_get(clause_id: int) -> dict | None:
     return await anyio.to_thread.run_sync(get_custom_clause, clause_id)
 
 
-@mcp.tool(tags={"clauses"})
+@mcp.tool(tags={"clauses"}, annotations=annotations_for("clause_update"))
 async def clause_update(
     clause_id: int,
     body: str | None = None,
@@ -99,7 +100,7 @@ async def clause_update(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"clauses"})
+@mcp.tool(tags={"clauses"}, annotations=annotations_for("clause_delete"))
 async def clause_delete(clause_id: int) -> dict:
     """Delete one clause by id.
 
@@ -114,7 +115,7 @@ async def clause_delete(clause_id: int) -> dict:
     return {"deleted": True, "clause_id": clause_id}
 
 
-@mcp.tool(tags={"clauses"})
+@mcp.tool(tags={"clauses"}, annotations=annotations_for("clause_review"))
 async def clause_review(clause_id: int, status: str) -> dict:
     """Set ALL of a clause's tag dims to one review status (bulk approve/reject).
 

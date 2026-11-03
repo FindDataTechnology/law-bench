@@ -28,7 +28,7 @@ const PORT = Number(process.env.PORT || 3111);
 const ENDPOINT = process.env.COPILOT_ENDPOINT || "/copilotkit";
 // LLM defaults: the shared token-vault gateway (OpenRouter-compatible API —
 // sk-or keys, "vendor/model" ids, plain OpenAI chat-completions protocol).
-const LLM_BASE_URL = process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
+const LLM_BASE_URL = process.env.OPENAI_BASE_URL || "https://token.finddatatech.cloud/v1";
 const MODEL = process.env.COPILOT_MODEL || "deepseek/deepseek-v4.1-flash";
 const MCP_URL =
   process.env.COPILOT_MCP_URL ||

@@ -123,5 +123,5 @@ pollute the clause DB.
 | 4 streams × 3 judges × 3 workers = 36 | property_service 0/10 (429-noise cascade) |
 | 2 streams × 3 judges × 2 workers = 12 | clean, 0× 429 |
 
-The relay at `<relay-ip>:3000` rate-limits **per uid, not per model** —
+The relay at `154.94.237.22:3000` rate-limits **per uid, not per model** —
 3 different judge backends share one rate-limit bucket. Safe ceiling = 12 concurrent.

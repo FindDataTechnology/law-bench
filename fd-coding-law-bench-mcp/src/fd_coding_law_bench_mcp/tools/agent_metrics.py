@@ -10,6 +10,7 @@ import asyncio
 import sys
 from pathlib import Path
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 # Make the law-template repo importable so `from agent.store` resolves.
@@ -18,7 +19,7 @@ if str(_AGENT_ROOT) not in sys.path:
     sys.path.insert(0, str(_AGENT_ROOT))
 
 
-@mcp.tool(tags={"metrics"})
+@mcp.tool(tags={"metrics"}, annotations=annotations_for("agent_run_store"))
 def agent_run_store(
     thread_id: str,
     contract_type: str,
@@ -77,7 +78,7 @@ def agent_run_store(
     return insert_agent_run(row)
 
 
-@mcp.tool(tags={"metrics"})
+@mcp.tool(tags={"metrics"}, annotations=annotations_for("agent_run_get"))
 def agent_run_get(run_id: int) -> dict | None:
     """Get one ``agent_runs`` row (full) by id.
 
@@ -88,7 +89,7 @@ def agent_run_get(run_id: int) -> dict | None:
     return get_agent_run(run_id)
 
 
-@mcp.tool(tags={"metrics", "query"})
+@mcp.tool(tags={"metrics", "query"}, annotations=annotations_for("agent_run_list"))
 def agent_run_list(limit: int = 20) -> list[dict]:
     """List recent ``agent_runs`` rows (summary fields only).
 
@@ -98,3 +99,38 @@ def agent_run_list(limit: int = 20) -> list[dict]:
     from agent.store import list_agent_runs
 
     return list_agent_runs(limit=limit)
+
+# ── 长任务句柄查询（mcp-long-running-operations 组 5）────────────────────
+
+
+@mcp.tool(tags={"metrics", "query"}, annotations=annotations_for("task_status"))
+def task_status(handle: str) -> dict:
+    """按任务句柄查状态与结果（统一了 pipeline 与 batch 两个家族）。
+
+    `self_heal_pipeline_run` 返回 `pipeline_run_id`（数字），
+    `contract_generate_batch` 返回 `trace_id`（`trace-` 前缀）。此前调用方
+    拿到一个 id 要自己知道该去哪张表查——一个没有查询路径的句柄等于没有句柄。
+
+    Returns ``{handle, kind, found, status, progress, counts, result?, error?}``。
+
+    **状态如实**：pipeline 家族跑完即落库，故库里查到就是 completed、查不到
+    就是 not_found；batch 家族的 trace_id 只是日志关联键、不落条目表，故
+    报 `unknown_not_persisted` 并说明"逐条结果只在调用返回里"。这里刻意不
+    编造 running/interrupted——那会让调用方对着一个假的进度条干等。
+    """
+    from ..tasks import task_status as _impl
+
+    return _impl(handle)
+
+
+@mcp.tool(tags={"metrics", "query"}, annotations=annotations_for("task_failed_items"))
+def task_failed_items(handle: str) -> list[str]:
+    """取某任务的失败/未完成条目，供分项重试。
+
+    pipeline 家族在全通过时返回空列表；未全通过时返回一条说明（含 iteration，
+    调用方据此判断是否要换 rubric 重跑而不是重跑同一条）。batch 家族无法从
+    句柄反推条目，返回空列表——请按 `task_status` 的 error 说明处理。
+    """
+    from ..tasks import failed_items_for
+
+    return failed_items_for(handle)

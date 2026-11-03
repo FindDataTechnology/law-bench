@@ -13,6 +13,7 @@ import asyncio
 from typing import Any
 from functools import lru_cache
 
+from ..annotations import annotations_for
 from ..server import mcp
 from .errors import make_error_response, extract_error_info
 
@@ -24,7 +25,7 @@ def _cached_tag_combinations(contract_type: str, max_warn: int = 1000) -> dict:
     return None  # computed on-demand below
 
 
-@mcp.tool(tags={"contracts"})
+@mcp.tool(tags={"contracts"}, annotations=annotations_for("contract_generate_batch"))
 async def contract_generate_batch(
     contract_type: str,
     tag_combinations: list[dict] | None = None,

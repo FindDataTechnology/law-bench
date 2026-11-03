@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"pipeline"})
+@mcp.tool(tags={"pipeline"}, annotations=annotations_for("tag_iteration_suggest"))
 async def tag_iteration_suggest(
     contract_type: str,
     tags: dict | None = None,
@@ -92,7 +93,7 @@ async def tag_iteration_suggest(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"pipeline"})
+@mcp.tool(tags={"pipeline"}, annotations=annotations_for("tag_iteration_apply"))
 async def tag_iteration_apply(
     approved_suggestions: list[dict],
     contract_type: str,

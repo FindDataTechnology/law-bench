@@ -1,0 +1,37 @@
+{
+  "sources": [
+    {
+      "id": 1,
+      "name": "demo_xwfb_archive",
+      "label": "Demo Archive (演示机关)",
+      "url": "https://www.demo.gov.cn/xwfb/",
+      "category": "网页抓取",
+      "category_label": "Web Scraw",
+      "description": "Synthetic minimal source for the broken-registry loader test.",
+      "config": {
+        "type": "scraw",
+        "seed_url": "https://www.demo.gov.cn/xwfb/",
+        "archives": [],
+        "columns": [],
+        "crawl": {"default_max_pages": 50}
+      }
+    }
+  ],
+  "datasource_columns": [
+    {
+      "column_name": "title",
+      "column_type": "string",
+      "datasource_id": 999,
+      "description": "dangling reference: no source carries id 999",
+      "is_nullable": 0,
+      "is_primary_key": 0,
+      "semantic_type": "title",
+      "table_name": "demo_xwfb_archive",
+      "unit": ""
+    }
+  ],
+  "scraw_configs": [],
+  "organizations": [
+    {"code": "DEMO", "name_en": "Demo Org", "name_zh": "演示机关", "metadata": {"type": "ministry", "url": "https://www.demo.gov.cn"}}
+  ]
+}

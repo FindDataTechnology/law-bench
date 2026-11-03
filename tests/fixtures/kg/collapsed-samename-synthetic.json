@@ -1,0 +1,18 @@
+{
+  "graph": "collapsed-samename-synthetic",
+  "source": "synthetic",
+  "note": "合成的坍缩快照：判据②（同名不同文号可分，113/71 教训）的反例——两个同名实体无文号区分，不可分。数据为构造值。",
+  "summary": {
+    "nodes": 3,
+    "edges": 1,
+    "statute_layer_nodes": 3
+  },
+  "nodes": [
+    {"uuid": "c1", "name": "行政单位财务规则", "law_id": 401},
+    {"uuid": "c2", "name": "行政单位财务规则", "law_id": 402},
+    {"uuid": "c3", "name": "中华人民共和国民事诉讼法", "law_id": 403}
+  ],
+  "edges": [
+    {"src": "c3", "dst": "c1", "type": "CITES"}
+  ]
+}

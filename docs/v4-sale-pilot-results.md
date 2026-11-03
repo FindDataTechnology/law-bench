@@ -39,7 +39,7 @@ Judges see "所有权自交付时转移" (id=565) + "未付清全部价款前保
 
 ### 5. **Relay migration needed**
 Old relay (linjie.love): 20 req/min + PAT pool exhaustion → unusable for multi-judge
-New relay (<relay-ip>): ~7 req/min, unlimited daily → works for serial eval
+New relay (154.94.237.22): ~7 req/min, unlimited daily → works for serial eval
 
 ## Working Clause Structure (sale)
 

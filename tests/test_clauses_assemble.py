@@ -69,12 +69,14 @@ def test_assemble_with_scenario_includes_tagged(seeded_db):
     txt = _docx_text(r["docx_path"])
     assert "base-marker" in txt
     assert "jinlin-marker" in txt
-    # clause-declared slots surface in instructions, rendered to Chinese where a
-    # concept mapping exists (penalty -> 违约金); property_name has no mapping so
-    # it stays Latin.
+    # Clause-declared slots surface in instructions, rendered to Chinese: the
+    # slot ontology now resolves every Latin concept through its curated
+    # glossary + compositional fallback (penalty -> 违约金, property_name ->
+    # 物业名称), so no instruction is left Latin.
     names = {i["name"] for i in r["instructions"]}
-    assert "property_name" in names
-    assert "违约金" in names
+    assert "物业名称" in names  # property_name via the glossary
+    assert "违约金" in names  # penalty via the concept label
+    assert not {"property_name", "penalty"} & names, "Latin names should be rendered"
     # law_refs deduped union
     assert any(ref["name"] == "中华人民共和国民法典" for ref in r["law_refs"])
 

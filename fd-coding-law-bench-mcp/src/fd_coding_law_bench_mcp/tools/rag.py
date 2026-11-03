@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"search"})
+@mcp.tool(tags={"search"}, annotations=annotations_for("search_clauses"))
 async def search_clauses(query: str, top_k: int = 5) -> list[dict]:
     """Retrieve ranked clause chunks for a natural-language query.
 

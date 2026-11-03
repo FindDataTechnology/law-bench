@@ -11,10 +11,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"pipeline"})
+@mcp.tool(tags={"pipeline"}, annotations=annotations_for("auto_reject_pipeline_run"))
 async def auto_reject_pipeline_run(
     contract_type: str,
     tags: dict | None = None,

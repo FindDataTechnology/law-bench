@@ -57,6 +57,8 @@ EXPECTED_TOOLS = {
     "type_metadata",
     "validation_check",
     "validation_list",
+    "task_status",
+    "task_failed_items",
 }
 
 

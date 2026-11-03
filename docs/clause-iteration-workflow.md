@@ -15,7 +15,7 @@
 
 ```bash
 # 分析最近 50 次 pipeline 运行
-PYTHONPATH=<repo-root>:$PYTHONPATH \
+PYTHONPATH=/Users/chengsishi/law-template:$PYTHONPATH \
   python scripts/analyze_clause_iteration.py \
     --limit 50 \
     --output analysis.json
@@ -46,7 +46,7 @@ cat analysis.json | python -m json.tool
 
 ```bash
 # 预览将要执行的操作（不修改数据库）
-PYTHONPATH=<repo-root>:$PYTHONPATH \
+PYTHONPATH=/Users/chengsishi/law-template:$PYTHONPATH \
   python scripts/auto_clause_iteration.py \
     --analysis analysis.json \
     --confidence high \
@@ -64,7 +64,7 @@ PYTHONPATH=<repo-root>:$PYTHONPATH \
 
 ```bash
 # 实际应用更改（记录操作日志）
-PYTHONPATH=<repo-root>:$PYTHONPATH \
+PYTHONPATH=/Users/chengsishi/law-template:$PYTHONPATH \
   python scripts/auto_clause_iteration.py \
     --analysis analysis.json \
     --confidence high \
@@ -169,7 +169,7 @@ cat weekly_ops.jsonl | python -m json.tool
 
 **解决**: 设置 PYTHONPATH
 ```bash
-export PYTHONPATH=<repo-root>:$PYTHONPATH
+export PYTHONPATH=/Users/chengsishi/law-template:$PYTHONPATH
 ```
 
 ### 问题 2: 没有推荐

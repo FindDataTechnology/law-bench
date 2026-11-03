@@ -9,7 +9,7 @@ Prerequisites:
 - law-bench MCP server running (for contract generation)
 
 Usage:
-    cd <repo-root>
+    cd /Users/chengsishi/law-template
     pytest contract-review-agent/tests/test_integration.py -v
 """
 import asyncio

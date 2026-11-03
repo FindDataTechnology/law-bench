@@ -1,0 +1,563 @@
+{
+  "schema": "mcp-tool-surface/v1",
+  "server": "law-bench",
+  "entry_path": "/law-bench",
+  "product_line": "lex",
+  "hosting": [
+    "shared-instance"
+  ],
+  "description": "LawBench 合同智能 MCP（52 工具）：条款语料与装配、合同生成、法条引用、验证审查（commercial 面）；评测/rubric/对比/自愈流水线/语料治理（internal 面）。分级依据 design D8（adapt-legal-skills-to-facet-presets）。",
+  "skills_eligible_for_packs": [
+    "contract-review-cn",
+    "civil-nine-step-workflow",
+    "labor-arbitration-workflow",
+    "personal-injury-calculator",
+    "criminal-defense-workflow",
+    "criminal-plea-and-nonprosecution",
+    "criminal-trial-examination-outline",
+    "statute-validity-check",
+    "case-retrieval-report",
+    "legal-concept-map",
+    "litigation-drafting",
+    "evidence-card-organizer",
+    "labor-compensation-calculator"
+  ],
+  "output_structure": {
+    "declared": [],
+    "undeclared": [
+      "agent_run_get",
+      "agent_run_list",
+      "agent_run_store",
+      "auto_reject_pipeline_run",
+      "clause_delete",
+      "clause_get",
+      "clause_list",
+      "clause_review",
+      "clause_update",
+      "compare_get",
+      "compare_list",
+      "compare_matrix",
+      "compare_run",
+      "contract_content",
+      "contract_download",
+      "contract_evaluate",
+      "contract_generate",
+      "contract_generate_batch",
+      "contract_generate_stored",
+      "contract_type_catalog",
+      "criterion_add",
+      "criterion_delete",
+      "criterion_reorder",
+      "criterion_update",
+      "law_info",
+      "law_references",
+      "law_types",
+      "pipeline_get",
+      "pipeline_list",
+      "prompt_create",
+      "prompt_delete",
+      "prompt_get",
+      "prompt_list",
+      "prompt_update",
+      "rubric_create",
+      "rubric_delete",
+      "rubric_get",
+      "rubric_list",
+      "rubric_update",
+      "run_draft",
+      "run_get",
+      "run_list",
+      "search_clauses",
+      "self_heal_pipeline_run",
+      "tag_combinations_list",
+      "tag_iteration_apply",
+      "tag_iteration_suggest",
+      "tag_validate",
+      "tag_vocab_list",
+      "task_failed_items",
+      "task_status",
+      "type_metadata",
+      "validation_check",
+      "validation_list"
+    ],
+    "note": "未声明输出结构（已知缺口）。原因：本服务的返回形状随输入变化较大（过滤参数、可选字段、上游缺省），逐工具声明需先固化契约，排在 mcp-protocol-hardening 组 2 之后的迭代。清单显式登记此状态，使客户端不会把「未声明」误读为「无结构」。"
+  },
+  "naming_convention": {
+    "order": "verb_noun",
+    "applies_to": "new_tools",
+    "note": "新工具一律 `动词_名词`。既有名词序工具**不改名**——改名会破坏已发布 pack 的引用（一个技能文本里点名的工具名消失即整个套件不可用）；它们在本 清单中登记为 historical，改名的唯一正当路径是组 6.5 的兼容期机制。",
+    "historical": "see tool_naming_legacy",
+    "prefix_policy": "跨服务同名工具不得靠前缀区分（前缀是服务标识而非工具语义）；同名消解靠描述里写明部署与数据源差异。"
+  },
+  "tool_groups": [
+    {
+      "group": "assembly",
+      "level": "commercial",
+      "tools": [
+        "contract_generate",
+        "contract_generate_stored",
+        "contract_generate_batch",
+        "contract_type_catalog",
+        "type_metadata",
+        "contract_content",
+        "contract_download",
+        "tag_combinations_list",
+        "tag_vocab_list",
+        "tag_validate"
+      ],
+      "notes": "条款装配生成线：骨架/标签驱动装配 + 人工审阅条款语料（全部维度 approved 才参与装配）。"
+    },
+    {
+      "group": "clauses",
+      "level": "commercial",
+      "tools": [
+        "clause_get",
+        "clause_list",
+        "search_clauses",
+        "clause_review"
+      ],
+      "notes": "条款语料只读 + 单条款评审。语料的写权（update/delete）在 internal 组——客户不得改语料。"
+    },
+    {
+      "group": "clauses_admin",
+      "level": "internal",
+      "tools": [
+        "clause_update",
+        "clause_delete"
+      ],
+      "notes": "条款语料治理：内容编辑属运营侧职权。"
+    },
+    {
+      "group": "legal_refs",
+      "level": "commercial",
+      "tools": [
+        "law_info",
+        "law_references",
+        "law_types"
+      ],
+      "notes": "法条引用与法律目录。"
+    },
+    {
+      "group": "review",
+      "level": "commercial",
+      "tools": [
+        "validation_check",
+        "validation_list"
+      ],
+      "notes": "合同验证审查（完整性/缺失检查）。"
+    },
+    {
+      "group": "evaluation",
+      "level": "internal",
+      "tools": [
+        "contract_evaluate",
+        "run_draft",
+        "run_get",
+        "run_list",
+        "rubric_create",
+        "rubric_delete",
+        "rubric_get",
+        "rubric_list",
+        "rubric_update",
+        "criterion_add",
+        "criterion_delete",
+        "criterion_reorder",
+        "criterion_update"
+      ],
+      "notes": "LLM 判官评测线（rubric 打分/运行/准则管理）——内部质量基建，design D8 定为不外售。"
+    },
+    {
+      "group": "compare",
+      "level": "internal",
+      "tools": [
+        "compare_get",
+        "compare_list",
+        "compare_matrix",
+        "compare_run"
+      ],
+      "notes": "起草提示词两两对比（A/B 评测）。"
+    },
+    {
+      "group": "pipeline_heal",
+      "level": "internal",
+      "tools": [
+        "pipeline_get",
+        "pipeline_list",
+        "self_heal_pipeline_run",
+        "auto_reject_pipeline_run"
+      ],
+      "notes": "评测流水线与低分自愈。"
+    },
+    {
+      "group": "prompts_admin",
+      "level": "internal",
+      "tools": [
+        "prompt_create",
+        "prompt_delete",
+        "prompt_get",
+        "prompt_list",
+        "prompt_update"
+      ],
+      "notes": "起草提示词管理。"
+    },
+    {
+      "group": "tag_iteration",
+      "level": "internal",
+      "tools": [
+        "tag_iteration_apply",
+        "tag_iteration_suggest"
+      ],
+      "notes": "条款语料标签迭代（语料演化）。"
+    },
+    {
+      "group": "ops",
+      "level": "internal",
+      "tools": [
+        "agent_run_get",
+        "agent_run_list",
+        "agent_run_store"
+      ],
+      "notes": "agent 运行记录（内部运维面）。"
+    },
+    {
+      "group": "metrics",
+      "level": "commercial",
+      "tools": [
+        "task_failed_items",
+        "task_status"
+      ],
+      "description": ""
+    }
+  ],
+  "tool_annotations": {
+    "agent_run_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "agent_run_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "agent_run_store": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    },
+    "contract_generate": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "contract_generate_batch": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "contract_content": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "contract_generate_stored": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "contract_download": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "contract_type_catalog": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "type_metadata": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "tag_vocab_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "tag_validate": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "tag_combinations_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "clause_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "clause_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "clause_update": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "clause_delete": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "clause_review": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "rubric_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "rubric_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "rubric_create": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    },
+    "rubric_update": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "rubric_delete": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "criterion_add": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    },
+    "criterion_update": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "criterion_delete": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "criterion_reorder": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "prompt_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "prompt_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "prompt_create": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    },
+    "prompt_update": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "prompt_delete": {
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "contract_evaluate": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "run_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "run_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "compare_run": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "compare_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "compare_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "compare_matrix": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "run_draft": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "task_status": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "task_failed_items": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "self_heal_pipeline_run": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "auto_reject_pipeline_run": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "pipeline_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "pipeline_get": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "tag_iteration_suggest": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "tag_iteration_apply": {
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "search_clauses": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "law_types": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "law_info": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "law_references": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "validation_check": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "validation_list": {
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "registry": {
+    "entry_path": "/law-bench",
+    "upstream": "http://cheap6.mesh.finddata.cn:30840/mcp",
+    "expected_tool_count": 54
+  }
+}

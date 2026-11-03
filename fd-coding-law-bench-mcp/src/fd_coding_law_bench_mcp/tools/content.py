@@ -11,10 +11,11 @@ import anyio
 import uuid
 from typing import Literal
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"contracts"})
+@mcp.tool(tags={"contracts"}, annotations=annotations_for("contract_content"))
 async def contract_content(
     contract_type: str,
     tags: dict | None = None,

@@ -1,0 +1,24 @@
+{
+  "case": "internal-violation",
+  "source": "synthetic",
+  "note": "合成发布门反例：allowTools 声明了 internal 工具 admin_purge——它在 tool_list 快照中真实存在，但不在 commercial 名单内；真实发布门据此 400 拒发（paas publish-tool-gate.js 商业闭包分支），迁入版判同一结论。",
+  "pack_manifest": {
+    "name": "law-bench-internal-violation",
+    "mcpServers": [
+      {"registryName": "law-bench", "allowTools": ["contract_draft", "admin_purge"]}
+    ],
+    "agents": [],
+    "skills": []
+  },
+  "registry_index": {
+    "law-bench": {
+      "tool_list": ["contract_draft", "clause_search", "verify_contract", "admin_purge"],
+      "metadata": {
+        "surface": {
+          "commercial_tools": ["contract_draft", "clause_search", "verify_contract"],
+          "tools_commercial": 3
+        }
+      }
+    }
+  }
+}

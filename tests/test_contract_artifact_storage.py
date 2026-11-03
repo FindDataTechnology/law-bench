@@ -385,6 +385,7 @@ def test_openapi_has_artifact_paths(app_client: TestClient):
 # --- integration (real MinIO; skip if unreachable) ------------------------ #
 
 
+@pytest.mark.external
 def test_generate_stored_real_minio(app_client: TestClient, seeded_db):
     """Integration: by-type generate-stored against real MinIO (skip if unreachable)."""
     import src.contracts.artifacts as arts

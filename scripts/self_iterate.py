@@ -50,7 +50,7 @@ from src.eval.scoring import evaluate_with_multi_judge
 DEFAULT_JUDGES = ["openai/kimi-k3", "openai/glm-5.2", "openai/deepseek-v3"]
 GEN_MODEL = os.environ.get("DRAFTER_MODEL", "openai/glm-5.2")
 # Inner per-criterion concurrency passed to evaluate_with_multi_judge. The 3 judges
-# all go through ONE relay (http://<relay-ip>:3000) which rate-limits per uid
+# all go through ONE relay (http://154.94.237.22:3000) which rate-limits per uid
 # (NOT per model), so total concurrent reqs to the relay == streams × 3 × this value.
 # A probe (2026-08-11) showed 12 concurrent = all ok, 16 = 429s start. With 2 batch
 # streams, max_workers=2 → 2×3×2 = 12, right at the clean ceiling. The drafter fires

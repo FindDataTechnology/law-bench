@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"validations"})
+@mcp.tool(tags={"validations"}, annotations=annotations_for("validation_list"))
 async def validation_list(contract_type: str) -> list[dict]:
     """List stored validation constraints for a contract type.
 
@@ -40,7 +41,7 @@ async def validation_list(contract_type: str) -> list[dict]:
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"validations"})
+@mcp.tool(tags={"validations"}, annotations=annotations_for("validation_check"))
 async def validation_check(
     contract_type: str,
     draft: str | None = None,

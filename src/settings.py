@@ -233,6 +233,18 @@ def admission_mode() -> str:
     mode = _env("AUTH_ADMISSION_MODE", "enforce").strip().lower()
     return "warn" if mode == "warn" else "enforce"
 
+# Env vars the standalone drafting CLI (main.py) needs before it can build the
+# crew: one OpenAI-compatible endpoint plus a model id per role. Presence-only —
+# the values are the crew's business. Documented by .env.example's first block.
+DRAFTING_REQUIRED_VARS = [
+    "OPENAI_API_KEY",
+    "OPENAI_API_BASE",
+    "INTAKE_MODEL",
+    "DRAFTER_MODEL",
+    "AUDITOR_MODEL",
+]
+
+
 # Env vars that MUST be populated before the app serves any traffic. Checked
 # fail-fast at startup in create_app() — a missing value means the process
 # refuses to boot (fail closed: never run an open server). JWKS reachability

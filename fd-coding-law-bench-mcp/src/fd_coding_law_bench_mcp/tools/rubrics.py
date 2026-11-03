@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("rubric_get"))
 async def rubric_get(name: str) -> dict:
     """Fetch a rubric's metadata and ordered criteria, by name.
 
@@ -31,7 +32,7 @@ async def rubric_get(name: str) -> dict:
     return await anyio.to_thread.run_sync(get_rubric_detail, name)
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("rubric_create"))
 async def rubric_create(
     name: str,
     context: str,
@@ -58,7 +59,7 @@ async def rubric_create(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("rubric_update"))
 async def rubric_update(
     rubric_id: int,
     name: str,
@@ -84,7 +85,7 @@ async def rubric_update(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("rubric_delete"))
 async def rubric_delete(rubric_id: int) -> dict:
     """Delete a local rubric; its criteria cascade via FK ON DELETE CASCADE.
 
@@ -100,7 +101,7 @@ async def rubric_delete(rubric_id: int) -> dict:
     return {"deleted": True, "rubric_id": rubric_id}
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("criterion_add"))
 async def criterion_add(
     rubric_id: int,
     name: str,
@@ -126,7 +127,7 @@ async def criterion_add(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("criterion_update"))
 async def criterion_update(
     criterion_id: int,
     name: str,
@@ -152,7 +153,7 @@ async def criterion_update(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("criterion_delete"))
 async def criterion_delete(criterion_id: int) -> dict:
     """Delete a criterion from a local rubric and renumber the survivors.
 
@@ -168,7 +169,7 @@ async def criterion_delete(criterion_id: int) -> dict:
     return {"deleted": True, "criterion_id": criterion_id}
 
 
-@mcp.tool(tags={"rubrics"})
+@mcp.tool(tags={"rubrics"}, annotations=annotations_for("criterion_reorder"))
 async def criterion_reorder(rubric_id: int, ordered_criterion_ids: list[int]) -> list[int]:
     """Reassign criterion ``ordinal`` to match the given order.
 

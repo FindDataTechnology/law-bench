@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"law"})
+@mcp.tool(tags={"law"}, annotations=annotations_for("law_types"))
 async def law_types() -> list[dict]:
     """List contract types that have at least one law_info survey row.
 
@@ -26,7 +27,7 @@ async def law_types() -> list[dict]:
     return await anyio.to_thread.run_sync(_list)
 
 
-@mcp.tool(tags={"law"})
+@mcp.tool(tags={"law"}, annotations=annotations_for("law_info"))
 async def law_info(contract_type: str) -> dict:
     """Fetch both sources' survey content for a contract type.
 
@@ -42,7 +43,7 @@ async def law_info(contract_type: str) -> dict:
     return await anyio.to_thread.run_sync(_get, contract_type)
 
 
-@mcp.tool(tags={"law"})
+@mcp.tool(tags={"law"}, annotations=annotations_for("law_references"))
 async def law_references() -> list[dict]:
     """Aggregate the unique laws referenced across every law_info survey.
 

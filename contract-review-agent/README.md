@@ -2,9 +2,11 @@
 
 基于 LangGraph + 3 个 AI 模型的多模型合同评审服务，自动生成合同并提供法律、商业、完整性三重审查。
 
-## 🌐 部署形态
+## 🌐 在线地址
 
-服务自托管（Docker Compose / k8s 均可），默认端口：前端 3000、后端 8000，API 文档位于 `http://<backend-host>:8000/docs`。原公网演示实例已下线。
+- **前端界面**: http://23.144.68.246:30830
+- **后端 API**: http://23.144.68.246:30831
+- **API 文档**: http://23.144.68.246:30831/docs
 
 ---
 
@@ -34,7 +36,7 @@
 
 ```bash
 # 1. 配置环境变量
-cd <repo-root>/contract-review-agent
+cd /Users/chengsishi/law-template/contract-review-agent
 cp .env.example .env
 # 编辑 .env 文件，填写你的 API KEY 和数据库配置
 
@@ -104,7 +106,7 @@ DATABASE_URL=postgresql://app:CHANGEME@postgres.postgres.svc.cluster.local:5432/
 # === 服务器配置 ===
 HOST=0.0.0.0
 PORT=8000
-CORS_ORIGINS=http://localhost:30830,http://<retired-america-box-ip>:30830
+CORS_ORIGINS=http://localhost:30830,http://23.144.68.246:30830
 ```
 
 ---
@@ -114,7 +116,7 @@ CORS_ORIGINS=http://localhost:30830,http://<retired-america-box-ip>:30830
 ### 运行合同评审
 
 ```bash
-curl -X POST http://<retired-america-box-ip>:30831/api/chat \
+curl -X POST http://23.144.68.246:30831/api/chat \
   -H "Content-Type: application/json" \
   -d '{
     "message": "生成一份农产品买卖合同",
@@ -149,10 +151,10 @@ curl -X POST http://<retired-america-box-ip>:30831/api/chat \
 
 ```bash
 # 列出最近记录
-curl http://<retired-america-box-ip>:30831/api/agent-runs?limit=20
+curl http://23.144.68.246:30831/api/agent-runs?limit=20
 
 # 获取特定记录详情
-curl http://<retired-america-box-ip>:30831/api/agent-runs/{run_id}
+curl http://23.144.68.246:30831/api/agent-runs/{run_id}
 ```
 
 ---
@@ -268,7 +270,7 @@ A: 不会。当前版本中，评审建议仅作为参考反馈显示给用户�
 
 ### Q: 如何自定义评估规则？
 
-A: 通过规则管理后台 http://<retired-america-box-ip>:30820 可以创建/修改 rubric 规则。
+A: 通过规则管理后台 http://23.144.68.246:30820 可以创建/修改 rubric 规则。
 
 ---
 
@@ -288,7 +290,7 @@ kubectl logs -l app=review-agent-backend -n law-bench --tail=100
 
 ```bash
 # 检查 CORS 配置
-curl -I http://<retired-america-box-ip>:30830
+curl -I http://23.144.68.246:30830
 
 # 检查浏览器控制台错误
 ```
@@ -308,7 +310,7 @@ curl https://www.linjie.love/v1/models
 ## 📞 技术支持
 
 - **项目文档**: `/docs/` 目录
-- **OpenAPI 文档**: http://<retired-america-box-ip>:30831/docs
+- **OpenAPI 文档**: http://23.144.68.246:30831/docs
 - **代码仓库**: https://github.com/law-ai-official/law-bench/tree/main/contract-review-agent
 
 ---

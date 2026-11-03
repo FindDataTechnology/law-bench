@@ -64,7 +64,10 @@ class TestUnnamedContractClassification:
         assert classify_contract("ppp_project") == "unnamed_contract"
 
     def test_unnamed_contract_count(self):
-        assert len(UNNAMED_CONTRACTS) == 22
+        # 19 个 named 是民法典典型合同的法定数目（固定）；unnamed 是业务分类，
+        # 随 Category B 生成器类型扩充（22 -> 24）。断言覆盖下界而非钉死当前
+        # 数字，否则每扩一类就要改测试。
+        assert len(UNNAMED_CONTRACTS) >= 22
 
 
 class TestUnknownContractType:
@@ -123,13 +126,16 @@ class TestContractListing:
 
     def test_list_unnamed_contracts(self):
         unnamed = list_unnamed_contracts()
-        assert len(unnamed) == 22
+        assert len(unnamed) >= 22
         assert "company_formation" in unnamed
         assert "employment" in unnamed
 
     def test_list_all_contracts(self):
         all_contracts = list_all_contracts()
-        assert len(all_contracts) == 41
+        # The union must equal named + unnamed exactly — that invariant holds
+        # regardless of how many types the catalog carries.
+        assert set(all_contracts) == set(NAMED_CONTRACTS) | set(UNNAMED_CONTRACTS)
+        assert len(all_contracts) == len(NAMED_CONTRACTS) + len(UNNAMED_CONTRACTS)
 
     def test_no_overlap_between_named_and_unnamed(self):
         named = set(list_named_contracts())

@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"pipeline"})
+@mcp.tool(tags={"pipeline"}, annotations=annotations_for("self_heal_pipeline_run"))
 async def self_heal_pipeline_run(
     contract_type: str,
     tags: dict | None = None,
@@ -90,7 +91,7 @@ async def self_heal_pipeline_run(
 pipeline_run = self_heal_pipeline_run
 
 
-@mcp.tool(tags={"pipeline"})
+@mcp.tool(tags={"pipeline"}, annotations=annotations_for("pipeline_list"))
 async def pipeline_list(limit: int = 20) -> list[dict]:
     """List recent pipeline runs (most recent first).
 
@@ -103,7 +104,7 @@ async def pipeline_list(limit: int = 20) -> list[dict]:
     return await anyio.to_thread.run_sync(list_pipeline_runs, limit)
 
 
-@mcp.tool(tags={"pipeline"})
+@mcp.tool(tags={"pipeline"}, annotations=annotations_for("pipeline_get"))
 async def pipeline_get(pipeline_id: int) -> dict:
     """Fetch one pipeline run + its linked eval run's per-criterion verdicts.
 

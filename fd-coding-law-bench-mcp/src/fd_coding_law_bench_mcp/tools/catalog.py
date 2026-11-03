@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 from functools import lru_cache
 from typing import Literal
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
@@ -22,7 +23,7 @@ _catalog_cache: tuple[list[dict], datetime] | None = None
 _CACHE_TTL = timedelta(minutes=5)
 
 
-@mcp.tool(tags={"contracts"})
+@mcp.tool(tags={"contracts"}, annotations=annotations_for("contract_type_catalog"))
 async def contract_type_catalog(
     include_clause_counts: bool = True,
     refresh: bool = False,
@@ -104,7 +105,7 @@ async def contract_type_catalog(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"contracts"})
+@mcp.tool(tags={"contracts"}, annotations=annotations_for("type_metadata"))
 async def type_metadata(
     contract_type: str,
     include_scenario_details: bool = True,

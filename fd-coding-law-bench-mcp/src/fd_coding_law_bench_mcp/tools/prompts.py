@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"prompts"})
+@mcp.tool(tags={"prompts"}, annotations=annotations_for("prompt_list"))
 async def prompt_list() -> list[dict]:
     """List all generation prompts (without the content body).
 
@@ -25,7 +26,7 @@ async def prompt_list() -> list[dict]:
     return await anyio.to_thread.run_sync(_list)
 
 
-@mcp.tool(tags={"prompts"})
+@mcp.tool(tags={"prompts"}, annotations=annotations_for("prompt_get"))
 async def prompt_get(name: str) -> dict:
     """Fetch a prompt's full record (including ``content``), by name.
 
@@ -40,7 +41,7 @@ async def prompt_get(name: str) -> dict:
     return await anyio.to_thread.run_sync(_get, name)
 
 
-@mcp.tool(tags={"prompts"})
+@mcp.tool(tags={"prompts"}, annotations=annotations_for("prompt_create"))
 async def prompt_create(
     name: str,
     contract_type: str,
@@ -73,7 +74,7 @@ async def prompt_create(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"prompts"})
+@mcp.tool(tags={"prompts"}, annotations=annotations_for("prompt_update"))
 async def prompt_update(
     prompt_id: int,
     name: str,
@@ -105,7 +106,7 @@ async def prompt_update(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"prompts"})
+@mcp.tool(tags={"prompts"}, annotations=annotations_for("prompt_delete"))
 async def prompt_delete(prompt_id: int) -> dict:
     """Delete a prompt (no child table, nothing cascades).
 

@@ -72,6 +72,9 @@ EXPECTED_TOOLS = {
     "agent_run_store",
     "agent_run_list",
     "agent_run_get",
+    # long-running task handles (mcp-long-running-operations)
+    "task_status",
+    "task_failed_items",
 }
 
 # Each tool's concept group. Read from the registered tool component's
@@ -129,6 +132,8 @@ EXPECTED_TAGS = {
     "agent_run_store": "metrics",
     "agent_run_list": "metrics",
     "agent_run_get": "metrics",
+    "task_status": "metrics",
+    "task_failed_items": "metrics",
 }
 
 # Every tool module that registers ``@mcp.tool`` decorators on import.

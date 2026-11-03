@@ -3,10 +3,13 @@
 
 Single source of truth for:
 
-- the four mutually-exclusive tiers and their ordering,
-- the bronze "never ground truth" guard (single point),
 - the open-source license allowlist + gate,
 - manifest record shape, paths, and deterministic JSONL I/O.
+
+The four-tier taxonomy and its guards moved verbatim to the platform kernel
+(``src/bench/tiers.py``) and are re-exported below unchanged, so sibling
+scripts' ``from common import ...`` (tier names included) keeps working with a
+single implementation.
 
 See ``docs/finetune-data.md`` for the tiering rationale and
 ``openspec/changes/add-finetune-data-flywheel/`` for the spec/design.
@@ -20,7 +23,23 @@ from __future__ import annotations
 import json
 import pathlib
 import re
-from typing import Any, Iterable
+import sys
+
+# Kernel import: put the repo root (common.py -> parents[2]) on sys.path so
+# ``src.bench.tiers`` resolves even when the scripts layer runs without the
+# project venv — tiers.py is pure stdlib, so the import never needs one. The
+# tier API below is a re-export of that single source; there is no second copy.
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2]))
+
+from src.bench.tiers import (  # noqa: E402,F401  (re-exported; single source)
+    TIERS,
+    TIER_RANK,
+    BronzeGroundTruthError,
+    TierGuardError,
+    assert_not_ground_truth,
+    filter_by_tier,
+    tier_at_least,
+)
 
 # --- slot placeholder syntax (single point for the scripts layer) -----------
 # Mirrors src/generator/slots.py SLOT_PATTERN: {{name}} with optional inner
@@ -43,14 +62,7 @@ WAREHOUSE_MANIFEST = MANIFEST_DIR / "warehouse_manifest.jsonl"
 REJECTED_SOURCES = MANIFEST_DIR / "rejected_sources.jsonl"
 COVERAGE_GAPS = MANIFEST_DIR / "coverage_gaps.jsonl"
 
-# --- tiers ------------------------------------------------------------------
-# Four mutually-exclusive tiers (spec: 数据分层与溯源标记).
-TIERS = ("gold", "silver", "bronze", "raw")
-# Rank for "X 及以上" filter semantics. gold=0 is the highest (ground truth);
-# raw=3 is the lowest (structural backbone, no label semantics).
-# "silver 及以上" => records whose rank <= rank(silver), i.e. gold or silver.
-TIER_RANK = {"gold": 0, "silver": 1, "bronze": 2, "raw": 3}
-
+# --- tier map for warehouse extraction (tier system: src/bench/tiers.py) ----
 # Which warehouse table maps to which tier at extraction time. The extractor
 # tags each material with the tier from this map.
 TIER_BY_TABLE = {
@@ -67,64 +79,6 @@ TIER_BY_TABLE = {
     "core_clauses": "gold",  # mandatory-clause checklist per type
     "industry_standard_references": "gold",  # statute pointers per type
 }
-
-# --- bronze/silver guards (single point) -----------------------------------
-
-# Ground-truth / reward-positive purposes: which tiers are forbidden for each.
-# bronze (machine self-eval) is never ground truth. silver (LLM draft) is never
-# a reward-positive sample (SFT warmup only). Enforced single-point here so
-# every loader/exporter that assembles a labeled set routes through one check.
-_GROUND_TRUTH_FLOORS = {"bronze"}          # bronze can never be ground truth
-_REWARD_POSITIVE_FLOORS = {"bronze", "silver"}  # silver can never be reward positive
-
-
-class TierGuardError(RuntimeError):
-    """Raised when a forbidden tier is used for a guarded purpose."""
-
-
-# Keep the old name as an alias so existing callers keep working.
-BronzeGroundTruthError = TierGuardError
-
-
-def _forbidden(tier: str, purpose: str) -> set[str]:
-    """Return the tier set forbidden for ``purpose``."""
-    if purpose in ("ground_truth", "judge_c_ground_truth", "drafter_a_ground_truth"):
-        return _GROUND_TRUTH_FLOORS
-    if purpose in ("reward_positive", "drafter_a_reward_positive"):
-        return _REWARD_POSITIVE_FLOORS
-    # Unknown purpose: fail closed — treat any non-gold tier as forbidden.
-    return {"bronze", "silver", "raw"}
-
-
-def assert_not_ground_truth(tier: str, purpose: str = "ground_truth") -> None:
-    """Single-point tier guard. Call from every loader/exporter that assembles
-    a ground-truth or reward-positive sample set.
-
-    - ``purpose='ground_truth'`` (default): ``bronze`` is forbidden.
-    - ``purpose='reward_positive'``: ``bronze`` and ``silver`` are forbidden.
-    """
-    if tier in _forbidden(tier, purpose):
-        raise TierGuardError(
-            f"tier={tier!r} cannot be used for purpose={purpose!r}: "
-            "bronze is machine self-eval (never ground truth); "
-            "silver is an LLM draft (SFT warmup only, never reward positive). "
-            "See docs/finetune-data.md."
-        )
-
-
-def tier_at_least(tier: str, floor: str) -> bool:
-    """True if ``tier``'s rank <= ``floor``'s rank (tier is at least as gold-side)."""
-    return TIER_RANK[tier] <= TIER_RANK[floor]
-
-
-def filter_by_tier(records: Iterable[dict], floor: str) -> list[dict]:
-    """Return records whose ``tier`` is at least ``floor`` (gold side).
-
-    Single-point tier filter used by all loaders. ``floor="gold"`` returns
-    only gold; ``floor="silver"`` returns gold+silver (never bronze/raw).
-    """
-    return [r for r in records if tier_at_least(r.get("tier", "raw"), floor)]
-
 
 # --- license gate -----------------------------------------------------------
 LICENSE_ALLOWLIST = {"Apache-2.0", "MIT"}

@@ -29,3 +29,10 @@ dev = ["pytest>=8.0"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+# `external`: needs a live service (MinIO / Elasticsearch / LLM endpoint) or a
+# populated object store; the release gate runs with `-m "not external"` and
+# prints what it dropped. The suite is otherwise hermetic — it needs only a
+# reachable PostgreSQL for the per-test databases.
+markers = [
+    "external: requires a live external service; excluded from the release gate",
+]

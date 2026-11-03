@@ -29,7 +29,7 @@ export function Chat({ onResult }: { onResult: (r: ChatResult | null) => void })
 
     try {
       const backendUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://23.144.68.246:30831";
       const res = await fetch(`${backendUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

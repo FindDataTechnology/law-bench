@@ -44,6 +44,7 @@ from .routes import (
     law_catalog,
     law_info,
     pages,
+    promotion,
     review,
     samples,
     search,
@@ -113,6 +114,7 @@ def create_app() -> FastAPI:
     app.include_router(contracts.router)
     app.include_router(clauses.router)
     app.include_router(review.router)
+    app.include_router(promotion.router)
     app.include_router(dashboard.router)
 
     # Resolve the active locale once per request, stash it for the template

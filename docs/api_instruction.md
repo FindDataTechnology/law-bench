@@ -36,9 +36,9 @@
 - OpenAPI JSON：`https://lawbench.finddatatech.cloud/openapi.json`
 - 健康检查：`GET https://lawbench.finddatatech.cloud/healthz`
 
-部署在 cheap k3s 集群（公网 `<cheap1-public-ip>` 由 Caddy 终结 TLS），NodePort `30820`
+部署在 cheap k3s 集群（公网 `103.236.89.212` 由 Caddy 终结 TLS），NodePort `30820`
 （容器端口 8010）。旧域名 `https://lawbench.token118.com` 随 america 机器
-（`<retired-america-box-ip>`）一并下线（2026-09-09 起 america 已退役，不可访问），
+（`23.144.68.246`）一并下线（2026-09-09 起 america 已退役，不可访问），
 对接一律用上面的新域名。
 后端连的是生产 PostgreSQL（条款库 / rubric / 产物元数据都在库里），生成的 docx/pdf 产物
 落 MinIO。日常对接**直接用这个远端地址**，不必本地跑。

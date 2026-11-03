@@ -120,15 +120,19 @@ def test_slots_ontology_fills_missing(monkeypatch, app_client: TestClient):
     """A template slot absent from the manifest is resolved via the slot ontology."""
     import src.web.routes.contract_context as cc
 
+    # sale's body carries per-type Chinese slot names (the Latin canonical set
+    # predates the masters migration), so strip a Chinese one: 甲方名称 resolves
+    # through the ontology's latin bridge to party_a.
     real = cc.get_slot_instructions("sale")
-    stripped = [si for si in real if si["name"] != "party_a"]
+    stripped = [si for si in real if si["name"] != "甲方名称"]
+    assert len(stripped) < len(real), "fixture precondition: 甲方名称 is in the manifest"
     monkeypatch.setattr(cc, "get_slot_instructions", lambda _t: stripped)
 
     r = app_client.get("/api/contracts/sale/slots")
     assert r.status_code == 200
     by_name = {e["name"]: e for e in r.json()}
-    assert by_name["party_a"]["source"] == "ontology"
-    assert by_name["party_a"]["label"]  # non-empty guidance
+    assert by_name["甲方名称"]["source"] == "ontology"
+    assert by_name["甲方名称"]["label"]  # non-empty guidance
 
 
 def test_slots_uncovered_flagged(monkeypatch, app_client: TestClient):

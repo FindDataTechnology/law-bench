@@ -93,7 +93,12 @@ RUN uv sync --no-install-project --no-dev \
     && rm -rf "$UV_CACHE_DIR"
 
 # Application sources + seed data.
+# Domain packs are part of the runtime tree: src/law_catalog is a compat shim
+# re-exporting packs/legal/law_catalog, and src/bench/packs.py loads
+# packs/*/pack.yaml at startup. A new top-level runtime dir MUST gain a COPY
+# line here — forgetting it ships a crash-on-boot image (learned 2026-11-03).
 COPY --chown=appuser:appuser src ./src
+COPY --chown=appuser:appuser packs ./packs
 COPY --chown=appuser:appuser main.py ./
 COPY --chown=appuser:appuser templates ./templates
 COPY --chown=appuser:appuser db ./db

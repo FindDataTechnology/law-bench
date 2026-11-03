@@ -360,7 +360,7 @@ mask 边界靠 Qwen3 chat template 的**token 级前缀性质**（实测 `full[:
 
 **产物**：两个独立 adapter（各 324MB，`adapter_model.safetensors` 79.7M 参数 + tokenizer）。已打包 `data/finetune/adapters/adapters_0905.tar.gz`（571MB，md5 校验过）；训练所用原始数据 + run_meta + 完整 loss 曲线归档在 `data/finetune/box_rescue/`。
 
-> ⚠️ **数据 lineage 待审计**：box 上实际训练用的是机上导出的 SFT 集 **judge_c 2314 train / 257 val、drafter_a 471/55**——大于「输入泄露与重接地」一节里重接地后的 **967/107**。机上这份导出早于/绕过了 `reground_judge_c.py` 的泄露修复，provenance 未重新审计。若判官 adapter 在真实条款上表现不佳，先怀疑训练数据 lineage，再怀疑 adapter。
+> ✅ **数据 lineage 已审计结项（2026-10-18）**：实训练集 `judge_c_gold.grounded.jsonl` = **2571 = 1074（本章重接地）+ 1497（ai_reviewer 新生成）**，输入侧泄露 0%。本次重跑复核：bootstrap 全量 9134 行 body 100% 抄自 reasoning（比本文档原记的 96% 更高，因原口径只覆盖 conf≥0.5 的 1969 行）、conf≥0.5 子集 reground 1969→1074（丢 895、harness 685=63.8%、修后泄露 0%）与本章记录逐项吻合；join 引用落地 93.4%、随机对照 42.6%、裕度 +0.508。原「实训练可能绕过修复」的疑虑解除：量大是因为合并了 1497 条合规新数据。**仍需披露**：verdict 侧仍为机器自评未人工复核；丢弃的 895 条（本口径）系统性偏 fail。
 
 ## A/B 评测：base vs base+adapter
 
@@ -384,6 +384,7 @@ mask 边界靠 Qwen3 chat template 的**token 级前缀性质**（实测 `full[:
 
 - base 55 条全部写满 1400 仍未收尾；ft 有 24 条在上限内自然收束。仍有 31 条撞上限被截断，这些行的 chrF 被截断压低，真实水平略高于 51。
 - **记忆化提示**：ft 侧 3/55 行 chrF>90，idx0 达 100.0（1023 token、长度比 1.0，近似逐字复现 gold）——验证集与训练分布存在近重复样本，中位数 42.9 比均值 51.0 更能代表真实泛化水平。
+- **对外口径（2026-10-18 落档）**：主口径 = **中位数 42.9**，均值不得单独引用；引用时必须同时给验证集 55 条、3 条近重复（含 1 条近似逐字）、31/55 条撞上限被截断（压低分数，真实水平略高）。chrF 只衡量字符序列重合度、**不衡量法律正确性**，不得表述为准确率。完整口径见 `docs/xingyan/research/chrf-median-caliber.md`。
 
 逐行结果归档：`data/finetune/eval_out/{judge_c,drafter_a}_{base,ft}.jsonl` + `eval_report.md`。
 

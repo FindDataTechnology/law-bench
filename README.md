@@ -110,24 +110,29 @@ uv run --project . python -m fd_coding_law_bench_mcp
 
 ```
 src/
+  bench/          知识评测平台内核（领域无关：知识单元、tier 守卫、域包注册、数据确定性通道）
   clauses/        条款库（种子导入、三级组装、标签、审核工作流）
   contracts/      合同生成与制品（Markdown/DOCX/PDF，槽位填充）
   eval/           LLM 评审（rubric CRUD、多评审打分、compare、自愈管线、人工复核）
-  law_catalog/    法规目录（别名、条文引用解析、承继关系、审计）
+  law_catalog/    法规目录（别名、条文引用解析、承继关系、审计；实现住 packs/legal，此处为兼容 shim）
   search/         条款分块 RAG（Elasticsearch，可选）
   web/            FastAPI 工作台 + 公共只读 API（OIDC / API Key）
   settings.py     全部配置项（一律环境变量，无内置默认密码）
+packs/
+  legal/          法律域包（pack.yaml 声明 + 法规目录实现 + 域组件清单）
 data/
   clause_seeds/   43 类合同种子条款（YAML）
   finetune/       微调数据管线 schema 与产物（见 微调说明.md）
 db/               内置种子（rubric/标准/提示词，含 Harbor v0.20.0 衍生规则）
 fd-coding-law-bench-mcp/   FastMCP server（37 工具，包装 src.* 原地实现）
 contract-review-agent/     LangGraph 合同评审子项目
+paper/            law-bench 方法论文（初稿与实验数据）
+contracts/        软件服务合同空白模板样品（docx 生成脚本）
 docs/            设计与运维文档（评测体系、组装逻辑、管线架构、V4 结果…）
 tests/           pytest 套件（本地 PG 即可运行，无外部网络依赖）
 ```
 
-> 内部部署配置（k8s 清单、Jenkins、ArgoCD、OpenSpec 变更管理目录）不随开源发布；开源部署使用根目录的 `Dockerfile`（单镜像，默认服务完整应用，`PUBLIC_API=1` 时服务只读公共 API）。
+> 本仓是 law-bench 的开源面：内核（`src/bench`，领域无关，受 `tests/test_kernel_domain_free.py` 领域闸看守）+ 域包接口 + 法律域包 + 方法论文。**内部专属资产**（柏讯连接器、内部语料、gold 数据集、客户数据）住 [law-bench-internal](https://github.com/FindDataTechnology/law-bench-internal)；CI 的泄露门（`scripts/check_public_hygiene.py`，GitHub Actions 与 Jenkins 首步 fail-closed）拦截内部仓引用与凭据形态物料入库。仓内另有本团队自用的部署与变更管理配置（`deploy/`、`argocd/`、`Jenkinsfile`、`openspec/`），开源部署使用根目录的 `Dockerfile`（单镜像，默认服务完整应用，`PUBLIC_API=1` 时服务只读公共 API）。
 
 ## 文档索引
 

@@ -1,0 +1,23 @@
+name: legal
+version: 0.1.0
+description: 法律垂类域包：法规目录副本、引用解析/审计/修复与合同条款语料的声明与组件清单。
+kinds:
+  - clause
+components:
+  - type: module
+    path: packs/legal/law_catalog
+  - type: module
+    path: src/law_api
+  - type: module
+    path: src/eval/law_info.py
+  - type: module
+    path: src/eval/legal_refs.py
+  - type: module
+    path: src/eval/law_refined_citations.py
+  - type: data
+    path: data/clause_seeds
+eval_suites:
+  - law-catalog
+  - law-article-citation
+  - law-citation-audit
+  - law-citation-remediation

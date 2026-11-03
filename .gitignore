@@ -72,7 +72,6 @@ data/finetune/review/bootstrap_manifest.json
 .deepeval/
 .claude/
 .pytest_cache/
-.ruff_cache/
 .DS_Store
 **/.DS_Store
 
@@ -80,10 +79,6 @@ data/finetune/review/bootstrap_manifest.json
 .mcp.json
 # local SSH connection config (plaintext passwords — never commit)
 ssh-config.json
-# real external business contracts (client-facing documents — never commit)
-/contracts/
-# unpublished paper manuscripts and figures (never commit)
-/paper/
 # local SSH exec helper (reads ssh-config.json; box access tooling, not source)
 scripts/_ssh_exec.py
 # root-level venv (has its own internal .gitignore with "*", but ignore by name too)
@@ -118,10 +113,3 @@ assistant-ui/node_modules/
 
 # CopilotKit island build output (rebuilt by the image's node stage)
 src/web/static/assistant/
-
-# third-party impeccable skill content (CC BY-NC-ND — not redistributable;
-# kept locally for the operator's workflow, never committed)
-.agents/skills/impeccable/
-.github/skills/
-.github/agents/
-.github/hooks/

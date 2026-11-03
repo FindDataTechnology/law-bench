@@ -1,0 +1,282 @@
+{
+ "bailment": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "brokerage": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "capital_increase": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "company_formation": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "construction": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "employment": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "entrustment": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "equity_holding_in_trust": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "equity_incentive": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "equity_transfer": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "film_production": {
+  "runs": 1,
+  "max_iter": 3,
+  "reached_all_pass": false,
+  "last_n_passed": 9,
+  "last_n_criteria": 11
+ },
+ "financing_lease": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "franchise": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "gift": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "guarantee": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "insurance": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "intermediation": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "ip_license": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "labor_dispatch": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "land_transfer": {
+  "runs": 1,
+  "max_iter": 3,
+  "reached_all_pass": false,
+  "last_n_passed": 10,
+  "last_n_criteria": 11
+ },
+ "lease": {
+  "runs": 1,
+  "max_iter": 3,
+  "reached_all_pass": false,
+  "last_n_passed": 9,
+  "last_n_criteria": 10
+ },
+ "loan": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "partnership": {
+  "runs": 4,
+  "max_iter": 3,
+  "reached_all_pass": false,
+  "last_n_passed": 9,
+  "last_n_criteria": 10
+ },
+ "ppp_project": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "property_service": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "real_estate_development": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "real_estate_lease": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "real_estate_sale": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "sale": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "service": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "software_development": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "talent_agency": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "technology": {
+  "runs": 2,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "tourism_service": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "transport": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ },
+ "trust": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 11,
+  "last_n_criteria": 11
+ },
+ "utilities_supply": {
+  "runs": 1,
+  "max_iter": 2,
+  "reached_all_pass": true,
+  "last_n_passed": 8,
+  "last_n_criteria": 8
+ },
+ "vam_agreement": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "warehousing": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 10,
+  "last_n_criteria": 10
+ },
+ "work": {
+  "runs": 1,
+  "max_iter": 1,
+  "reached_all_pass": true,
+  "last_n_passed": 9,
+  "last_n_criteria": 9
+ }
+}

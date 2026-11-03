@@ -18,6 +18,7 @@ import anyio
 from datetime import datetime, timedelta
 from functools import lru_cache
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
@@ -43,7 +44,7 @@ def _get_cached_vocab(contract_type: str | None, refresh: bool = False) -> dict:
     return result
 
 
-@mcp.tool(tags={"tags"})
+@mcp.tool(tags={"tags"}, annotations=annotations_for("tag_vocab_list"))
 async def tag_vocab_list(
     contract_type: str | None = None,
     refresh: bool = False,
@@ -68,7 +69,7 @@ async def tag_vocab_list(
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"tags"})
+@mcp.tool(tags={"tags"}, annotations=annotations_for("tag_validate"))
 async def tag_validate(tags: dict, contract_type: str | None = None) -> dict:
     """Validate a tag dict against the controlled vocabulary.
 
@@ -93,7 +94,7 @@ async def tag_validate(tags: dict, contract_type: str | None = None) -> dict:
     return await anyio.to_thread.run_sync(_go)
 
 
-@mcp.tool(tags={"tags"})
+@mcp.tool(tags={"tags"}, annotations=annotations_for("tag_combinations_list"))
 async def tag_combinations_list(
     contract_type: str,
     include_clause_availability: bool = True,

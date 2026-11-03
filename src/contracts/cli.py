@@ -146,14 +146,30 @@ def main(argv: list[str] | None = None) -> int:
             print("no contract types found", file=sys.stderr)
             return 1
         failed = 0
+        skipped: list[str] = []
         for ct in types:
             try:
                 result = generate_contract(ct["key"], format=args.format, out_dir=args.out)
+            except NotFoundError as exc:
+                # A type with a template but no bundled law_info survey cannot
+                # be generated: the 法律法规 section is part of the deliverable.
+                # That is missing data, not a generation fault — report it on
+                # one line and keep going, so a catalog that outgrew its survey
+                # corpus does not look like a broken renderer.
+                print(f"skip {ct['key']}: {exc}", file=sys.stderr)
+                skipped.append(ct["key"])
+                continue
             except Exception as exc:  # noqa: BLE001 - report and continue
                 print(f"error generating {ct['key']}: {exc}", file=sys.stderr)
                 failed += 1
                 continue
             _print_paths(result)
+        if skipped:
+            print(
+                f"\n{len(skipped)} type(s) skipped for missing law_info data: "
+                + ", ".join(skipped),
+                file=sys.stderr,
+            )
         return 1 if failed else 0
 
     if not args.contract_type:

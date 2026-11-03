@@ -216,7 +216,7 @@ Copy the relevant entry from `mcp-config.example.json` into your project's
   "mcpServers": {
     "law-bench": {
       "command": "uv",
-      "args": ["run", "--project", "<repo-root>", "python", "-m", "fd_coding_law_bench_mcp"]
+      "args": ["run", "--project", "/Users/chengsishi/law-template", "python", "-m", "fd_coding_law_bench_mcp"]
     }
   }
 }

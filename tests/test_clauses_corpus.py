@@ -39,6 +39,7 @@ def test_list_corpus_documents_raises_when_unreachable(monkeypatch):
         corpus.list_corpus_documents()
 
 
+@pytest.mark.external
 def test_corpus_integration_real_minio():
     """Integration: list + read one doc from the real MinIO corpus (skip if unreachable)."""
     try:

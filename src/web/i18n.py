@@ -1558,6 +1558,19 @@ _CONTRACT_CRITERION_TITLES: dict[str, str] = {
     "default_and_refund": "违约与退费",
     "sub_contracting": "转团限制",
     "dispute_resolution": "争议解决",
+    # service (scripts/seed_contract_rubrics.py)
+    "service_scope": "服务内容与范围",
+    "service_standards": "服务标准与质量",
+    "service_fees": "服务费用与支付",
+    "service_period": "服务期限与交付",
+    "acceptance_and_delivery": "验收与交付",
+    "confidentiality_and_ip": "保密与知识产权",
+    # land_transfer (scripts/seed_contract_rubrics.py)
+    "land_information": "土地基本信息",
+    "transfer_method": "流转方式",
+    "transfer_period": "流转期限",
+    "transfer_fees": "流转费用与支付",
+    "land_use_restrictions": "土地用途与限制",
 }
 
 

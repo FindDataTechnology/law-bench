@@ -10,10 +10,11 @@ from __future__ import annotations
 
 import anyio
 
+from ..annotations import annotations_for
 from ..server import mcp
 
 
-@mcp.tool(tags={"contracts"})
+@mcp.tool(tags={"contracts"}, annotations=annotations_for("contract_generate"))
 async def contract_generate(
     contract_type: str,
     format: str = "pdf",

@@ -2,8 +2,8 @@
 
 异步 REST API:提交合同文本,按指定 rubric(评估规则集)评估,轮询获取结果。
 
-- **Base URL**: `http://<retired-america-box-ip>:30820`
-- **交互式文档**: `http://<retired-america-box-ip>:30820/api/docs`(Swagger UI,可在线试调)
+- **Base URL**: `http://23.144.68.246:30820`
+- **交互式文档**: `http://23.144.68.246:30820/api/docs`(Swagger UI,可在线试调)
 
 ---
 
@@ -36,7 +36,7 @@
 **内联文本:**
 
 ```bash
-curl -X POST http://<retired-america-box-ip>:30820/api/evaluate \
+curl -X POST http://23.144.68.246:30820/api/evaluate \
   -F "rubric=contract_sale_v2" \
   -F "contract_text=甲方与乙方就买卖事项达成如下协议……"
 ```
@@ -44,7 +44,7 @@ curl -X POST http://<retired-america-box-ip>:30820/api/evaluate \
 **文件上传:**
 
 ```bash
-curl -X POST http://<retired-america-box-ip>:30820/api/evaluate \
+curl -X POST http://23.144.68.246:30820/api/evaluate \
   -F "rubric=contract_sale_v2" \
   -F "contract_file=@/path/to/contract.md"
 ```
@@ -98,7 +98,7 @@ pending ──▶ running ──▶ completed
 ### 示例
 
 ```bash
-curl http://<retired-america-box-ip>:30820/api/evaluate/1
+curl http://23.144.68.246:30820/api/evaluate/1
 ```
 
 ### 完成响应 — `200 OK`
@@ -185,7 +185,7 @@ curl http://<retired-america-box-ip>:30820/api/evaluate/1
 ### 示例
 
 ```bash
-curl "http://<retired-america-box-ip>:30820/api/evaluate?limit=10"
+curl "http://23.144.68.246:30820/api/evaluate?limit=10"
 ```
 
 ### 响应 — `200 OK`
@@ -218,7 +218,7 @@ curl "http://<retired-america-box-ip>:30820/api/evaluate?limit=10"
 import time
 import requests
 
-BASE = "http://<retired-america-box-ip>:30820"
+BASE = "http://23.144.68.246:30820"
 
 # 1. 提交评估
 with open("contract.md", "rb") as f:
