@@ -8,6 +8,8 @@
 
 > 邻近的合同生成器负责「产出草稿」，law-bench 负责「度量草稿」：每一条起草策略的变化，都要经过 rubric 评审的量化验证才会合入。
 
+> **产品站**：[bench.finddatatech.cloud](https://bench.finddatatech.cloud/) —— 一站一链介绍页：知识沉淀 → 本体发布 → 柏讯消费；发布面活数字与 as_of 直拉自匿名概览端点。
+
 ## 核心能力
 
 | 能力 | 说明 |
