@@ -22,7 +22,9 @@ def test_repo_is_clean_at_head():
 
 
 def test_url_embedded_credential_detected():
-    line = 'origin = "https://FindDataTechnology:ab890a2ba9b926f86826c441705db8aa@gitee.com/x.git"'
+    # 用明显的合成值：2026-11-09 发现原字面量疑似真实 gitee token，已换成 FAKE-*。
+    # 规则只要求密码段 >=6 字符，换成假值不影响这条测试要验的行为。
+    line = 'origin = "https://FindDataTechnology:FAKE-TOKEN-ONLY-FOR-TEST@gitee.com/x.git"'
     hits = [n for n, p in hyg.CONTENT_RULES if p.search(line)]
     assert "url-embedded credential" in hits
 
