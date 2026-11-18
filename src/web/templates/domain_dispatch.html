@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ t.console.dispatch.title }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+
+{% block content %}
+{#- 派单确认页：**这一页只读**。
+
+    批量派单的危险不在「点了会怎样」，而在「不小心点了」：如果列表页渲染时
+    就建任务，刷新一次就多一批。所以先看计划（谁、几个、已有哪些已开单），
+    再在下一页确认写。
+
+    已经开单的域不重复建，并且在计划里如实列出——静默跳过会让人以为派全了。
+
+    指派人三档不是三个样式，是三种后果：内核岗位下一轮就跑；舰队要等它自己认领；
+    归人的缺口压根不该派给智能体（派了只是把积压挪到看不见的地方）。所以选档位
+    的控件按缺口归谁渲染，而不是给一个能随便选的下拉。 -#}
+<div class="toolbar between">
+  <h1>{{ t.console.dispatch.title }}</h1>
+  <a class="btn btn-sm" href="{{ url_for('console_domain_list') }}?gap={{ plan.gap }}">{{ t.console.dispatch.back }}</a>
+</div>
+
+<div class="panel">
+  <p class="hint">{{ plan.pillar.title }}</p>
+  <p class="muted">{{ plan.pillar.detail }}</p>
+  <p class="hint">
+    {{ t.console.dispatch.route_label }} <code>{{ route }}</code>
+    {% if kernel_role %} · {% if human_only %}{{ t.console.workorders.consequence_human }}
+    {% else %}{{ t.console.dispatch.kernel_owner }} <code>{{ kernel_role }}</code>{% endif %}{% endif %}
+  </p>
+</div>
+
+{% if human_only %}
+<div class="panel">
+  <p class="hint">{{ t.console.dispatch.human_only_note }}</p>
+</div>
+{% endif %}
+
+{% if plan.will_create %}
+<div class="panel">
+  <h2>{{ t.console.dispatch.will_create }} {{ plan.will_create|length }}</h2>
+  <ul class="plain">
+    {% for d in plan.will_create %}
+    <li><strong>{{ d.name }}</strong> <code>{{ d.path or d.key }}</code></li>
+    {% endfor %}
+  </ul>
+  <form method="POST" action="{{ url_for('console_dispatch_confirm') }}" class="toolbar gap">
+    <input type="hidden" name="gap" value="{{ plan.gap }}">
+
+    {% if human_only %}
+    {#- 归人的缺口：只有这一档可派。给智能体选项等于让人以为它能替人做复核。 -#}
+    <input type="hidden" name="assignee_kind" value="human">
+    <label for="assignee">{{ t.console.dispatch.assignee_human }}</label>
+    <input type="text" name="assignee" id="assignee" required
+           placeholder="someone@example.com">
+    {% else %}
+    <label for="assignee_kind">{{ t.console.dispatch.assignee_kind }}</label>
+    <select name="assignee_kind" id="assignee_kind">
+      <option value="kernel-role">{{ t.console.workorders.kind_kernel_role }}{% if kernel_role %}（{{ kernel_role }}）{% endif %}</option>
+      <option value="fleet">{{ t.console.workorders.kind_fleet }}</option>
+      <option value="human">{{ t.console.workorders.kind_human }}</option>
+    </select>
+
+    <label for="assignee">{{ t.console.dispatch.assignee }}</label>
+    <input type="text" name="assignee" id="assignee" required
+           placeholder="someone@example.com">
+    <input type="hidden" name="assignee_ref" value="{{ kernel_role or '' }}">
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary">{{ t.console.dispatch.confirm }}</button>
+  </form>
+
+  {% if not human_only %}
+  <p class="hint">{{ t.console.dispatch.assignee_hint }}</p>
+  <ul class="plain hint">
+    <li>{{ t.console.workorders.consequence_kernel }}{% if kernel_role %}（<code>{{ kernel_role }}</code>）{% endif %}</li>
+    <li>{{ t.console.workorders.consequence_fleet }}{% if fleets %}：{% for f in fleets %}<code>{{ f.name }}</code>{% if not loop.last %} · {% endif %}{% endfor %}{% else %}——{{ t.console.dispatch.no_fleet }}{% endif %}</li>
+    <li>{{ t.console.dispatch.kernel_ref_hint }}</li>
+  </ul>
+  {% endif %}
+</div>
+{% else %}
+<div class="panel">
+  <p class="hint">{{ t.console.dispatch.nothing_to_do }}</p>
+</div>
+{% endif %}
+
+{% if plan.already_open %}
+<div class="panel">
+  <h2>{{ t.console.dispatch.already_open }} {{ plan.already_open|length }}</h2>
+  <p class="hint">{{ t.console.dispatch.already_hint }}</p>
+  <ul class="plain">
+    {% for d in plan.already_open %}
+    <li>{{ d.name }} <code>{{ d.path or d.key }}</code></li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

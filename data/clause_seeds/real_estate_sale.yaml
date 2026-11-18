@@ -1,0 +1,111 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# real_estate_sale (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: real_estate_sale
+tags:
+  - name: property_nature
+    values: [住宅, 商业, 办公, 公寓, 工业, 其他]
+    why: 直接决定限购资格、贷款年限、首付比例、税费税率及居住用途限制，通用合同无法覆盖此标的物法律属性差异
+  - name: transaction_type
+    values: [一手房, 二手房, 法拍房, 安置房]
+    why: 不同来源房屋涉及不同监管政策（网签备案流程、资金监管要求）、税费计算方式及交付标准，通用"强度"无法区分行政监管差异
+  - name: hukou_obligation
+    values: [需迁出, 无需迁出, 无法迁出, 逾期违约金]
+    why: 仅存在于住宅买卖中，涉及子女入学、居住证办理等核心权益，是房产特有的履约节点，通用"义务"过于宽泛
+  - name: loan_dependency
+    values: [全款, 纯商贷, 纯公积金, 组合贷, 未知]
+    why: 房产交易高度依赖银行审批，贷款失败导致的合同解除机制与普通货物买卖完全不同，通用"风险"不涵盖融资结构对履行的决定性影响
+clauses:
+  - family: 户口迁出义务
+    section: 权利义务
+    body: >
+      出卖人承诺于房屋所有权转移登记之日起{{hukou_days}}日内，将落户于该房屋的全体户口迁出。若逾期未迁出，每逾期一日，按已付房价款的万分之五向买受人支付违约金；逾期超过{{grace_days}}日，买受人有权解除合同并要求赔偿损失。
+      （《民法典》第五百零九条）
+    stance: pro_b
+    strength: strong
+    why: 户籍管理属行政管理范畴，示范文本常忽略，但民事合同中明确约定可保障买方入学权益，属高频纠纷点，非买卖/租赁通用大路货
+    verdict: real
+    slot_instructions:
+      - name: hukou_days
+        label: 户口迁出期限
+        description: 出卖人自房屋所有权转移登记之日起迁出户口的日数
+        example: "30"
+        required: true
+      - name: grace_days
+        label: 解约宽限期
+        description: 逾期未迁出后买受人可解除合同的宽限日数
+        example: "90"
+        required: true
+  - family: 贷款审批失败处理
+    section: 价款及支付
+    body: >
+      若因买受人原因或银行政策导致贷款未获批或额度不足，买受人应在收到通知后{{supplement_days}}日内以现金补足差额。若无法补足，双方同意解除合同，出卖人无息退还已付款项，互不承担违约责任。
+      （《民法典》第五百六十三条）
+    stance: balanced
+    strength: standard
+    why: 通用模板通常假设"钱到位"，但房产交易中银行拒贷是常见风险，需明确"补款"还是"解约"的优先顺序，非大路货
+    verdict: real
+    slot_instructions:
+      - name: supplement_days
+        label: 补款期限
+        description: 买受人收到贷款未获批通知后以现金补足差额的日数
+        example: "15"
+        required: true
+  - family: 特殊瑕疵告知（凶宅/重大缺陷）
+    section: 合同标的
+    body: >
+      出卖人保证该房屋内未曾发生过非正常死亡事件（即"凶宅"），亦无重大结构性安全隐患。若隐瞒上述情况，视为欺诈，买受人有权撤销合同并主张惩罚性赔偿。
+      （《民法典》第一百四十八条、第五百条）
+    stance: pro_b
+    strength: strong
+    why: 示范文本多关注物理质量，极少提及心理瑕疵（凶宅）及道德风险，是房产特有的价值减损因素
+    verdict: real
+  - family: 税费承担明细
+    section: 价款及支付
+    body: >
+      本次交易产生的契税、增值税及附加、个人所得税、登记费等，由【出卖人/买受人】各自承担法定部分，或约定如下：{{tax_detail}}。若因政策调整导致税费增加，超出原预估部分由{{tax_bearer}}承担。
+      （《中华人民共和国契税法》第一条）
+    stance: balanced
+    strength: standard
+    why: 通用买卖通常默认"含税价"，但房产税费占比高且名目杂，极易产生争议，必须单独列明
+    verdict: real
+    slot_instructions:
+      - name: tax_detail
+        label: 税费约定明细
+        description: 各项税费的具体承担约定，如契税由买受人承担、增值税及附加由出卖人承担等
+        example: 契税由买受人承担；增值税及附加由出卖人承担；个人所得税由出卖人承担
+        required: true
+      - name: tax_bearer
+        label: 增量税费承担方
+        description: 因政策调整导致税费增加时超出原预估部分的承担方
+        example: 买受人
+        required: false
+  - family: 学位占用承诺
+    section: 合同标的
+    body: >
+      出卖人确认该房屋对应的学位名额在{{year}}学年未被占用。若因出卖人原因导致买受人子女无法入学，出卖人应退还全部房款并支付相当于房价款{{percent}}%的违约金。
+    stance: pro_b
+    strength: strong
+    why: 学区房交易核心价值在于学位，但国家层面无统一法条，多为地方政策，需结合当地教育局规定执行（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: year
+        label: 学年
+        description: 学位名额未被占用的学年
+        example: "2025"
+        required: true
+      - name: percent
+        label: 违约金比例
+        description: 因学位占用导致无法入学时出卖人支付违约金占房价款的百分比
+        example: "10"
+        required: true
+skipped:
+  - item: 不可抗力条款
+    reason: 通用合同已有标准不可抗力定义（自然灾害、战争等），房产买卖无特殊例外，归入通用违约责任即可
+  - item: 保密条款
+    reason: 除非涉及上市公司并购，普通房产买卖不涉及商业秘密，通用隐私保护足以覆盖个人信息
+  - item: 争议解决管辖法院
+    reason: 虽房产专属管辖，但示范文本 base 中"争议解决"章节已包含不动产所在地管辖原则，无需新增特有条款
+  - item: 一般违约责任比例
+    reason: 示范文本 base 中"违约责任"章节已设定违约金计算方式，具体比例由用户填写，无需新增固定条文
+  - item: 送达地址确认
+    reason: 属于程序性事项，通用合同签署信息章节已包含，无需针对房产单独设立

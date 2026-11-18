@@ -1,0 +1,61 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# gift (赠与合同) consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: gift
+tags:
+  - name: revocation_type
+    values: [arbitrary, statutory, non_revocable]
+    why: 赠与合同核心特征在于"诺成但可撤销"，区分公证/公益后的不可撤销与一般赠与的任意撤销，是买卖/租赁不具备的特殊权利结构，通用4维无法界定具体撤销机制
+  - name: burden_nature
+    values: [pure_gift, conditional_gift]
+    why: 《民法典》第六百六十一条规定附义务赠与中受赠人不履行义务时赠与人可撤销，改变合同单务性质，通用stance无法体现"附义务"导致的特殊撤销后果
+  - name: tax_liability
+    values: [donor, donee, both]
+    why: 不动产/股权赠与涉及契税、个税等特定税种，不同于买卖的增值税逻辑，且常由双方协商转嫁，是赠与特有的成本分配点
+clauses:
+  - family: 任意撤销权放弃声明
+    section: 权利义务
+    body: >
+      双方确认，本合同项下赠与财产为{{gift_nature}}（如：经过公证/具有救灾扶贫等社会公益性质），根据《民法典》第六百五十八条，赠与人不享有任意撤销权，承诺不可反悔。
+    stance: pro_b
+    strength: strong
+    why: 示范文本常忽略"任意撤销权"的例外情形，未公证的一般赠与在交付前存在被单方撤回的法律漏洞；锁定赠与人不可反悔，非买卖/租赁通用
+    verdict: real
+    slot_instructions:
+      - name: gift_nature
+        label: 赠与性质
+        description: 赠与财产的性质或类型，用于判断是否适用任意撤销权例外，如"经过公证""具有救灾扶贫等社会公益性质"等
+        example: 经过公证
+        required: true
+  - family: 法定撤销事由列举
+    section: 违约责任
+    body: >
+      若受赠人出现以下情形，赠与人有权依据《民法典》第六百六十三条撤销赠与并要求返还：1.严重侵害赠与人或其近亲属；2.对赠与人有扶养义务而不履行；3.不履行赠与合同约定的义务。
+    stance: pro_a
+    strength: strong
+    why: 通用违约责任多针对金钱赔偿，未涵盖赠与特有的"人身关系破坏"或"扶养义务违反"作为撤销触发点，非大路货
+    verdict: real
+  - family: 瑕疵担保责任限制
+    section: 权利义务
+    body: >
+      鉴于赠与的无偿性，除赠与人故意不告知瑕疵或保证无瑕疵外，赠与人不承担瑕疵担保责任，依据《民法典》第六百六十二条执行。
+    stance: pro_a
+    strength: standard
+    why: 通用条款默认卖方承担瑕疵担保，直接套用会使赠与人在无过错情况下仍需赔偿，违背赠与法理，示范文本常漏
+    verdict: real
+  - family: 穷困抗辩权行使
+    section: 履行期限
+    body: >
+      若赠与人经济状况显著恶化，严重影响其生产经营或家庭生活，依据《民法典》第六百六十六条，赠与人可不再履行赠与义务，并书面通知受赠人。
+    stance: pro_a
+    strength: standard
+    why: 通用履行期限仅约定时间，未考虑赠与人因突发变故丧失履约能力的法定中止权，赠与特有
+    verdict: real
+skipped:
+  - item: 价款及支付方式
+    reason: 赠与本质为无偿，除非是"附义务赠与"，否则不应设置常规价款条款，强行加入易混淆为买卖或变相交易；base"价款及支付"已覆盖附义务情形
+  - item: 通用违约金条款
+    reason: 赠与合同中除法定撤销外通常不适用金钱违约金，通用违约金条款在此类合同中缺乏适用基础且易产生歧义
+  - item: 保密条款
+    reason: 属于通用商务合同条款，非赠与合同特有法律关系要素，归入通用模板即可
+  - item: 不可抗力定义
+    reason: 属于所有合同类型的通用免责事由，已包含在基础条款库中，重复抽取无增加价值

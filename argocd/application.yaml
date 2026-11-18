@@ -1,0 +1,45 @@
+# ArgoCD Application for the law-bench namespace.
+#
+# Apply with:
+#   kubectl apply -f argocd/appproject.yaml -n argocd    # project first
+#   kubectl apply -f argocd/application.yaml -n argocd
+#
+# Before this, the namespace was applied by hand (`kubectl apply -f
+# deploy/*.yaml` from cheap-4) — the 2026-09-21 rolls are the last ones done
+# that way. The app is what makes a deploy declarative: bump the image tag in
+# `deploy/deployment.yaml`, commit, push, and ArgoCD rolls the pod.
+#
+# Scope: `path: deploy`, top-level `*.yaml` only (the subdirectories hold other
+# boxes' manifests and runbooks — america-box is retired, china-box/public/
+# review-agent belong elsewhere).
+#
+# 2026-11-09：mcp-deployment.yaml 重新纳入同步。原先排除它的理由（注释原文）是
+# 「清单相对线上是旧的：清单 sha-2c502d7 + cheap-4，线上 sha-5f8041a 在 liuliangdmh1xr0w9ryu，
+# 两个 tag 在 Harbor 都不存在，同步会搬走 MCP pod 并可能 ImagePullBackOff」，并且它自己写了
+# 修法：「Reconcile the file with the intended state, then drop this exclusion」。现在：
+#   · 镜像：清单已换到 law-template:sha-e411d22（TCR），与线上一致；
+#   · 节点：清单对齐到线上所在的 liuliangdmh1xr0w9ryu（两节点都有 node-local 包覆盖，已实测）；
+#   · 纳入前 kubectl diff 为空 —— 这次 sync 不会动 pod。
+# 该 app 本就开着 selfHeal，纳入后这份清单再漂移会被自动纠正。
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: law-bench
+  namespace: argocd
+spec:
+  project: law-bench
+  source:
+    repoURL: https://gitee.com/FindDataTechnology/law-bench.git
+    targetRevision: main
+    path: deploy
+    directory:
+      include: '*.yaml'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: law-bench
+  syncPolicy:
+    # selfHeal reverts manual kubectl edits (git is the source of truth). No
+    # prune: nothing is ever deleted by a sync, so a manifest dropped from the
+    # repo leaves the live object alone.
+    automated:
+      selfHeal: true

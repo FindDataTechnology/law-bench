@@ -1,0 +1,70 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# film_production consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: film_production
+tags:
+  - name: approval_status
+    values: [立项备案, 送审中, 过审, 未通过, 被删减]
+    why: 影视剧需经广电部门行政许可方可发行，此状态直接决定合同目的能否实现，是行业特有的合规前置条件；通用risk维度仅提示风险，无法追踪行政流程节点
+  - name: key_talent_lock
+    values: [全锁, 部分锁, 可替换, 需投资人同意]
+    why: 演员、导演的人身属性强于普通劳务，其变动直接影响作品质量与发行，需专门界定替换权限与后果；通用obligation维度不涵盖人身依附性资产的特殊保护
+  - name: completion_guarantee
+    values: [无, 第三方机构, 投资方兜底]
+    why: 影视制作周期长、超支风险高，需明确"拍不完"时的资金补足责任主体，属行业融资特有结构；通用risk维度不区分担保来源与触发条件
+  - name: revenue_calculation_basis
+    values: [净收益, 总票房, 保底分账, 流媒体买断]
+    why: 影视收入链条复杂（院线、电视、网络、海外），会计扣除项争议极大，需定义计算逻辑而非仅约定金额；通用payment维度仅约定支付，不定义计算模型
+clauses:
+  - family: 剧本修改与定稿权
+    section: 权利义务
+    body: >
+      甲方拥有最终剧本审定权。若乙方（导演/编剧）擅自修改导致无法通过审查或影响投资回报，视为违约。依据《中华人民共和国著作权法》第十条关于修改权的规定，双方确认剧本作为核心IP的修改需书面确认。
+    stance: pro_a
+    strength: strong
+    why: 示范文本常笼统写"配合修改"，未明确"谁有权否决"及"修改导致的审查失败责任"，非大路货
+    verdict: real
+  - family: 公映许可证申领义务
+    section: 履行期限
+    body: >
+      乙方应在取得{{prerequisite}}后【XX】日内负责向主管部门申请《电影公映许可证》。因政策调整或内容违规导致未能取得的，视为合同目的不能实现，双方按实际投入结算。依据《中华人民共和国电影产业促进法》第十七条。
+    stance: pro_a
+    strength: standard
+    why: 示范文本多关注"交付成片"，忽略"拿证"这一法定发行前提，且未区分政策风险与内容风险
+    verdict: real
+    slot_instructions:
+      - name: prerequisite
+        label: 前置条件
+        description: 乙方申请《电影公映许可证》前需取得的成片或初审通过文件等前置材料
+        example: 成片终剪版及初审通过意见
+        required: true
+  - family: 主演替换与违约金
+    section: 违约责任
+    body: >
+      若主要演员因个人原因退出，甲方有权要求更换同等量级演员。若无法更换，乙方应退还已付酬金的【XX】%并赔偿因此造成的延期损失。依据《中华人民共和国民法典》第五百八十五条。
+    stance: pro_a
+    strength: strong
+    why: 通用违约条款针对金钱债务，未针对"艺人罢演"这一影视特有高风险事件设定具体救济
+    verdict: real
+  - family: 财务审计权
+    section: 价款及支付
+    body: >
+      任一方均有权委托第三方审计机构对影片收支进行审计。若误差超过【5】%，审计费由过错方承担。依据《中华人民共和国民法典》第五百零九条诚实信用原则。
+    stance: balanced
+    strength: standard
+    why: 示范文本通常只写"按时付款"，未赋予合作方穿透式查账的权利，易引发"阴阳账本"纠纷
+    verdict: real
+  - family: 拍摄期间不可抗力特别约定
+    section: 违约责任
+    body: >
+      除法律规定的不可抗力外，疫情管控、极端天气、场地突发查封等导致停工超过【XX】天，视为特殊不可抗力，双方互不承担违约责任，但需协商延期。依据《中华人民共和国民法典》第五百九十条。
+    stance: balanced
+    strength: standard
+    why: 通用不可抗力条款过于宽泛，未将影视制作特有的"停拍风险"纳入免责或延期范畴
+    verdict: real
+skipped:
+  - item: 保密条款
+    reason: 属于所有商业合同的通用标准条款，非影视剧特有，无需单独增加
+  - item: 争议解决方式
+    reason: 仲裁或诉讼管辖属于通用程序性条款，示范文本已有基础框架，无需定制
+  - item: 合同转让限制
+    reason: 债权转让限制属于通用合同法理，影视合同中虽有特殊性但不构成独立条款族

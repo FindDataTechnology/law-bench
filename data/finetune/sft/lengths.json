@@ -1,0 +1,133 @@
+{
+  "mode": "exact (Qwen/Qwen3-8B, vocab=151643)",
+  "datasets": {
+    "judge_c": {
+      "total_tokens": {
+        "n": 1969,
+        "min": 165,
+        "p50": 240,
+        "p90": 304,
+        "p95": 323,
+        "p99": 349,
+        "max": 459,
+        "mean": 249
+      },
+      "assistant_tokens": {
+        "n": 1969,
+        "min": 41,
+        "p50": 75,
+        "p90": 104,
+        "p95": 106,
+        "p99": 138,
+        "max": 199,
+        "mean": 77
+      },
+      "overflow": [
+        {
+          "max_seq_len": 512,
+          "fits": 1969,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        },
+        {
+          "max_seq_len": 1024,
+          "fits": 1969,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        },
+        {
+          "max_seq_len": 2048,
+          "fits": 1969,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        },
+        {
+          "max_seq_len": 4096,
+          "fits": 1969,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        },
+        {
+          "max_seq_len": 8192,
+          "fits": 1969,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        }
+      ]
+    },
+    "drafter_a": {
+      "total_tokens": {
+        "n": 131,
+        "min": 629,
+        "p50": 1912,
+        "p90": 2282,
+        "p95": 2488,
+        "p99": 2660,
+        "max": 4004,
+        "mean": 1846
+      },
+      "assistant_tokens": {
+        "n": 131,
+        "min": 377,
+        "p50": 1611,
+        "p90": 1906,
+        "p95": 1989,
+        "p99": 2309,
+        "max": 2565,
+        "mean": 1512
+      },
+      "overflow": [
+        {
+          "max_seq_len": 512,
+          "fits": 0,
+          "truncated": 131,
+          "truncated_pct": 100.0,
+          "zero_signal": 11,
+          "zero_signal_pct": 8.4
+        },
+        {
+          "max_seq_len": 1024,
+          "fits": 4,
+          "truncated": 127,
+          "truncated_pct": 96.9,
+          "zero_signal": 2,
+          "zero_signal_pct": 1.5
+        },
+        {
+          "max_seq_len": 2048,
+          "fits": 86,
+          "truncated": 45,
+          "truncated_pct": 34.4,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        },
+        {
+          "max_seq_len": 4096,
+          "fits": 131,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        },
+        {
+          "max_seq_len": 8192,
+          "fits": 131,
+          "truncated": 0,
+          "truncated_pct": 0.0,
+          "zero_signal": 0,
+          "zero_signal_pct": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,120 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# equity_transfer (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: equity_transfer
+tags:
+  - name: pre_emptive_right_status
+    values: [已书面放弃, 未通知, 需股东会决议, 未知]
+    why: 直接决定转让行为是否可撤销或无效，是股权变动特有的法定前置程序；通用risk仅提示法律风险，无法表达"是否已取得放弃声明"这一事实状态
+  - name: ownership_nature
+    values: [纯内资, 国有控股, 外商投资]
+    why: 触发完全不同的合规路径（进场交易、商务备案、反垄断申报），非一般商事合同共有；通用mandatory无法区分适用《公司法》还是《企业国有资产法》
+  - name: equity_encumbrance
+    values: [无负担, 已质押, 被冻结, 受限股]
+    why: 直接影响股权过户的物理可能性（如法院冻结无法变更），区别于普通动产买卖的交付障碍；通用risk无法作为起草核查清单项
+clauses:
+  - family: 优先购买权放弃确认
+    section: 权利义务
+    body: >
+      出让方保证已就本次转让书面通知公司其他股东。其他股东已于{{sign_date}}前出具《放弃优先购买权声明函》，随本合同附件{{exhibit_number}}。
+      （《公司法》（2023修订）第八十四条）
+    stance: pro_b
+    strength: strong
+    why: 示范文本常仅在"陈述与保证"中一笔带过，缺乏对"放弃声明函"作为付款前提的明确挂钩，易引发效力争议
+    verdict: real
+    slot_instructions:
+      - name: sign_date
+        label: 声明函出具日期
+        description: 其他股东出具《放弃优先购买权声明函》的截止日期
+        example: '2024-06-15'
+        required: true
+      - name: exhibit_number
+        label: 附件编号
+        description: 《放弃优先购买权声明函》作为合同附件的编号
+        example: 附件一
+        required: true
+  - family: 隐性债务追偿机制
+    section: 违约责任
+    body: >
+      若交割日后发现基准日前存在的未披露债务（包括但不限于税务、担保、劳动补偿），超出{{amount}}元部分，由出让方在收到通知后{{days}}日内全额补偿，否则按日支付违约金。
+      （《民法典》第五百条、第五百七十七条）
+    stance: pro_b
+    strength: strong
+    why: 示范文本多约定"各自承担"，缺乏具体的"追偿触发点"和"计算基数"，导致买方维权成本高
+    verdict: real
+    slot_instructions:
+      - name: amount
+        label: 债务豁免额度（元）
+        description: 受让方自行承担的未披露债务上限金额，超出此额度的部分由出让方补偿
+        example: 500000
+        required: true
+      - name: days
+        label: 补偿期限（日）
+        description: 出让方收到通知后全额补偿的期限，单位为日历日
+        example: 15
+        required: true
+  - family: 工商变更配合时限
+    section: 履行期限
+    body: >
+      出让方应在收到首笔转让款后{{days}}个工作日内，协助受让方办理股东名册记载及市场监督管理部门变更登记手续；逾期超过{{grace_days}}日，受让方有权解除合同。
+      （《公司法》（2023修订）第八十六条）
+    stance: pro_b
+    strength: standard
+    why: 示范文本常仅写"双方配合"，未设定明确的行政变更截止节点，导致"钱付了但没过户"的风险
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 配合变更期限（工作日）
+        description: 出让方收到首笔转让款后协助办理变更登记的工作日期限
+        example: 10
+        required: true
+      - name: grace_days
+        label: 解除宽限期（日）
+        description: 逾期超过该日数后受让方有权解除合同，单位为日历日
+        example: 15
+        required: true
+  - family: 原股东竞业禁止承诺
+    section: 权利义务
+    body: >
+      出让方承诺自交割日起{{year}}年内，不得从事与目标公司相同或竞争业务，亦不得招揽目标公司员工；违反者应退还全部转让款的{{percent}}。
+      （《民法典》合同编意思自治原则）
+    stance: pro_b
+    strength: strong
+    why: 常见于创始人退出场景，标准模板常忽略；若无此条，卖方套现后另起炉灶，买方价值受损
+    verdict: real
+    slot_instructions:
+      - name: year
+        label: 竞业禁止年限
+        description: 出让方自交割日起不得从事竞争业务的年限
+        example: 3
+        required: true
+      - name: percent
+        label: 违约退还比例（%）
+        description: 违反竞业禁止承诺时出让方应退还的转让款占全部转让款的百分比
+        example: 30
+        required: true
+  - family: 国资评估备案要求
+    section: 价款及支付
+    body: >
+      若出让方为国有企业，本合同最终成交价款应以经国资监管机构备案（备案编号{{filing_number}}）的资产评估结果为上限；若评估价高于成交价，以备案价为准调整支付。
+      （《企业国有资产法》第五十五条）
+    stance: balanced
+    strength: standard
+    why: 纯商业模板无此内容；国企转让若不经过评估备案，可能导致合同无效或被认定流失国资
+    verdict: real
+    slot_instructions:
+      - name: filing_number
+        label: 评估备案编号
+        description: 国资监管机构出具的资产评估备案编号，仅在出让方为国有企业时适用
+        example: 国资备[2024]001号
+        required: false
+skipped:
+  - item: 不可抗力条款
+    reason: 属于所有合同通用的基础条款，非股权转让特有，归入通用库即可
+  - item: 保密义务条款
+    reason: 虽重要，但通常作为通用附则条款存在，除非涉及特定商业秘密保护，否则不作为股权特有核心条款
+  - item: 争议解决管辖
+    reason: 已在 base 条文「争议解决」章节覆盖，无需针对股权类型单独增加特殊管辖逻辑
+  - item: 税费承担约定
+    reason: 虽有特殊性（如个税/印花税），但通常归类于「价款及支付」中的通用表述，无需单独设立特有条款族
+  - item: 陈述与保证
+    reason: 已在 base 条文「权利义务」中涵盖，除非涉及"隐性债务"等具体专项，否则不再重复拆分

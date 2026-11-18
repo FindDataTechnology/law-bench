@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{% if info %}{{ info.zh_name }}{% else %}{{ contract_type }}{% endif %} · {{ t.law_info.h1 }}{% endblock %}
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{% if info %}{{ info.zh_name }}{% else %}{{ contract_type }}{% endif %}</h1>
+    <a href="{{ url_for('page_law_info') }}">{{ t.law_info.back }}</a>
+  </div>
+</div>
+
+{% if not_found %}
+{# 坏类型 404：错误卡报因（哪个类型键没找到），非裸错误文案 #}
+{% with message=t.law_info.not_found, detail=contract_type %}
+  {% include '_error_card.html' %}
+{% endwith %}
+{% else %}
+<div class="law-info-grid">
+  <section class="panel">
+    <h2>{{ t.law_info.source_doubao }}</h2>
+    <div class="muted"><code>{{ info.type }}</code></div>
+    {% if doubao_html %}
+    <article class="markdown-body">
+      {{ doubao_html|safe }}
+    </article>
+    {% else %}
+    {% with message=t.law_info.no_content %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+    {% endif %}
+  </section>
+  <section class="panel">
+    <h2>{{ t.law_info.source_deepseek }}</h2>
+    <div class="muted"><code>{{ info.type }}</code></div>
+    {% if deepseek_html %}
+    <article class="markdown-body">
+      {{ deepseek_html|safe }}
+    </article>
+    {% else %}
+    {% with message=t.law_info.no_content %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+    {% endif %}
+  </section>
+</div>
+{% endif %}
+{% endblock %}

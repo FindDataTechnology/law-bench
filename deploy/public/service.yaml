@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: law-bench-public
+  namespace: law-bench
+  labels:
+    app: law-bench-public
+spec:
+  # ClusterIP by default: the public pod is fronted by Caddy/ingress (see
+  # Caddyfile fragment) which terminates TLS and applies the gateway-level
+  # rate_limit, so the pod does not need a directly-exposed NodePort. This
+  # keeps the public surface to exactly one host (the China domain) through
+  # one entry point, rather than a raw :8010 NodePort anyone can reach.
+  #
+  # If you are NOT running a Caddy/ingress in front on the China box, switch
+  # `type` to NodePort and set a `nodePort` (pick a NEW port — do NOT reuse the
+  # origin's 30820; the two pods must stay independently addressable). The
+  # origin's law-bench service (deploy/service.yaml, NodePort 30820) is
+  # untouched and must remain open — it is the origin's own surface.
+  type: ClusterIP
+  selector:
+    app: law-bench-public
+  ports:
+    - name: http
+      port: 8010
+      targetPort: 8010
+      protocol: TCP

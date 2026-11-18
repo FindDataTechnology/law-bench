@@ -1,0 +1,89 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# bailment consulted Kimi 2026-07-30; all 《法条》 citations cross-checked against
+# 《中华人民共和国民法典》第二十一章 保管合同（第八百八十八条至第九百零三条）.
+contract_type: bailment
+tags:
+  - name: paid_or_gratuitous
+    values: [有偿, 无偿]
+    why: 直接决定保管人归责标准--有偿保管人就保管不善担一般过失责任，无偿保管人仅就故意或重大过失担责（《民法典》第八百九十七条）；且保管费无约定时视为无偿（第八百八十九条），是保管合同核心区分点，通用4维无法量化该法律归责差异
+  - name: item_risk_level
+    values: [普通, 易燃易爆, 贵重, 违禁]
+    why: 涉及寄存人告知义务及贵重物品声明规则（《民法典》第八百九十三条、第八百九十八条），特定物品有法定特别处理要求，通用risk维度仅指商业风险、不指代法定物品属性风险
+  - name: delivery_evidence_type
+    values: [实物交接单, 电子码, 钥匙移交]
+    why: 保管合同为实践性合同，自保管物交付时成立（《民法典》第八百九十条），保管人应出具保管凭证（第八百九十一条），凭证形式决定举证责任起点，区别于租赁占有转移或买卖所有权转移
+clauses:
+  - family: 有偿与无偿保管责任分级
+    section: 违约责任
+    body: >
+      本合同为{{paid_or_gratuitous}}保管。若为有偿，保管人因保管不善造成保管物毁损、灭失的，应当承担赔偿责任；若为无偿，保管人能够证明自己没有故意或者重大过失的，不承担赔偿责任。
+      （《中华人民共和国民法典》第八百九十七条）
+    stance: balanced
+    strength: standard
+    why: 通用模板常统一写"过错责任"，未体现无偿保管人仅就故意或重大过失担责的法定减责保护，易引发归责标准争议
+    verdict: real
+    slot_instructions:
+      - name: paid_or_gratuitous
+        label: 保管性质
+        description: 保管合同为有偿或无偿
+        example: 有偿
+        required: true
+  - family: 禁止擅自使用保管物
+    section: 权利义务
+    body: >
+      未经寄存人书面同意，保管人不得使用或者许可第三人使用保管物。保管人违反前述约定使用或者许可第三人使用保管物的，应当赔偿因此给寄存人造成的损失，并支付违约金{{amount}}元。
+      （《中华人民共和国民法典》第八百九十五条）
+    stance: pro_b
+    strength: strong
+    why: 租赁允许使用、买卖转移所有权，唯保管合同法定禁止保管人使用或许可第三人使用保管物，此条是界定违约的核心边界，非大路货
+    verdict: real
+    slot_instructions:
+      - name: amount
+        label: 违约金金额
+        description: 保管人擅自使用保管物应支付的违约金金额（元）
+        example: 5000
+        required: true
+  - family: 危险物品及贵重物品告知声明义务
+    section: 权利义务
+    body: >
+      寄存人交付易燃、易爆、有毒等危险物品或者贵重物品的，应当说明物品性质并提供有关资料；寄存人未说明，致使保管人受损失的，寄存人应当承担赔偿责任。寄存货币、有价证券或者贵重物品未声明的，按照一般物品赔偿。
+      （《中华人民共和国民法典》第八百九十三条、第八百九十八条）
+    stance: pro_a
+    strength: standard
+    why: 示范文本常忽略寄存人告知/声明义务的前置性，发生安全事故或贵重物品毁损后责任与赔偿标准划分不清；该义务为保管合同法定构成要件
+    verdict: real
+  - family: 保管人留置权
+    section: 价款及支付
+    body: >
+      寄存人未按照约定支付保管费或者其他费用的，保管人对保管物享有留置权，但是当事人另有约定的除外。
+      （《中华人民共和国民法典》第九百零三条）
+    stance: pro_a
+    strength: standard
+    why: 通用模板多写"追偿权/违约金"，未明确留置权这一法定担保物权，影响保管人费用救济手段
+    verdict: real
+  - family: 寄存人随时领取与费用结算
+    section: 履行期限
+    body: >
+      寄存人可以随时领取保管物。当事人对保管期限没有约定或者约定不明确的，保管人可以随时请求寄存人领取保管物；约定保管期限的，保管人无特别事由不得请求寄存人提前领取。寄存人提前领取的，保管费{{fee_refund_method}}。
+      （《中华人民共和国民法典》第八百九十九条）
+    stance: pro_b
+    strength: mild
+    why: 通用履行期限多为"起止日期"，未覆盖保管合同寄存人随时领取权及由此引发的保管费结算变数，易生纠纷
+    verdict: real
+    slot_instructions:
+      - name: fee_refund_method
+        label: 保管费退还方式
+        description: 寄存人提前领取保管物时保管费的退还方式
+        example: 按实际保管天数折算退还
+        required: true
+skipped:
+  - item: 不可抗力条款
+    reason: 属于所有合同类型的通用兜底条款，无保管合同特异性，归入通用库即可
+  - item: 保密义务
+    reason: 虽在保管中重要，但属通用商业合同标配，非保管合同特有法律构成要件
+  - item: 争议解决管辖
+    reason: 完全通用，不依赖保管合同的物理特性或法定责任结构
+  - item: 保险购买建议
+    reason: 非法定必选条款（除非仓储物流行业强制要求），且易与"合同标的"重复
+  - item: 所有权保留
+    reason: 保管合同不涉及所有权转移，该条款逻辑冲突，无需起草

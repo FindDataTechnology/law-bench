@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-bench/finetune/drafter-a/pair.schema.json",
+  "title": "Drafter-A pair",
+  "description": "One drafter-training sample: (task_desc/slots, body). Silver pairs = pipeline_runs.filled_text (548, SFT warmup only, never reward positive). Gold pairs = human-verified compliant body. Slot consistency enforced by the exporter validator: all {{slot}} placeholders in body must be replaced, and replaced keys ⊆ declared slots.",
+  "type": "object",
+  "required": ["task_desc", "slots", "body", "provenance", "tier"],
+  "additionalProperties": false,
+  "properties": {
+    "task_desc": {
+      "description": "Natural-language drafting task description.",
+      "type": "string",
+      "minLength": 1
+    },
+    "slots": {
+      "description": "Declared slot values the drafter must fill into the body. May be empty for a fully-drafted body with no declared slots (slot-consistency still enforced: body must contain no unreplaced {{slot}}).",
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "required": ["name", "value"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "body": {
+      "description": "Filled contract body. No unreplaced {{slot}} placeholders (validator-enforced).",
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["annotated_by"],
+      "additionalProperties": false,
+      "properties": {
+        "annotated_by": {
+          "description": "machine_generated (silver) | human (gold).",
+          "type": "string"
+        },
+        "id": {
+          "description": "Source row handle, e.g. pipeline_runs:17.",
+          "type": "string"
+        },
+        "contract_type": {
+          "description": "Contract class key of the source run (e.g. sale, employment). Null for rows whose source predates type tagging.",
+          "type": ["string", "null"]
+        },
+        "scenario": {
+          "description": "Business scenario tag (业务场景, e.g. 农产品买卖). Null when the source run carried no tags.",
+          "type": ["string", "null"]
+        },
+        "stance": {
+          "description": "Drafting stance (pro_a | pro_b | balanced). Null when the source run carried no tags. Coverage is heavily skewed toward balanced.",
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "tier": {
+      "description": "silver = LLM draft (SFT warmup only); gold = human-verified compliant body.",
+      "type": "string",
+      "enum": ["gold", "silver"]
+    }
+  }
+}

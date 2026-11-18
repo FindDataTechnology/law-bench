@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://law-bench/finetune/manifest.schema.json",
+  "title": "Finetune provenance manifest entry",
+  "description": "One JSONL record per material row. Every material that lands under data/finetune/ (warehouse extraction, open-source intake, or human annotation) MUST carry these provenance fields so tier filtering and the bronze guard can operate on a uniform shape.",
+  "type": "object",
+  "required": ["dataset", "source", "license", "tier", "provenance"],
+  "additionalProperties": true,
+  "properties": {
+    "dataset": {
+      "description": "Which dataset this material feeds: judge-c | drafter-a | warehouse | opensource. Warehouse/opensource are raw material pools; judge-c/drafter-a are the schema-validated training datasets.",
+      "type": "string",
+      "enum": ["judge-c", "drafter-a", "warehouse", "opensource"]
+    },
+    "source": {
+      "description": "Origin of the material: warehouse (law-bench DB tables) | opensource (external corpus) | human (human annotation).",
+      "type": "string",
+      "enum": ["warehouse", "opensource", "human"]
+    },
+    "license": {
+      "description": "SPDX identifier or 'proprietary' (warehouse material is the project's own data, tagged 'proprietary'). Open-source must be Apache-2.0 or MIT to enter the pool (license gate).",
+      "type": "string"
+    },
+    "tier": {
+      "description": "Data tier. gold = human gold rubric+criteria / human-verified body, direct ground truth. silver = LLM draft (pipeline_runs.filled_text), SFT warmup only. bronze = machine self-eval (eval_criteria_results.verdict), NEVER ground truth (exporter hard-guarded). raw = structural backbone (clauses) + judge input pool, no label semantics.",
+      "type": "string",
+      "enum": ["gold", "silver", "bronze", "raw"]
+    },
+    "provenance": {
+      "description": "Stable handle locating the source row. For warehouse material: '<table>:<id>'. For open-source: '<repo>:<doc_id>'. For human annotation: 'human:<annotator>:<batch>'.",
+      "type": "string"
+    },
+    "row_ref": {
+      "description": "Relative path to the material file under data/finetune/, so the manifest is self-resolving. Optional for human-annotated material produced directly into a dataset file.",
+      "type": "string"
+    }
+  }
+}

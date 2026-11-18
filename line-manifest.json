@@ -1,0 +1,37 @@
+{
+  "schema": "line-manifest/v1",
+  "line": "law-bench",
+  "public_base_url": "https://mcp.finddatatech.cloud/law-bench",
+  "identity": {
+    "issuer": "https://auth.finddatatech.cloud/oidc",
+    "jwks_uri": "https://auth.finddatatech.cloud/oidc/jwks",
+    "jit_policy": "off"
+  },
+  "auth_tracks": [
+    {
+      "kind": "line-native",
+      "name": "mcp-http-token",
+      "accepts": "line-native-key",
+      "fallback": true
+    },
+    {
+      "kind": "customer-key",
+      "accepts": "ciyuan-sk",
+      "fallback": false,
+      "enforced": false,
+      "migration_task": "converge-line-identity-and-keys#8.3"
+    }
+  ],
+  "scopes": [
+    "line:read",
+    "line:write"
+  ],
+  "billing": {
+    "plane": "ciyuan"
+  },
+  "surfaces": {
+    "mcp": true,
+    "account": false,
+    "admin": false
+  }
+}

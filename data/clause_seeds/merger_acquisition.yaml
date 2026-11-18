@@ -1,0 +1,105 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# merger_acquisition (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: merger_acquisition
+tags:
+  - name: approval_tier
+    values: [内部决议, 国资监管, 外资准入, 反垄断审查]
+    why: '涉及交易生效的前置行政许可或内部决策程序，直接影响交割合法性，通用"风险"维度无法区分审批来源与性质'
+  - name: performance_commitment
+    values: [有, 无, 分期考核, 回购触发]
+    why: '并购中常见的估值调整机制(对赌)，是定价核心变量，通用"强度"维度无法量化承诺的具体触发条件'
+  - name: conditions_precedent
+    values: [尽职调查通过, 无重大不利变化, 第三方同意]
+    why: '并购交割高度依赖特定条件成就，不同于普通买卖的交付即完成，通用"期限"维度无法涵盖条件性约束'
+clauses:
+  - family: 反垄断申报义务
+    section: 履行期限
+    body: >
+      若本次交易达到国务院规定的经营者集中申报标准，双方应于{{days}}日内向国家市场监督管理总局申报，未经批准不得实施交割。《反垄断法》第二十五条
+    stance: balanced
+    strength: standard
+    why: 通用模板常忽略行业集中度门槛，此为公司并购特有的行政合规义务
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 申报期限（日）
+        description: 双方在达到经营者集中申报标准后向国家市场监督管理总局申报的期限，单位为日历日
+        example: 30
+        required: true
+  - family: 员工劳动关系承继
+    section: 权利义务
+    body: >
+      目标公司员工原则上由收购方继续履行劳动合同，工龄连续计算。因本次并购导致解除劳动关系的补偿金由{{bearer}}承担。《劳动合同法》第三十四条
+    stance: balanced
+    strength: standard
+    why: 涉及劳动法特殊保护，普通买卖合同无此主体身份转移问题，易引发群体性纠纷
+    verdict: real
+    slot_instructions:
+      - name: bearer
+        label: 补偿金承担方
+        description: 因并购导致解除劳动关系时经济补偿金的承担方，通常为收购方或转让方
+        example: 收购方
+        required: true
+  - family: 工商变更登记配合
+    section: 履行期限
+    body: >
+      转让方应在收到首笔款项后{{days}}个工作日内配合办理股东名册记载及工商变更登记手续。《公司法》(2023 修订) 第八十六条
+    stance: pro_b
+    strength: standard
+    why: 股权变动以登记对抗为要件，区别于动产交付，是并购特有的物权变动环节
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 配合变更期限（工作日）
+        description: 转让方收到首笔款项后配合办理工商变更登记的工作日期限
+        example: 10
+        required: true
+  - family: 过渡期损益归属
+    section: 价款及支付
+    body: >
+      自评估基准日至交割日期间，目标公司产生的盈利由{{profit_bearer}}享有，亏损由{{loss_bearer}}以现金补足。{{supplementary_terms}}
+    stance: balanced
+    strength: standard
+    why: 通用买卖通常以交付日为准，并购因周期长、审计难，需单独约定期间损益，无明确法条强制规定（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: profit_bearer
+        label: 盈利归属方
+        description: 过渡期内目标公司产生的盈利由哪一方享有
+        example: 受让方
+        required: true
+      - name: loss_bearer
+        label: 亏损承担方
+        description: 过渡期内目标公司产生的亏损由哪一方以现金补足
+        example: 转让方
+        required: true
+      - name: supplementary_terms
+        label: 补充约定
+        description: 关于过渡期损益归属的补充约定，如损益金额计算方式或审计确认安排
+        example: 损益金额以交割审计报告为准
+        required: false
+  - family: 或有债务追偿权
+    section: 违约责任
+    body: >
+      若交割后出现基准日前未披露的隐性债务，受让方有权要求转让方在{{days}}日内全额赔偿，并可直接从尾款扣除。《民法典》第五百七十七条
+    stance: pro_b
+    strength: strong
+    why: '通用违约责任侧重违约金，并购需针对"历史遗留债务"设定专门追偿路径'
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 赔偿期限（日）
+        description: 转让方在受让方要求后全额赔偿隐性债务的期限，单位为日历日
+        example: 15
+        required: true
+skipped:
+  - item: 不可抗力
+    reason: '属通用基础条款，已在 base 条文"违约责任"或"附则"中覆盖，无需新增'
+  - item: 争议解决（管辖/仲裁）
+    reason: 属 base 条文独立章节，内容标准化程度高，无并购特有需求
+  - item: 一般保密义务
+    reason: '虽并购保密更严，但 base 条文"权利义务"已包含保密原则，细节可通过附件扩展而非新增主文'
+  - item: 通知与送达
+    reason: 属通用程序性条款，对所有合同类型一致，无并购特异性
+  - item: 适用法律
+    reason: 属通用基础条款，国内并购默认适用中国法律，无需特别强调

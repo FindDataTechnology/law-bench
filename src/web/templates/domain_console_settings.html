@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.settings.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'settings' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 域设置：只承载本域成员与邀请。
+
+    平台级（模板、开域、跨域邀请）不在这里 —— 它们在 admin 门，只在
+    admin scope 下渲染。这里给一个「完整域管理」链接，指向既有的
+    admin 域详情页（该页对 lead 亦可达，见 C1）。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.settings.h1 }}</h1>
+    <p class="hint">{{ t.console.settings.intro }}</p>
+  </div>
+  <a class="btn btn-sm" href="{{ url_for('admin_domain_detail', domain_key=domain.key) }}">{{ t.console.settings.view_full }}</a>
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.settings.members_h2 }}</h2>
+  {% if members %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.console.settings.col_member }}</th>
+        <th>{{ t.console.settings.col_role }}</th>
+        <th>{{ t.console.settings.col_added }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in members %}
+      <tr>
+        <td><code>{{ m.user_id }}</code></td>
+        {#- Neutral role badge (harbor紫 = platform admin identity only, which
+            never appears in a domain member list). -#}
+        <td><span class="badge">{{ t.console.role[m.role] }}</span></td>
+        <td class="muted nowrap">{{ m.added_at[:16] | replace('T', ' ') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% with message=t.console.settings.no_members %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.settings.invites_h2 }}</h2>
+  {% if invitations %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.console.settings.col_invite }}</th>
+        <th>{{ t.console.settings.col_role }}</th>
+        <th>{{ t.console.settings.col_expires }}</th>
+        <th>{{ t.console.settings.col_used }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in invitations %}
+      <tr>
+        <td class="muted"><code>{{ i.id }}</code></td>
+        <td><span class="badge">{{ t.console.role[i.role] }}</span></td>
+        <td class="muted nowrap">{{ i.expires_at[:16] | replace('T', ' ') }}</td>
+        <td>{% if i.accepted_at %}{{ t.console.settings.invite_used }}{% else %}{{ t.console.settings.invite_pending }}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint"><a href="{{ url_for('admin_domain_detail', domain_key=domain.key) }}">{{ t.console.settings.invite_new }}</a></p>
+  {% else %}
+  {% with message=t.console.settings.no_invites,
+          action_href=url_for('admin_domain_detail', domain_key=domain.key),
+          action_label=t.console.settings.invite_new %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+{% endblock %}

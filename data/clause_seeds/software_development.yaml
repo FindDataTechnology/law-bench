@@ -1,0 +1,126 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# software_development (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: software_development
+tags:
+  - name: delivery_form
+    values: [源码交付, 目标码交付, SaaS访问权, API接口调用]
+    why: 决定所有权转移节点及后续维护责任边界，买卖/租赁不涉及代码层级交付差异，通用4维无法区分技术交付物形态
+  - name: open_source_license
+    values: [无开源, 宽松型_MIT_BSD, 弱传染_LGPL, 强传染_GPL]
+    why: 涉及知识产权污染风险(Viral Effect)，直接影响客户商业使用合法性，通用风险维度不涵盖具体许可证传染性
+  - name: data_compliance_level
+    values: [一般数据, 重要数据, 个人信息, 核心数据]
+    why: 触发不同层级的《个保法》/《数安法》义务，普通货物交易无此分级，通用风险维度未细化数据分类分级义务
+  - name: sla_response_time
+    values: [分钟级, 小时级, 工作日, 7x24小时]
+    why: 软件故障影响业务连续性，需量化服务可用性而非仅物理交付，通用强度维度无法量化服务可用性指标
+clauses:
+  - family: 开源组件披露与侵权担保
+    section: 权利义务
+    body: >
+      乙方应书面披露本项目使用的开源组件清单及许可类型。若因使用传染性开源协议导致甲方产品被迫开源，乙方应赔偿损失。{{penalty}}（依据《民法典》第 509 条诚实信用原则）
+    stance: pro_a
+    strength: strong
+    why: 示范文本常忽略第三方代码库授权风险，易引发知识产权纠纷
+    verdict: real
+    slot_instructions:
+      - name: penalty
+        label: 赔偿方式
+        description: 因传染性开源协议导致甲方产品被迫开源时，乙方赔偿损失的具体金额或计算方式
+        example: 合同总价的30%
+        required: false
+  - family: 源代码托管触发机制
+    section: 附则
+    body: >
+      若乙方破产或连续{{months}}个月停止服务，甲方有权向托管机构提取源代码。托管费用由{{party}}方承担。
+    stance: pro_a
+    strength: strong
+    why: 定制开发中防止供应商倒闭导致系统停摆的关键保障，通用模板极少涉及
+    verdict: real
+    slot_instructions:
+      - name: months
+        label: 停止服务月数
+        description: 触发源代码提取权的乙方连续停止服务月数
+        example: 6
+        required: true
+      - name: party
+        label: 费用承担方
+        description: 承担源代码托管费用的一方
+        example: 乙方
+        required: true
+  - family: 终止后数据删除与返还
+    section: 权利义务
+    body: >
+      合同终止后{{days}}日内，乙方应彻底删除服务器上的甲方数据并出具销毁证明，不得留存备份。{{deletion_requirement}}（依据《个人信息保护法》第 47 条）
+    stance: pro_a
+    strength: strong
+    why: 旧版模板多只谈"归还"，未明确"彻底删除"义务，不符合现行数据合规要求
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 删除期限
+        description: 合同终止后乙方完成数据删除并出具销毁证明的天数
+        example: 15
+        required: true
+      - name: deletion_requirement
+        label: 删除补充要求
+        description: 数据删除范围、销毁证明形式等补充约定
+        example: 包含生产环境及异地备份，销毁证明需第三方审计出具
+        required: false
+  - family: 非功能性指标验收标准
+    section: 履行期限
+    body: >
+      除功能测试外，系统需支持{{concurrent_users}}并发用户，页面响应时间不超过{{response_seconds}}秒。否则视为验收不合格。{{remedy}}（依据《民法典》第 610 条质量不符）
+    stance: pro_a
+    strength: standard
+    why: 示范文本常仅写"符合需求说明书"，缺乏可量化的性能指标，易产生验收扯皮
+    verdict: real
+    slot_instructions:
+      - name: concurrent_users
+        label: 并发用户数
+        description: 系统需支持的最小并发用户数
+        example: 500
+        required: true
+      - name: response_seconds
+        label: 响应时间
+        description: 页面响应时间上限（秒）
+        example: 3
+        required: true
+      - name: remedy
+        label: 补救措施
+        description: 验收不合格时乙方的补救措施或整改约定
+        example: 乙方应在30日内完成整改并重新提交验收
+        required: false
+  - family: 第三方服务费用变动承担
+    section: 价款及支付
+    body: >
+      若因云厂商/第三方 API 涨价导致成本增加超过{{percent}}%，超出部分由{{party}}方承担，或双方协商调整服务费。{{adjustment_method}}（依据《民法典》第 593 条第三人原因）
+    stance: balanced
+    strength: standard
+    why: 针对 SaaS 或集成类项目特有，传统软件交付通常不考虑持续性的第三方依赖成本波动
+    verdict: real
+    slot_instructions:
+      - name: percent
+        label: 成本增加阈值
+        description: 触发费用调整条款的第三方服务成本增加百分比
+        example: 10
+        required: true
+      - name: party
+        label: 费用承担方
+        description: 成本增加超出阈值部分的承担方
+        example: 甲方
+        required: true
+      - name: adjustment_method
+        label: 调整方式
+        description: 双方协商调整服务费的具体方式或计算方法
+        example: 按实际涨幅分段分摊
+        required: false
+skipped:
+  - item: 保密条款
+    reason: 属于所有商业合同的通用必备条款，已有通用标签覆盖，非软件开发特有
+  - item: 不可抗力
+    reason: 《民法典》第 590 条法定免责事由，示范文本已包含，重复无意义
+  - item: 法律适用与管辖
+    reason: 争议解决章节的通用配置，不体现软件开发的技术特性，归入通用争议解决即可
+  - item: 通知送达方式
+    reason: 程序性通用条款，无论何种合同均需明确联系方式，不具备软件行业特异性

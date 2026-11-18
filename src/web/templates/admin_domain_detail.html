@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.domains.detail_h1 }} {{ domain.name }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<style>
+  /* polish-bench-workbench 0.3, this page only: sibling inline action forms
+     (change role / remove member) flow on one row inside the nowrap action
+     cell instead of stacking as block elements, and their selects size to
+     content instead of the global width:100% (the cell scrolls at ≤720px). */
+  .data-table td.dl-cell .inline-form { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; margin-right: 0.3rem; vertical-align: middle; }
+  .data-table td.dl-cell .inline-form select { width: auto; min-width: 8rem; }
+</style>
+
+<p><a href="{{ url_for('admin_domains') }}">{{ t.admin.domains.back }}</a></p>
+<div class="toolbar between">
+  <h1>{{ domain.name }} <code>{{ domain.key }}</code></h1>
+</div>
+
+{# Domain info: the workspace is anchored to one immutable template version. #}
+<div class="panel">
+  <h2>{{ t.admin.domains.info_h2 }}</h2>
+  <table class="data-table">
+    <tbody>
+      <tr><th>{{ t.admin.domains.col_key }}</th><td><code>{{ domain.key }}</code></td></tr>
+      <tr><th>{{ t.admin.domains.col_name }}</th><td>{{ domain.name }}</td></tr>
+      <tr><th>{{ t.admin.domains.col_template }}</th><td>{{ domain.template_name }}</td></tr>
+      <tr><th>{{ t.admin.domains.col_version }}</th><td><span class="badge">v{{ domain.template_version }}</span></td></tr>
+      <tr><th>{{ t.admin.domains.col_created_by }}</th><td>{{ domain.created_by }}</td></tr>
+      <tr><th>{{ t.admin.domains.col_created_at }}</th><td class="muted">{{ domain.created_at }}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{# Publish & pull (change add-knowledge-distribution-contract): the domain
+   lead/admin freezes this domain's content into an immutable publication;
+   registered consumers pull snapshots via the Logto-free machine endpoint
+   /api/v1/distribution/{key}/ontology with their X-Consumer-Token. The POST
+   lives in routes/distribution.py; the listing data is supplied by this
+   page's handler (admin.py::admin_domain_detail). #}
+<div class="panel">
+  <h2>{{ t.admin.distribution.publish_h2 }}</h2>
+  <p class="muted">{{ t.admin.distribution.publish_intro }}</p>
+  <form method="POST" action="{{ url_for('admin_domain_publish', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.admin.distribution.publish_btn }}</button>
+    </div>
+  </form>
+
+  <h3>{{ t.admin.distribution.latest_h3 }}</h3>
+  {% if latest_publication %}
+  <p>
+    <span class="badge">v{{ latest_publication.version }}</span>
+    <code class="muted">{{ latest_publication.digest[:12] }}…</code>
+  </p>
+  {% else %}
+  <p class="muted">{{ t.admin.distribution.none_yet }}</p>
+  {% endif %}
+
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.distribution.col_version }}</th>
+        <th>{{ t.admin.distribution.col_digest }}</th>
+        <th>{{ t.admin.distribution.col_published_at }}</th>
+        <th>{{ t.admin.distribution.col_published_by }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in publications %}
+      <tr>
+        <td><span class="badge">v{{ p.version }}</span></td>
+        <td><code class="muted">{{ p.digest[:12] }}…</code></td>
+        <td class="muted">{{ p.published_at }}</td>
+        <td>{{ p.published_by }}</td>
+      </tr>
+      {% endfor %}
+      {% if not publications %}
+      <tr><td colspan="4" class="muted">{{ t.admin.distribution.none_yet }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+{# RAG corpus (change add-domain-rag-corpus-service, design D5): the domain's
+   registered ES index + MinIO sources. Register/update and ingest are lead+
+   admin-gated POSTs (routes/admin.py); ingest fires run_ingest in a daemon
+   thread and only flashes "started" — the outcome lands in the service log.
+   Retrieval with the domain param lives at /search?domain=<key>. #}
+<div class="panel">
+  <h2>{{ t.admin.rag.h2 }}</h2>
+  <p class="muted">{{ t.admin.rag.intro }}</p>
+
+  <h3>{{ t.admin.rag.current_h3 }}</h3>
+  {% if rag_corpus %}
+  <table class="data-table">
+    <tbody>
+      <tr><th>{{ t.admin.rag.col_index }}</th><td><code>{{ rag_corpus.index_name }}</code></td></tr>
+      <tr><th>{{ t.admin.rag.col_sources }}</th><td>
+        {% for s in rag_corpus.sources %}
+        <code>{{ s.bucket }}/{{ s.prefix }}</code>{% if not loop.last %}<br>{% endif %}
+        {% else %}
+        <span class="muted">{{ t.admin.rag.empty_sources }}</span>
+        {% endfor %}
+      </td></tr>
+      <tr><th>{{ t.admin.rag.col_embedding }}</th><td>{{ rag_corpus.embedding_model or t.admin.rag.default_model }}</td></tr>
+      <tr><th>{{ t.admin.rag.col_registered_by }}</th><td>{{ rag_corpus.registered_by }}</td></tr>
+      <tr><th>{{ t.admin.rag.col_created_at }}</th><td class="muted">{{ rag_corpus.created_at }}</td></tr>
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">{{ t.admin.rag.none_yet }}</p>
+  {% endif %}
+
+  <h3>{{ t.admin.rag.register_h3 }}</h3>
+  <form method="POST" action="{{ url_for('admin_domain_rag_register', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label for="rag-index">{{ t.admin.rag.index_label }}</label>
+      <input type="text" name="index_name" id="rag-index" value="{{ rag_index_value }}" required>
+    </div>
+    <div class="filter-group">
+      <label for="rag-sources">{{ t.admin.rag.sources_label }}</label>
+      <textarea name="sources" id="rag-sources" rows="4" style="min-width:60%">{{ rag_sources_pretty }}</textarea>
+    </div>
+    <div class="filter-group">
+      <label for="rag-embedding">{{ t.admin.rag.embedding_label }}</label>
+      <input type="text" name="embedding_model" id="rag-embedding" value="{{ rag_embedding_value }}">
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.admin.rag.register_btn }}</button>
+    </div>
+  </form>
+
+  <h3>{{ t.admin.rag.ingest_h3 }}</h3>
+  <form method="POST" action="{{ url_for('admin_domain_rag_ingest', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label for="rag-prefix">{{ t.admin.rag.prefix_label }}</label>
+      <input type="text" name="prefix" id="rag-prefix" style="min-width:40%">
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.admin.rag.ingest_btn }}</button>
+    </div>
+  </form>
+
+  <p><a href="{{ url_for('page_search') }}?domain={{ domain.key }}">{{ t.admin.rag.search_link }}</a></p>
+</div>
+
+{# Active members (retired rows stay in history but are not shown here).
+   Ops are lead/admin only — the route dependencies enforce that; the forms
+   render unconditionally because the page itself is unreachable otherwise.
+   The row select is labeled via aria-label (an inline action control; a
+   visible per-row label would bloat the table). #}
+<div class="panel">
+  <h2>{{ t.admin.domains.members_h2 }}</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.domains.col_user }}</th>
+        <th>{{ t.admin.domains.col_role }}</th>
+        <th>{{ t.admin.domains.col_added_at }}</th>
+        <th>{{ t.admin.domains.col_added_by }}</th>
+        <th>{{ t.admin.domains.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in members %}
+      <tr>
+        <td><code>{{ m.user_id }}</code></td>
+        <td><span class="badge">{{ t.admin.role[m.role] }}</span></td>
+        <td class="muted">{{ m.added_at }}</td>
+        <td>{{ m.added_by }}</td>
+        <td class="dl-cell">
+          <form method="POST" action="{{ url_for('admin_member_role', domain_key=domain.key) }}" class="inline-form">
+            <input type="hidden" name="user_id" value="{{ m.user_id }}">
+            <select name="role" aria-label="{{ t.admin.domains.col_role }}">
+              {% for r in roles %}
+              <option value="{{ r }}"{% if r == m.role %} selected{% endif %}>{{ t.admin.role[r] }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-sm">{{ t.admin.domains.change_btn }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin_member_remove', domain_key=domain.key) }}" class="inline-form">
+            <input type="hidden" name="user_id" value="{{ m.user_id }}">
+            <button type="submit" class="btn btn-sm btn-danger">{{ t.admin.domains.remove_btn }}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not members %}
+      <tr><td colspan="5" class="muted">{{ t.admin.domains.empty_members }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+
+  <h3>{{ t.admin.domains.add_member_h2 }}</h3>
+  <form method="POST" action="{{ url_for('admin_member_add', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label for="mem-user-id">{{ t.admin.domains.user_id_label }}</label>
+      <input type="text" name="user_id" id="mem-user-id" required>
+    </div>
+    <div class="filter-group">
+      <label for="mem-role">{{ t.admin.domains.role_label }}</label>
+      <select name="role" id="mem-role">
+        {% for r in roles %}
+        <option value="{{ r }}">{{ t.admin.role[r] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.admin.domains.add_btn }}</button>
+    </div>
+  </form>
+</div>
+
+{# Invitations: token stored as digest only; the table shows a hash prefix.
+   The full plaintext link appears exactly once — in the creation flash. #}
+<div class="panel">
+  <h2>{{ t.admin.domains.invitations_h2 }}</h2>
+
+  <h3>{{ t.admin.domains.create_invitation_h2 }}</h3>
+  <form method="POST" action="{{ url_for('admin_invitation_create', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label for="inv-role">{{ t.admin.domains.role_label }}</label>
+      <select name="role" id="inv-role">
+        {% for r in roles %}
+        <option value="{{ r }}">{{ t.admin.role[r] }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="inv-days">{{ t.admin.domains.expires_days_label }}</label>
+      <input type="number" name="expires_days" id="inv-days" value="7" min="1" max="365">
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.admin.domains.invite_btn }}</button>
+    </div>
+  </form>
+
+  <h3>{{ t.admin.domains.pending_h2 }}</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.domains.col_role }}</th>
+        <th>{{ t.admin.domains.col_token }}</th>
+        <th>{{ t.admin.domains.col_invited_by }}</th>
+        <th>{{ t.admin.domains.col_created_at }}</th>
+        <th>{{ t.admin.domains.col_expires_at }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for inv in invitations %}
+      <tr>
+        <td><span class="badge">{{ t.admin.role[inv.role] }}</span></td>
+        <td><code class="muted">{{ inv.token_prefix }}</code></td>
+        <td>{{ inv.invited_by }}</td>
+        <td class="muted">{{ inv.created_at }}</td>
+        <td class="muted">{{ inv.expires_at }}{% if inv.expired %} <span class="badge">{{ t.admin.domains.expired_badge }}</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      {% if not invitations %}
+      <tr><td colspan="5" class="muted">{{ t.admin.domains.none_pending }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

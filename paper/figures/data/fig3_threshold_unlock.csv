@@ -1,0 +1,9 @@
+﻿contract_type,zh_name,score_before,score_after,rounds
+loan,借款合同,6/9,9/9,1
+construction,建设工程合同,6/10,10/10,2
+bailment,保管合同,8/9,9/9,1
+gift,赠与合同,7/9,9/9,2
+transport,运输合同,8/9,9/9,2
+entrustment,委托合同,9/10,10/10,1
+warehousing,仓储合同,9/10,10/10,1
+work,承揽合同,8/9,9/9,1

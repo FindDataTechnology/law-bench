@@ -1,0 +1,79 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# private_equity_fund consulted Kimi 2026-07-30. 《私募投资基金监督管理条例》article
+# numbers verified against 国务院 official text (effective 2023-09-01) via dataPro legal DB:
+# Kimi cited 第十二条(应为第十八条 合格投资者)、第二十六条(应为第二十八条 关联交易)、
+# 第二十九条(实为审计义务,非赎回) -- corrected below; uncorrectable citation flagged unverified.
+contract_type: private_equity_fund
+tags:
+  - name: compliance_filing_status
+    values: [filed, pending_filing, filing_exempt]
+    why: 私募基金未经备案不得开展投资活动，直接影响合同效力及后续退出路径，通用合同无此行政监管要求
+  - name: distribution_hierarchy
+    values: [senior, junior, pari_passu, waterfall]
+    why: 涉及 LP/GP 之间的风险收益匹配及税务处理，是基金区别于普通借贷/买卖的核心经济特征
+  - name: key_person_dependency
+    values: ["yes", "no", "trigger_threshold"]
+    why: PE 基金高度依赖管理团队能力，关键人变动可能触发赎回或清算，通用合同仅关注主体存续
+  - name: valuation_method
+    values: [nav, cost, third_party_appraisal]
+    why: 基金份额申购赎回价格依据，直接决定"价款"计算逻辑，通用合同通常无动态估值需求
+clauses:
+  - family: 合格投资者穿透核查
+    section: 当事人
+    body: >
+      甲方承诺符合《私募投资基金监督管理条例》第十八条规定的合格投资者标准，并同意乙方对最终出资人进行穿透核查至自然人、法人或国资主体。
+    stance: pro_b
+    strength: standard
+    why: 通用模板常忽略"穿透"义务，但监管要求必须识别实际受益人，防止代持违规；条号经核为第十八条(非Kimi原引第十二条)
+    verdict: real
+  - family: 关联交易回避表决
+    section: 权利义务
+    body: >
+      若本合同项下投资涉及关联方，管理人应依据《私募投资基金监督管理条例》第二十八条履行披露义务，且相关投资决策需经{{threshold_percent}}%以上份额持有人同意方可执行。
+    stance: pro_a
+    strength: strong
+    why: 通用合同极少规定内部回避机制，但 PE 基金存在严重利益冲突风险，属强监管红线；条号经核为第二十八条(非Kimi原引第二十六条)
+    verdict: real
+    slot_instructions:
+      - name: threshold_percent
+        label: 同意比例
+        description: 关联交易决策需经份额持有人同意的最低百分比
+        example: 50
+        required: true
+  - family: 基金备案完成时点
+    section: 附则
+    body: >
+      双方确认，本合同生效以基金在中国证券投资基金业协会完成备案为前提；若{{days}}日内未完成备案，本合同自动终止且无需承担违约责任。
+    stance: balanced
+    strength: standard
+    why: 示范文本常将备案作为"义务"而非"生效条件"，导致无效合同下的责任界定不清；备案报送义务本身见《私募投资基金监督管理条例》第三十三条，但以备案为合同生效前提系合同设计，无单一条号依据（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 备案期限
+        description: 基金完成备案的天数期限，逾期则合同自动终止
+        example: 30
+        required: true
+  - family: 流动性风险应对
+    section: 履行期限
+    body: >
+      如遇巨额赎回或市场极端情况，管理人有权依据本合同约定启动延期支付或暂停赎回机制，但需提前{{days}}日公告。
+    stance: pro_b
+    strength: strong
+    why: 通用合同无"巨额赎回"概念，PE 基金因封闭期特性需明确流动性缓冲条款；Kimi 原引《私募投资基金监督管理条例》第二十九条经核为审计义务条款，巨额赎回规则见《公开募集证券投资基金运作管理办法》(公募适用)，私募无对应强制法条（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 提前公告天数
+        description: 启动延期支付或暂停赎回前需提前公告的天数
+        example: 5
+        required: true
+skipped:
+  - item: 不可抗力
+    reason: 属于通用民事合同条款，已在 Base 条文「违约责任」或「附则」中覆盖，无 PE 特异性
+  - item: 争议解决管辖
+    reason: 属于通用诉讼/仲裁条款，不体现私募基金监管特殊性，归入 Base 即可
+  - item: 保密条款
+    reason: 虽重要但通用性强，除非涉及特定敏感信息（如未公开重大投资），否则无需单独设立 PE 特有标签
+  - item: 一般性合规承诺
+    reason: 如"遵守法律法规"等笼统表述，若无具体指向（如反洗钱、合格投资者），易与 Base 条文「权利义务」冗余

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.areas['eval-standards'] }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'eval-standards' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 评测标准区：本域自有 + 沿父域链继承（引用式，不复制）。
+
+    「继承」是默认生效的口径：父域改一条判据，子树立刻跟着变。要偏离就必须
+    fork，而 fork 必须写差异摘要——否则半年后没人能分辨「这就是父域那条」还是
+    「这条被改过」。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.areas['eval-standards'] }}</h1>
+    <p class="hint">{{ t.console.eval_standards.intro }}</p>
+  </div>
+</div>
+
+{% macro standard_row(s) %}
+<tr>
+  <td><strong>{{ s.name }}</strong></td>
+  <td>{{ s.context }}</td>
+  <td>{{ s.source }}</td>
+  <td>
+    {% if s.derived_from %}
+      <span class="badge">{{ t.console.eval_standards.forked }}</span>
+    {% endif %}
+  </td>
+</tr>
+{% endmacro %}
+
+<div class="panel">
+  <h2>{{ t.console.eval_standards.own_h2 }} ({{ own|length }})</h2>
+  {% if own %}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.eval_standards.col_name }}</th>
+      <th>{{ t.console.eval_standards.col_context }}</th>
+      <th>{{ t.console.eval_standards.col_source }}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>{% for s in own %}{{ standard_row(s) }}{% endfor %}</tbody>
+  </table>
+  {% else %}
+  <p class="hint">{{ t.console.eval_standards.none_own }}</p>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.eval_standards.inherited_h2 }} ({{ inherited|length }})</h2>
+  {% if inherited %}
+  <p class="hint">{{ t.console.eval_standards.inherited_hint }}</p>
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.eval_standards.col_name }}</th>
+      <th>{{ t.console.eval_standards.col_context }}</th>
+      <th>{{ t.console.eval_standards.col_source }}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>{% for s in inherited %}{{ standard_row(s) }}{% endfor %}</tbody>
+  </table>
+  {% else %}
+  <p class="hint">{{ t.console.eval_standards.none_inherited }}</p>
+  {% endif %}
+</div>
+
+{#- 工具区：这些页面（rubric 增删改、提示词、对比）还没有搬进新 IA，
+    但功能是真的。把入口放在拥有它们的区里，而不是继续挂在顶栏——
+    顶栏只教一套模型，功能不失联。 -#}
+{% if cap.can_read %}
+<div class="panel">
+  <h2>{{ t.console.eval_standards.tools_h2 }}</h2>
+  <p class="hint">{{ t.console.eval_standards.tools_hint }}</p>
+  <ul class="plain">
+    <li><a href="{{ url_for('page_list_rubrics') }}">{{ t.nav.rubrics }}</a></li>
+    <li><a href="{{ url_for('page_list_prompts') }}">{{ t.nav.prompts }}</a></li>
+    <li><a href="{{ url_for('page_list_compares') }}">{{ t.nav.compare }}</a></li>
+    <li><a href="{{ url_for('page_review') }}">{{ t.nav.review }}</a></li>
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

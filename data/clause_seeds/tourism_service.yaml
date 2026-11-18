@@ -1,0 +1,80 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# tourism_service (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: tourism_service
+tags:
+  - name: shopping_constraint_type
+    values: [无购物, 指定购物, 自愿购物]
+    why: 《旅游法》第三十五条对"指定购物"有严格限制（不得指定具体场所、不得安排另行付费项目），通用"风险"标签无法区分合规与违规购物的法律后果差异
+  - name: itinerary_change_trigger
+    values: [不可抗力, 旅行社单方, 游客原因]
+    why: 旅游合同中行程变更的责任承担（费用增减、解除合同）依据变更发起方不同而完全不同，通用"履行期限"无法体现这种法定责任划分逻辑
+  - name: personnel_substitution_consent
+    values: [需书面同意, 不可替换, 自动允许]
+    why: 旅游服务具有强烈人身属性，《旅游法》第六十四条规定换人需经旅行社同意且可能产生差价，通用"权利义务"无法精准控制此类身份变更风险
+clauses:
+  - family: 禁止强迫购物承诺
+    section: 权利义务
+    body: >
+      甲方（旅行社）承诺不安排未经双方协商一致或未写入本合同的购物活动；如发生强迫购物，乙方（游客）有权要求甲方退还购物款项并赔偿损失。
+      （《中华人民共和国旅游法》第三十五条）
+    stance: pro_b
+    strength: strong
+    why: 通用模板常仅写"包含购物"，未明确"禁止强迫"的法律红线，易引发行政处罚风险
+    verdict: real
+  - family: 旅游者转团/换人规则
+    section: 权利义务
+    body: >
+      乙方如需将合同权利义务转让给第三人，应提前{{days}}日书面通知甲方；甲方应在收到通知后{{hours}}小时内确认是否同意。若同意，因增加的费用由{{party}}承担。
+      （《中华人民共和国旅游法》第六十四条）
+    stance: balanced
+    strength: standard
+    why: 通用合同多规定"债权转让"，但旅游合同强调"人身依附性"，换人需特定同意流程，非通用条款
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 提前通知天数
+        description: 转团或换人需提前书面通知甲方的天数
+        example: 7
+        required: true
+      - name: hours
+        label: 确认时限
+        description: 甲方收到通知后确认是否同意的小时数
+        example: 48
+        required: true
+      - name: party
+        label: 费用承担方
+        description: 因转团或换人增加费用的承担方
+        example: 乙方
+        required: true
+  - family: 突发事件救助义务
+    section: 权利义务
+    body: >
+      行程中发生危及乙方人身财产安全情形的，甲方应立即采取必要的救助和处置措施，并及时向乙方及其家属报告。
+      （《中华人民共和国旅游法》第八十一条）
+    stance: pro_b
+    strength: strong
+    why: 通用模板多关注"违约赔偿"，忽略"事中救助"这一法定义务，该义务是免责抗辩的关键前提
+    verdict: real
+  - family: 签证拒签责任分担
+    section: 违约责任
+    body: >
+      因甲方原因导致乙方被使领馆拒签的，甲方应全额退还已收费用，并支付合同总价{{percent}}%的违约金；因乙方自身原因导致的，费用按实际损失扣除。
+    stance: pro_b
+    strength: standard
+    why: 出境游特有场景，通用模板无法覆盖签证这一特殊履约障碍的责任认定（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: percent
+        label: 违约金比例
+        description: 因甲方原因导致拒签时支付的违约金占合同总价的百分比
+        example: 20
+        required: true
+skipped:
+  - item: 不可抗力定义
+    reason: 《民法典》第一百八十条已有统一定义，属于通用法条，非旅游服务合同特有，归入通用条款即可
+  - item: 保密条款
+    reason: 属于商业合同通用条款，不涉及旅游服务的特殊人身或安全属性，已在基础版中覆盖
+  - item: 争议解决管辖地
+    reason: 属于"争议解决"章节的基础内容，通用模板通常已包含"原告所在地/被告所在地/合同履行地"，无需新增旅游特有维度
+  - item: 逾期付款利息
+    reason: 适用《民法典》关于借款合同或一般违约责任的规定，无旅游行业特殊性，归入通用"价款及支付"即可

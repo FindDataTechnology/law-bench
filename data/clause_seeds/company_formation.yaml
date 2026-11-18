@@ -1,0 +1,81 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# company_formation (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: company_formation
+tags:
+  - name: contribution_compliance
+    values: [货币, 实物, 知识产权, 土地使用权, 劳务(受限)]
+    why: 公司设立核心在于资本形成，不同出资形态涉及物权变动、评估验资及法律禁止性规定（如劳务出资在有限公司受限），直接影响公司成立有效性；通用4维无法区分资金风险与资产过户风险，亦无法覆盖特定资产类型的合法性审查
+  - name: establishment_outcome
+    values: [成功设立, 设立失败, 部分设立]
+    why: 公司设立合同具有"目的契约"属性，若公司最终未获核准，合同效力及责任承担逻辑与一般商事合同完全不同（转为合伙关系或清算）；通用"违约责任"基于违约行为，而设立失败可能源于客观行政原因，需独立界定责任触发条件
+  - name: equity_lockup
+    values: [无, 短期(1-3年), 长期(至上市)]
+    why: 防止发起人在公司刚成立即套现离场，损害债权人及后续投资人利益，属公司治理前置约束；通用"强度"仅描述语气，"锁定期"涉及具体股权处分权限制及明确的时间/触发事件，无法替代
+clauses:
+  - family: 非货币出资评估与过户
+    section: 权利义务
+    body: >
+      股东{{party_a}}以{{asset_type}}作价出资，应于公司成立后{{days}}日内办理财产权转移手续。依据《中华人民共和国公司法（2023修订）》第四十八条，非货币财产应当评估作价，核实财产。
+    stance: pro_a
+    strength: standard
+    why: 通用模板多默认现金出资；非货币出资涉及权属变更与价值真实性，缺失易导致出资不实责任，非买卖/租赁通用大路货
+    verdict: real
+    slot_instructions:
+      - name: party_a
+        label: 股东名称
+        description: 以非货币财产出资的股东姓名或名称
+        example: 张三
+        required: true
+      - name: asset_type
+        label: 出资资产类型
+        description: 用于出资的非货币财产类型，如专利、商标、土地使用权等
+        example: 专利权
+        required: true
+      - name: days
+        label: 过户期限（日）
+        description: 公司成立后办理财产权转移手续的期限，单位为日历日
+        example: 30
+        required: true
+  - family: 设立失败后的债务承担
+    section: 违约责任
+    body: >
+      若因政策原因或审批未通过导致公司未能成立，全体发起人应对设立期间产生的债务和费用承担连带清偿责任。依据《最高人民法院关于适用〈中华人民共和国公司法〉若干问题的规定（三）》第四条。
+    stance: balanced
+    strength: strong
+    why: 通用模板多关注"违约赔偿"，忽略"设立失败"这一特殊状态下的法定连带责任，易引发发起人内部追偿纠纷
+    verdict: real
+    slot_instructions: []
+  - family: 设立前知识产权归属
+    section: 权利义务
+    body: >
+      各方确认，在公司正式取得营业执照前，为筹备公司所完成的智力成果（包括但不限于专利、商标、代码），其所有权自动归属于拟设立公司。若公司未成立，由各方共有。
+    stance: pro_a
+    strength: standard
+    why: 示范文本常遗漏"过渡期IP"；初创企业核心资产往往产生于注册前，无此条易发生创始人个人持有而非公司持有的确权风险
+    verdict: real
+    slot_instructions: []
+  - family: 发起人竞业禁止
+    section: 权利义务
+    body: >
+      自本协议签署之日起至公司成立满{{year}}年内，各发起人不得在与本公司业务相同或竞争领域内自营或任职。依据《中华人民共和国公司法（2023修订）》第一百八十条关于董事、监事、高级管理人员忠实义务的规定，发起人在公司设立阶段亦应遵守忠实义务，避免利益冲突。
+    stance: pro_a
+    strength: strong
+    why: 通用模板较少包含针对"发起人"阶段的竞业限制（通常针对高管）；设立初期人员流动大，缺乏此条易致核心资源流失
+    verdict: real
+    slot_instructions:
+      - name: year
+        label: 竞业禁止年限
+        description: 发起人自协议签署至公司成立后不得从事竞争业务的年限
+        example: 3
+        required: true
+skipped:
+  - item: 保密条款
+    reason: 属于所有商业合同的通用条款，已包含在通用"权利义务"或"附则"中，无设立合同特异性
+  - item: 争议解决方式
+    reason: 仲裁或诉讼选择属于标准配置，已在基线"争议解决"章节覆盖，无需新增特有维度
+  - item: 不可抗力
+    reason: 适用于所有合同履行场景，非公司设立合同特有，归入通用"附则"即可
+  - item: 通知与送达
+    reason: 程序性条款，通用性强，不增加实质性的设立法律风险点
+  - item: 生效条件
+    reason: 虽重要，但通常表述为"签字盖章生效"，属签署信息范畴，无需单独作为特有条款抽取

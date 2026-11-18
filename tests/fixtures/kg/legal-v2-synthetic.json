@@ -1,0 +1,23 @@
+{
+  "graph": "legal-v2-synthetic",
+  "source": "synthetic",
+  "note": "合成的最小图快照（演示 kg 车道四条硬判据的离线对账）；原仓无真实图统计 JSON 可读取，此文件不是任何生产图的抽样。节点名/文号均为构造值，非语料正文。",
+  "summary": {
+    "nodes": 6,
+    "edges": 3,
+    "statute_layer_nodes": 5
+  },
+  "nodes": [
+    {"uuid": "u1", "name": "中华人民共和国刑法", "law_id": 101},
+    {"uuid": "u2", "name": "中华人民共和国民法典", "law_id": 102},
+    {"uuid": "u3", "name": "行政单位财务规则（财政部令第113号）", "law_id": 201},
+    {"uuid": "u4", "name": "行政单位财务规则（财政部令第71号）", "law_id": 202, "article_no": "第七十一条"},
+    {"uuid": "u5", "name": "机关事务管理条例（国务院令第621号）", "law_id": 203},
+    {"uuid": "u6", "name": "财政部关于做好2026年预算工作的通知"}
+  ],
+  "edges": [
+    {"src": "u1", "dst": "u2", "type": "CITES"},
+    {"src": "u3", "dst": "u4", "type": "RELATES_TO"},
+    {"src": "u5", "dst": "u6", "type": "RELATES_TO"}
+  ]
+}

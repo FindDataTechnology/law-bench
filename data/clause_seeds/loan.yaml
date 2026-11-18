@@ -1,0 +1,102 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# loan (借款合同) - consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: loan
+tags:
+  - name: interest_rate_compliance_tier
+    values: [固定利率, LPR浮动, 逾期罚息, 复利]
+    why: 借款合同核心在于资金时间价值定价，且受国家金融监管严格限制（民间借贷利率司法保护上限为合同成立时一年期LPR的四倍），买卖/租赁无此概念；通用 risk 维度无法量化具体利率红线
+  - name: prepayment_cost_structure
+    values: [无违约金, 剩余本金比例, 固定月数利息]
+    why: 仅涉及借贷关系的流动性管理，买方付款或租客退租通常不涉及"提前结清利息"的复杂计算逻辑；通用 stance 维度无法区分是否允许提前还及如何计费
+  - name: fund_usage_red_line
+    values: [生产经营, 个人消费, 禁止流入股市楼市]
+    why: 借款具有特定目的性，违规使用可能触发法定解除或银行抽贷，买卖合同标的物交付后用途通常不限；通用 risk 维度无法覆盖金融合规性监管要求
+clauses:
+  - family: 利率上限司法保护线声明
+    section: 价款及支付
+    body: >
+      双方确认，本合同项下年利率不超过合同成立时一年期贷款市场报价利率（LPR）的{{lpr_multiple}}倍。超过部分人民法院不予支持。
+      依据：《民法典》第680条、《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》第25条。
+    stance: pro_b
+    strength: standard
+    why: 示范文本常只写"年利率X%"，未对齐最新LPR四倍司法保护线，易致超额利息无效；纯金融定价属性，非买卖/租赁通用
+    verdict: real
+    slot_instructions:
+      - name: lpr_multiple
+        label: LPR倍数
+        description: 年利率不超过合同成立时一年期LPR的倍数，司法保护上限为4倍
+        example: "4"
+        required: true
+  - family: 借款用途合规承诺与检查权
+    section: 权利义务
+    body: >
+      乙方承诺借款用于{{loan_purpose}}，不得用于违法活动或证券投资。甲方有权监督资金使用情况，发现挪用可提前收回借款。
+      依据：《民法典》第673条。
+    stance: pro_a
+    strength: standard
+    why: 通用模板常忽略"用途"约定，但借款用途违规是法定解除事由（贷款人可停止发放/提前收回/解除合同），对出借人风控至关重要
+    verdict: real
+    slot_instructions:
+      - name: loan_purpose
+        label: 借款用途
+        description: 借款资金的具体使用目的，如生产经营、个人消费等
+        example: 生产经营
+        required: true
+  - family: 提前还款违约金计算细则
+    section: 履行期限
+    body: >
+      乙方提前还款应提前{{notice_days}}日书面通知。若还款不足{{minimum_months}}个月，需按剩余利息的{{penalty_rate}}%支付违约金；满{{minimum_months}}个月后免收。
+      依据：《民法典》第677条。
+    stance: pro_a
+    strength: standard
+    why: 示范文本多默认"可随时还"而未约定违约金，提前还款的利息损失计算是纯金融属性条款，易引发纠纷
+    verdict: real
+    slot_instructions:
+      - name: notice_days
+        label: 提前通知天数
+        description: 乙方提前还款前需书面通知甲方的日数
+        example: "15"
+        required: true
+      - name: minimum_months
+        label: 最低借款月数
+        description: 是否收取提前还款违约金的借款月数分界线，不足此月数需支付违约金
+        example: "6"
+        required: true
+      - name: penalty_rate
+        label: 违约金比例
+        description: 不足最低借款月数时按剩余利息的百分比支付的违约金
+        example: "20"
+        required: true
+  - family: 交叉违约与加速到期触发
+    section: 违约责任
+    body: >
+      若乙方在其他债务中出现逾期或被起诉，视为对本合同根本违约，甲方有权宣布借款立即到期并追偿。
+      依据：《民法典》第563条、第678条。
+    stance: pro_a
+    strength: strong
+    why: 普通买卖/租赁合同无"加速到期"概念（通常为解约），这是信贷特有的风控条款，示范文本罕见
+    verdict: real
+  - family: 复利计收特别约定
+    section: 价款及支付
+    body: >
+      对不能按时支付的利息，甲方有权按{{compound_rate}}%利率计收复利，但复利总额不得超过法定上限。
+      依据：《人民币利率管理规定》第25条。
+    stance: pro_a
+    strength: strong
+    why: 民间借贷中复利常被默认为无效，需明确约定才可能被支持，通用模板极少涉及；§25 经核确为复利计收规定（银发〔1999〕77号），适用于金融机构借贷；民间借贷复利依据《民法典》第680条及民间借贷司法解释
+    verdict: real
+    slot_instructions:
+      - name: compound_rate
+        label: 复利利率
+        description: 对不能按时支付的利息计收复利的年利率百分比
+        example: "24"
+        required: true
+skipped:
+  - item: 不可抗力免责条款
+    reason: 属于通用商业合同基础条款，已包含在「附则」或「违约责任」通用层中，非借款合同特有
+  - item: 送达地址确认书
+    reason: 属于程序性签署信息，已在「签署信息」章节覆盖，重复抽取无意义
+  - item: 抵押/质押担保细节
+    reason: 担保物权设立需独立签订《抵押合同》或《质押合同》，借款合同仅需引用，不宜在此详述
+  - item: 借款本金金额
+    reason: 属于「合同标的」基础字段，已有 base 条文，无需作为新特有条款增加

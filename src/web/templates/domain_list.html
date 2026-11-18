@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}{{ t.console.list.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+
+{% block content %}
+{#- 全域运营台（L0）：不再是「我加入的域」清单，而是**缺口矩阵**。
+
+    每一行一个域（按 path 深度缩进体现父子），四根支柱各一列：
+      本体 = 声明词表类型数 / 策展条目数
+      语料 = 订阅到的库数 / 可用源数
+      评测 = 生效标准数（含沿父域链继承）/ 最近一次运行日期
+      提案 = 待确认数
+    「缺口」= 这三根支柱为零的域。它是这一页存在的理由，所以做成可点的筛选项，
+    而不是藏在列里让人自己扫；行内也标一次，便于从书签直接进来的人看懂。 -#}
+<div class="toolbar between">
+  <h1>{{ t.console.list.h1 }}</h1>
+  {% if domains %}<span class="muted">{{ tr('console.list.count', n=domains | length) }}</span>{% endif %}
+</div>
+
+{% if domains %}
+<p class="hint">{{ t.console.estate.intro }}</p>
+
+<div class="toolbar gap" role="group" aria-label="{{ t.console.estate.gap_filter }}">
+  <a class="btn btn-sm{% if not gap %} btn-primary{% endif %}"
+     href="{{ url_for('console_domain_list') }}">{{ t.console.estate.all }}</a>
+  {% if gap %}
+  {#- 派单入口只在筛出缺口后出现：它作用于「当前这一屏缺这个的域」，
+      不是一个独立功能。目标页只读，写发生在确认页。 -#}
+  <a class="btn btn-sm" href="{{ url_for('console_dispatch_preview') }}?gap={{ gap }}">
+    {{ t.console.dispatch.title }} ({{ rows|length }})
+  </a>
+  {% endif %}
+  {% if platform_admin %}
+  <a class="btn btn-sm{% if include_archived %} btn-primary{% endif %}"
+     href="{{ url_for('console_domain_list') }}{% if include_archived %}{% else %}?archived=1{% endif %}">
+    {{ t.console.estate.archived_toggle }}
+  </a>
+  {% endif %}
+  {% for key in ('ontology', 'knowledge', 'eval') %}
+  <a class="btn btn-sm{% if gap == key %} btn-primary{% endif %}"
+     href="{{ url_for('console_domain_list') }}?gap={{ key }}">
+    {{ t.console.estate['gap_' + key] }} ({{ gap_counts[key] }})
+  </a>
+  {% endfor %}
+</div>
+
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.console.list.col_domain }}</th>
+        <th>{{ t.console.estate.col_ontology }}</th>
+        <th>{{ t.console.estate.col_knowledge }}</th>
+        <th>{{ t.console.estate.col_eval }}</th>
+        <th>{{ t.console.estate.col_inbox }}</th>
+        <th>{{ t.console.list.col_role }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>
+          {% if r.depth %}<span class="muted">{{ '　' * r.depth }}└</span>{% endif %}
+          <a href="{{ url_for('console_overview', domain_key=r.domain.key) }}">{{ r.domain.name }}</a>
+          {% if r.domain.archived_at %}
+          <span class="badge bad">{{ t.console.estate.archived_badge }}</span>
+          <form method="POST" class="inline" action="{{ url_for('console_domain_archive', domain_key=r.domain.key) }}">
+            <input type="hidden" name="restore" value="1">
+            <button type="submit" class="btn btn-sm">{{ t.console.estate.restore_btn }}</button>
+          </form>
+          {% endif %}
+          <code>{{ r.domain.path }}</code>
+          {% for g in r.gaps %}
+          <span class="badge badge-warn">{{ t.console.estate['gap_' + g] }}</span>
+          {% endfor %}
+        </td>
+        <td>
+          {% if r.ontology.declared_types is not none %}
+            {{ r.ontology.declared_types }} / {{ r.ontology.curated_units }}
+            {% if r.ontology.smoke_units %}<span class="muted">（{{ t.console.estate.smoke_excluded }} {{ r.ontology.smoke_units }}）</span>{% endif %}
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if r.knowledge.error %}
+            <span class="badge badge-warn">{{ t.console.estate.scope_error }}</span>
+          {% else %}
+            {{ r.knowledge.libraries }} / {{ r.knowledge.sources }}
+            <span class="muted">· {{ r.knowledge.chunks }} 块</span>
+          {% endif %}
+        </td>
+        <td>
+          {{ r.eval.standards }}
+          {% if r.eval.last_run %}<span class="muted">{{ r.eval.last_run[:10] }}</span>
+          {% else %}<span class="muted">{{ t.console.estate.no_run }}</span>{% endif %}
+        </td>
+        <td>
+          {% if r.inbox.pending %}<strong>{{ r.inbox.pending }}</strong>
+          {% else %}<span class="muted">0</span>{% endif %}
+        </td>
+        <td><span class="badge">{{ t.console.role[r.domain.role] }}</span></td>
+        <td class="nowrap">
+          <a class="btn btn-sm" href="{{ url_for('console_overview', domain_key=r.domain.key) }}">{{ t.console.list.open }}</a>
+          {% if platform_admin and not r.domain.archived_at %}
+          <form method="POST" class="inline" action="{{ url_for('console_domain_archive', domain_key=r.domain.key) }}">
+            <button type="submit" class="btn btn-sm">{{ t.console.estate.archive_btn }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if gap and not rows %}
+<div class="panel">
+  <p class="hint">{{ t.console.estate.none_matching }}</p>
+</div>
+{% endif %}
+{% else %}
+<div class="panel">
+  <h2>{{ t.console.list.empty_h1 }}</h2>
+  <p>{{ t.console.list.empty_body }}</p>
+  {% if platform_admin %}
+  <p class="hint">{{ t.console.list.empty_admin_hint }}</p>
+  <p><a class="btn" href="{{ url_for('admin_domains') }}">{{ t.console.list.platform_gate }}</a></p>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

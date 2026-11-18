@@ -1,0 +1,3 @@
+In-pod loop (localhost, burst=20 rps=10): 22x200 then 429,429,429
+NodePort loop (sequential curl, ~10/s refill masks burst) — all 200: expected refill behavior, not a gate failure.
+Caller keying: anonymous → i:<ip> bucket; keyed callers same treatment (per rate_limit._caller_id).

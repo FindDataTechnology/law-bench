@@ -1,0 +1,97 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# entrustment (委托合同) consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: entrustment
+tags:
+  - name: remuneration_nature
+    values: [paid, gratuitous]
+    why: 直接决定受托人赔偿责任标准（《民法典》第929条：有偿适用过错、无偿仅故意/重大过失），是赔偿闸门，通用4维无法表达
+  - name: sub_entrustment_permission
+    values: [prohibited, consent_required, notification_only]
+    why: 涉及《民法典》第923条转委托责任归属，通用合同无此代理链条穿透风险
+  - name: arbitrary_revocation_consequence
+    values: [direct_loss_only, expectation_interest]
+    why: 对应《民法典》第933条，有偿/无偿委托解除后赔偿范围法定不同，需约定以规避争议
+  - name: instruction_change_response
+    values: [immediate, negotiated, written_confirmation]
+    why: 对应《民法典》第922条，委托合同强调服从指示，受托人配合义务需体现
+clauses:
+  - family: 转委托责任界定
+    section: 权利义务
+    body: >
+      未经委托人书面同意，受托人不得将委托事务转委托给第三人。经同意的，受托人仅就第三人的选任及其对第三人的指示承担责任；未经同意的，受托人应当对转委托的第三人的行为承担责任。
+      （依据：《民法典》第923条）
+    stance: pro_a
+    strength: strong
+    why: 通用模板常忽略代理链条中的责任穿透，易导致委托人无法向次受托人追责或受托人过度免责
+    verdict: real
+  - family: 有偿/无偿赔偿标准区分
+    section: 违约责任
+    body: >
+      本合同为{{remuneration_nature}}委托合同。若为有偿，受托人因过错造成委托人损失的应赔偿；若为无偿，受托人仅因故意或重大过失造成委托人损失的才承担赔偿责任。
+      （依据：《民法典》第929条）
+    stance: balanced
+    strength: standard
+    why: 示范文本常统一写"违约赔偿"，未区分有偿无偿的法定注意义务差异，易引发裁判尺度不一
+    verdict: real
+    slot_instructions:
+      - name: remuneration_nature
+        label: 委托性质
+        description: 委托合同为有偿或无偿
+        example: 有偿
+        required: true
+  - family: 任意解除权补偿约定
+    section: 违约责任
+    body: >
+      双方均享有任意解除权，但因解除合同造成对方损失的，除不可归责于该方的事由外，{{remuneration_nature}}委托合同应赔偿对方直接损失/合同履行后可获得的利益。
+      （依据：《民法典》第933条）
+    stance: balanced
+    strength: standard
+    why: 法定任意解除权常被误认为"无责解除"，示范文本多未明确解除后的损害赔偿计算标准
+    verdict: real
+    slot_instructions:
+      - name: remuneration_nature
+        label: 委托性质
+        description: 委托合同为有偿或无偿
+        example: 有偿
+        required: true
+  - family: 事务处理结果移交
+    section: 附则
+    body: >
+      合同终止后{{days}}日内，受托人应向委托人报告委托事务处理情况，并将处理取得的财产、文件及权益凭证全部移交给委托人。
+      （依据：《民法典》第927条）
+    stance: pro_a
+    strength: standard
+    why: 通用模板常止于"结清款项"，忽略非金钱类财产（如证件、数据、权利证书）的移交义务
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 移交天数
+        description: 合同终止后受托人移交财产及报告的期限（日）
+        example: 7
+        required: true
+  - family: 紧急情况下指示变通
+    section: 权利义务
+    body: >
+      情况紧急且难以联系委托人时，受托人为维护委托人利益可先行处置，但应在事后{{hours}}小时内报告并说明理由。
+      （依据：《民法典》第922条）
+    stance: balanced
+    strength: standard
+    why: 通用合同缺乏"紧急避险"式的代理权扩张条款，可能导致受托人在紧急时刻不敢作为而担责；第922条规定紧急情况下受托人可妥善处置并事后及时报告
+    verdict: real
+    slot_instructions:
+      - name: hours
+        label: 报告时限
+        description: 紧急情况处置后向委托人报告的时限（小时）
+        example: 24
+        required: true
+skipped:
+  - item: 保密义务
+    reason: 属于所有商业合同的通用条款，非委托合同特有，已包含在通用基础条款中
+  - item: 不可抗力
+    reason: 属于通用免责条款，适用于所有合同类型，无需针对委托合同单独定制
+  - item: 争议解决管辖
+    reason: 属于通用程序性条款，已在 base 条文"争议解决"章节覆盖，无委托特异性
+  - item: 送达地址确认
+    reason: 属于通用程序性条款，已在 base 条文"签署信息"或"附则"中覆盖
+  - item: 廉洁承诺
+    reason: 虽重要但属于合规通用条款，非委托合同法律关系的本质特征条款

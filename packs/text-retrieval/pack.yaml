@@ -1,0 +1,16 @@
+name: text-retrieval
+version: 0.1.0
+description: 文本检索评测域包（数据重尺子）：迁入 fd-text-core 的标注查询集契约（分级相关性 qrels）与 nDCG/hit@k/MRR 纯函数跑分器、双指纹（数据集+配置）趋势机；检索后端由调用方注入，本包零 LLM、零网络。
+kinds:
+  - retrieval-query
+components:
+  - type: module
+    path: packs/text-retrieval/__init__.py
+  - type: module
+    path: packs/text-retrieval/adapters.py
+  - type: module
+    path: packs/text-retrieval/scorer.py
+  - type: data
+    path: packs/text-retrieval/README.md
+eval_suites:
+  - text-retrieval-ndcg

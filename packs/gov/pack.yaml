@@ -1,0 +1,38 @@
+name: gov
+version: 0.1.0
+description: 政务数据域包（数据/元数据重、文本可选）：fd-cn-gov 公文爬虫 registry（sources/datasource_columns/scraw_configs/organizations 四表）的只读适配与纯确定性事实校验（kind=gov-fact，含 KG 车道验收判据的元数据图降级迁移）；零 LLM、零网络。
+kinds:
+  - gov-fact
+components:
+  - type: module
+    path: packs/gov/adapters.py
+  - type: module
+    path: packs/gov/checks.py
+eval_suites:
+  - gov-registry-consistency
+
+# 岗位参数：政务线只跑只读巡检与取材；评测/发布未声明即不启动。
+roles:
+  warden:
+    cadence_minutes: 15
+    review_threshold_hours: 48
+  verifier:
+    cadence_minutes: 120
+    checks: [key_already_live, endpoint_open]
+  scout:
+    cadence_minutes: 1440
+    doc_types: [办法, 规定, 规则, 命令, 决定, 准则, 标准]
+    sources: [gov]
+    limit: 30
+  builder:
+    cadence_minutes: 1440
+    doc_types: [办法, 规定]
+    sources: [gov]
+  concept:
+    cadence_minutes: 1440
+    batch_chunks: 10
+    min_usable_rate: 0.5
+    max_total: 40
+    # 语料面＝政务公开全文（本域唯一订阅的源）。概念只从它来，不猜。
+    sources: [gov]
+

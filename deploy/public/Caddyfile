@@ -1,0 +1,50 @@
+# Caddy gateway fragment for the China-facing public API domain.
+#
+# The public pod (deploy/public/deployment.yaml) listens on :8010 behind this
+# gateway. Caddy terminates TLS (auto Let's Encrypt for the public domain) and
+# reverse-proxies to the in-cluster Service. The Caddy `rate_limit` directive is
+# the PREFERRED production throttle (the in-process token-bucket in
+# src/web/rate_limit.py is the no-gateway fallback). Run BOTH if you want
+# defense in depth, but at minimum run this one — a gateway limiter is shared
+# across pod restarts and scales with replicas, which the in-process one does
+# not.
+#
+# This is a NEW host (not lawbench.token118.com — that is the origin). Pick a
+# China-facing domain you control DNS for and replace PUBLIC_API_DOMAIN below.
+#
+# Requires the Caddy `rate_limit` module (caddyserver/caddy-rate-limit). If your
+# Caddy build lacks it, drop the `rate_limit` block and rely on the in-process
+# limiter (RATE_LIMIT_ENABLED=1 on the pod, task 3.1).
+#
+# Mount: `caddy run --config /etc/caddy/Caddyfile`
+
+PUBLIC_API_DOMAIN {
+	# Auto TLS via Let's Encrypt. For a China box that cannot reach LE's ACME
+	# endpoints reliably, pre-issue a cert and use:
+	#   tls /etc/certs/pub.crt /etc/certs/pub.key
+	tls internal
+
+	encode gzip
+
+	# Per-IP gateway throttle. 10 rps sustained, burst 20 — mirrors the
+	# in-process defaults so the two layers agree. Tune per observed traffic.
+	rate_limit {
+		zone public_ip {
+			key {remotehost_ip}
+			events 20
+			window 1s
+		}
+	}
+
+	# /healthz MUST be exempt at the gateway too (mirrors the in-process
+	# _EXEMPT_PATH), or k8s liveness/readiness probes through Caddy would 429.
+	@healthz path /healthz
+	handle @healthz {
+		reverse_proxy law-bench-public.law-bench.svc.cluster.local:8010
+	}
+
+	# Everything else proxied to the public Service.
+	reverse_proxy law-bench-public.law-bench.svc.cluster.local:8010 {
+		header_up X-Forwarded-For {remote_host}
+	}
+}

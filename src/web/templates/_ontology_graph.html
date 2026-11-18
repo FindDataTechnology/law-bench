@@ -1,0 +1,84 @@
+{#- 本体图谱：左概念、右文档，边是它们之间的关系。
+
+    服务端画 SVG，不引前端图库：这张图的确定性本身就是信息——同一份本体永远画
+    同一张图，重载不会重排。孤立单位不画在画布里，单列在下面：「没有依据」是这个
+    视图最该暴露的事实，让它漂在空白处反而藏起来了。 -#}
+<div class="panel onto-graph">
+  <div class="toolbar between">
+    <h2>{{ t.console.ontology.graph_h2 }}</h2>
+    <span class="muted">{{ t.console.ontology.graph_count }}
+      {{ graph.concepts|length }} · {{ graph.documents|length }} · {{ graph.edges|length }}</span>
+  </div>
+
+  {% if graph.concepts or graph.documents %}
+  {% set row = 34 %}
+  {% set pad = 24 %}
+  {% set rows = [graph.concepts|length, graph.documents|length]|max %}
+  {% set height = pad * 2 + (rows - 1) * row if rows > 1 else pad * 2 + row %}
+  {% set cx = 8 %}
+  {% set dx = 316 %}
+  {% set cw = 268 %}
+  <svg class="onto-graph__svg" viewBox="0 0 600 {{ height }}" role="img"
+       aria-label="{{ t.console.ontology.graph_h2 }}">
+    <defs>
+      <marker id="onto-arrow" viewBox="0 0 8 8" refX="7" refY="4"
+              markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0,1 L7,4 L0,7 z" fill="#9aa3af"></path>
+      </marker>
+    </defs>
+
+    {#- edges first so nodes sit on top -#}
+    {% for e in graph.edges %}
+      {% set from_i = graph.concepts|map(attribute='external_key')|list %}
+      {% set to_i = graph.documents|map(attribute='external_key')|list %}
+      {% if e.from in from_i and e.to in to_i %}
+        {% set y1 = pad + from_i.index(e.from) * row %}
+        {% set y2 = pad + to_i.index(e.to) * row %}
+        <path class="onto-graph__edge"
+              d="M{{ cx + cw }},{{ y1 }} C{{ cx + cw + 40 }},{{ y1 }} {{ dx - 40 }},{{ y2 }} {{ dx }},{{ y2 }}"
+              marker-end="url(#onto-arrow)">
+          <title>{{ e.from }} {{ e.kind }} {{ e.to }}</title>
+        </path>
+      {% endif %}
+    {% endfor %}
+
+    {#- concept nodes -#}
+    {% for c in graph.concepts %}
+      {% set y = pad + loop.index0 * row %}
+      <g class="onto-graph__node onto-graph__node--concept">
+        <title>{{ c.external_key }}</title>
+        <rect x="{{ cx }}" y="{{ y - 12 }}" width="{{ cw }}" height="24" rx="4"></rect>
+        <text x="{{ cx + 10 }}" y="{{ y + 4 }}">{{ c.external_key }}</text>
+      </g>
+    {% endfor %}
+
+    {#- document nodes -#}
+    {% for d in graph.documents %}
+      {% set y = pad + loop.index0 * row %}
+      <g class="onto-graph__node onto-graph__node--doc">
+        <title>{{ d.kind }} · {{ d.external_key }}</title>
+        <rect x="{{ dx }}" y="{{ y - 12 }}" width="{{ cw }}" height="24" rx="4"></rect>
+        <text x="{{ dx + 10 }}" y="{{ y + 4 }}">{{ d.external_key }}</text>
+      </g>
+    {% endfor %}
+  </svg>
+  {% else %}
+  <p class="hint">{{ t.console.ontology.graph_empty }}</p>
+  {% endif %}
+
+  {% if graph.isolated %}
+  <div class="onto-graph__isolated">
+    <h3>{{ t.console.ontology.graph_isolated }} {{ graph.isolated|length }}</h3>
+    <p class="hint">{{ t.console.ontology.graph_isolated_hint }}</p>
+    <ul class="plain">
+      {% for u in graph.isolated %}
+      <li><code>{{ u.external_key }}</code> <span class="muted">{{ u.kind }}</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  {% if graph.truncated %}
+  <p class="hint">{{ t.console.ontology.graph_truncated }} {{ graph.limit }}</p>
+  {% endif %}
+</div>

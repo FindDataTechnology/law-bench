@@ -1,0 +1,28 @@
+# standalone .gitignore — this subproject may be pushed to GitHub on its own
+
+# secrets / local config
+.env
+.env.*
+!.env.example
+.mcp.json
+ssh-config.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.deepeval/
+
+# Node / Next.js frontend
+node_modules/
+frontend/.next/
+frontend/out/
+next-env.d.ts
+
+# artifacts
+output/
+*.log
+.DS_Store

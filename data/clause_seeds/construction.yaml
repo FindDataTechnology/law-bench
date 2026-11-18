@@ -1,0 +1,72 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# construction (consulted Kimi 2026-07-30); citations cross-checked via dataPro law lookup.
+contract_type: construction
+tags:
+  - name: price_adjustment_trigger
+    values: [固定总价, 可调价, 风险幅度内不调, 超出幅度调]
+    why: 建设工程周期长，主材（钢材/水泥）价格波动大，通用合同无此细分机制，易引发结算纠纷；通用"Risk"无法量化价格波动的具体阈值与计算方式
+  - name: concealed_works_status
+    values: [已验收, 未验收视为合格, 拒绝验收后果]
+    why: 涉及地基、管线等不可见部位，一旦覆盖即难以举证，是工程质量与索赔的核心环节；通用"Risk"无法体现"覆盖后"的特殊法律推定效力
+  - name: priority_right_status
+    values: [放弃, 保留, 已主张, 超期失效]
+    why: 仅建设工程承包人享有法定优先受偿权，直接影响债权实现顺位，其他合同无此概念；通用"Mandatory"无法体现该权利对担保物权的排他性
+clauses:
+  - family: 材料价格波动风险分担
+    section: 价款及支付
+    body: >
+      施工期间，主要建筑材料价格波动超过±{{percent}}%时，超出部分由{{bearer}}承担，依据《民法典》第533条情势变更原则执行。
+    slot_instructions:
+      - name: percent
+        label: 价格波动阈值（%）
+        description: 主要建筑材料价格波动的百分比阈值，超出即触发调价
+        example: "5"
+        required: true
+      - name: bearer
+        label: 超出部分承担方
+        description: 价格波动超出阈值后承担差价的主体
+        example: "发包人"
+        required: true
+    stance: balanced
+    strength: standard
+    why: 示范文本常写"固定单价"，但缺乏市场剧烈波动时的调价公式，易导致显失公平或履约僵局
+    verdict: real
+  - family: 隐蔽工程未检后果
+    section: 权利义务
+    body: >
+      隐蔽工程在隐蔽前，承包人应通知发包人检查。若发包人未及时检查，承包人可顺延工期并索赔窝工损失，依据《民法典》第798条。
+    stance: pro_b
+    strength: standard
+    why: 示范文本多笼统规定"需验收"，未明确"未检即视为同意"或"停工索赔"的具体后果，易生争议
+    verdict: real
+  - family: 优先受偿权行使期限
+    section: 违约责任
+    body: >
+      承包人应在发包人应付工程款之日起{{months}}个月内行使工程价款优先受偿权，依据《民法典》第807条及《建工司法解释（一）》第41条。
+    slot_instructions:
+      - name: months
+        label: 优先受偿权行使期限（月）
+        description: 承包人行使工程价款优先受偿权的月数
+        example: "18"
+        required: true
+    stance: pro_b
+    strength: strong
+    why: 示范文本通常不提及法定优先权，但实务中该权利是承包人核心筹码，且存在18个月除斥期间限制
+    verdict: real
+  - family: 农民工工资专用账户
+    section: 履行期限
+    body: >
+      承包人应设立农民工工资专用账户，实行分账管理，确保工资按月足额支付，依据《保障农民工工资支付条例》第26条。
+    stance: balanced
+    strength: standard
+    why: 属行政法规强制要求，示范文本多为民事约定，常遗漏行政合规性条款，导致行政处罚风险
+    verdict: real
+skipped:
+  - item: 不可抗力
+    reason: 属于通用合同基础条款，示范文本已有标准定义与后果分配，无需新增特有项
+  - item: 争议解决方式
+    reason: 仲裁/诉讼选择为通用条款，示范文本已有独立章节，非建设工程特有
+  - item: 保密义务
+    reason: 适用于所有商业合同，非建设工程领域特有的技术或法律风险点
+  - item: 分包管理
+    reason: 示范文本"权利义务"章节通常已包含禁止违法分包内容，新增易冗余

@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: review-agent-frontend
+  namespace: law-bench
+  labels:
+    app: review-agent-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: review-agent-frontend
+  template:
+    metadata:
+      labels:
+        app: review-agent-frontend
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull
+      containers:
+        - name: frontend
+          image: harbor.local/law-bench/review-agent-frontend:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: BACKEND_URL
+              value: "http://review-agent-backend:8000"
+            - name: LANGGRAPH_DEPLOYMENT_URL
+              value: "http://review-agent-backend:8000"
+            - name: NEXT_PUBLIC_COPILOTKIT_URL
+              value: "/api/copilotkit"
+          ports:
+            - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10

@@ -1,0 +1,89 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# lease mirrors employment.yaml (consulted Kimi 2026-07-30); citations re-checked by reviewer.
+contract_type: lease
+tags:
+  - name: priority_right_status
+    values: [none, reserved, waived, requires_written_notice]
+    why: 租赁关系产生法定优先购买权(《民法典》第七百二十六条)与优先续租权(《民法典》第七百三十四条)，属物权期待权；通用4维仅提示后果/效力，无法描述权利存续状态与操作节点，租赁合同特有
+  - name: subletting_authorization_mode
+    values: [prohibited, requires_landlord_consent, record_only, free_sublet]
+    why: 租赁物占有使用权分离是租赁核心特征，转租突破合同相对性，住宅/商业默认规则不同(《民法典》第七百一十六条)；通用4维无法区分"需同意/无需同意"的关键履约路径差异
+  - name: accession_disposal_rule
+    values: [restore_original, discounted_compensation, free_to_landlord]
+    why: 租赁期满涉及装修改建等添附物处置，涉及价值分割与所有权变动；通用"违约责任"仅关注违约后果，不涵盖合法终止时的资产清算逻辑，买卖/借款合同无此物理附着物问题
+clauses:
+  - family: 优先购买权通知与放弃
+    section: 权利义务
+    body: >
+      出租人出售租赁房屋的，应提前 {{notice_days}} 日书面通知承租人。承租人应在收到通知后 {{response_days}} 日内明确表示是否行使优先购买权，逾期未答复视为放弃。
+      （《中华人民共和国民法典》第七百二十六条）
+    stance: balanced
+    strength: standard
+    why: 示范文本常只写"有优先权"，漏掉通知期限与默示放弃机制，易致交易僵局或诉讼争议
+    verdict: real
+    slot_instructions:
+      - name: notice_days
+        label: 通知提前天数
+        description: 出租人出售租赁房屋前需提前书面通知承租人的日数
+        example: "15"
+        required: true
+      - name: response_days
+        label: 答复期限
+        description: 承租人收到通知后行使优先购买权的答复日数，逾期视为放弃
+        example: "15"
+        required: true
+  - family: 装修添附返还与补偿
+    section: 履行期限
+    body: >
+      租赁期满或合同解除时，对于不可拆除的装修装饰物：
+      1. 经同意的，按折旧率计算残值，由出租人补偿；
+      2. 未经同意的，出租人有权要求恢复原状或赔偿损失。
+      （《最高人民法院关于审理城镇房屋租赁合同纠纷案件具体应用法律若干问题的解释》第九条、第十一条）
+    stance: balanced
+    strength: standard
+    why: 示范文本多忽略残值计算与"同意与否"的区别，直接约定"无偿归出租人"可能因显失公平被认定无效；经复核，第九条为经同意装饰装修合同解除时残值补偿规则，第十一条为未经同意装饰装修恢复原状规则
+    verdict: real
+  - family: 转租审批流程细化
+    section: 权利义务
+    body: >
+      承租人拟转租的，须向出租人提交次承租人资质及转租方案。出租人应在收到申请后 {{reply_days}} 日内书面回复，逾期不回复视为不同意。若出租人无正当理由拒绝，不影响承租人依法转租的权利主张。
+      （《中华人民共和国民法典》第七百一十六条）
+    stance: pro_b
+    strength: standard
+    why: 示范文本常笼统写"不得转租"，未设审批时限或视为同意机制，致出租人恶意拖延阻碍转租
+    verdict: real
+    slot_instructions:
+      - name: reply_days
+        label: 审批答复天数
+        description: 出租人收到转租申请后书面回复的日数，逾期不回复视为不同意
+        example: "10"
+        required: true
+  - family: 房屋交付现状确认
+    section: 合同标的
+    body: >
+      双方确认房屋/设备交付时处于以下状态：{{status_detail}}（如：水电读数、墙面状况、设施清单）。交付后新增损耗由{{bearer}}承担。
+      （《中华人民共和国民法典》第七百零八条）
+    stance: balanced
+    strength: standard
+    why: 示范文本常仅列面积，漏"现状确认"细节，退租时自然损耗与人为损坏界限不清易发纠纷
+    verdict: real
+    slot_instructions:
+      - name: status_detail
+        label: 交付现状明细
+        description: 房屋或设备交付时的状态描述，包括水电读数、墙面状况、设施清单等
+        example: 水表读数1234;电表读数5678;墙面完好;空调x1台
+        required: true
+      - name: bearer
+        label: 损耗承担方
+        description: 交付后新增损耗的承担方，如承租人或出租人
+        example: 承租人
+        required: true
+skipped:
+  - item: 押金退还条款
+    reason: 属「价款及支付」保证金范畴，base条文通常已含押金金额及退还时间，增设独立条款冗余
+  - item: 不可抗力通用定义
+    reason: 「违约责任」/「附则」通用兜底条款，适用所有合同类型，非租赁特有，不符合"特有"筛选标准
+  - item: 逾期付款违约金
+    reason: 「违约责任」核心内容，base已覆盖迟延履行惩罚机制，无需单设租赁特有条款
+  - item: 房屋产权真实性承诺
+    reason: 属「合同标的」权属瑕疵担保，base通常已有"出租人保证拥有出租权"的概括规定，细化易重复

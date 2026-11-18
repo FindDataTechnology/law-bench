@@ -1,0 +1,111 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# brokerage (行纪合同) - consulted Kimi 2026-07-30; citations verified against
+# 民法典 第三编 合同 第二十五章 行纪合同 (art. 951-960, effective 2021-01-01).
+# Two Kimi article numbers corrected after verification: 介入权 955->956, 费用承担 951->952.
+contract_type: brokerage
+tags:
+  - name: broker_intervention_status
+    values: [allowed, prohibited, written_consent_required]
+    why: 行纪人对市场定价商品可"自买自卖"（《民法典》第九百五十六条），此维度界定该法定权利的行使边界，是行纪区别于委托代理与买卖的核心特征，通用4维无法表达
+  - name: price_difference_attribution
+    values: [to_principal, to_broker, shared]
+    why: 行纪人高于指定价卖出或低于指定价买入时利益归属（《民法典》第九百五十五条），是行纪合同特有利益平衡点，买卖/租赁/委托均无此概念，通用4维无法覆盖法定默认归属与约定变更的冲突
+  - name: broker_lien_trigger
+    values: [commission_only, include_advances, excluded]
+    why: 行纪人对委托物享有留置权以担保报酬请求权（《民法典》第九百五十九条），标的物范围与触发条件为行纪特有，通用风险标签无法精确描述
+clauses:
+  - family: 行纪人介入权
+    section: 权利义务
+    body: >
+      行纪人卖出或者买入具有市场定价的商品{{market_priced_goods}}，除委托人有相反的意思表示外，行纪人自己可以作为买受人或者出卖人。行纪人行使该权利的，仍然可以请求委托人支付报酬。委托人明确表示反对的，行纪人不得自行买入或卖出该商品。
+      （《中华人民共和国民法典》第九百五十六条）
+    stance: pro_b
+    strength: strong
+    why: 行纪合同特有的"自买自卖"介入权，区别于委托代理与买卖；示范文本常误作"关联交易披露"而遗漏，致行纪人错失商业机会或构成违约
+    verdict: real
+    slot_instructions:
+      - name: market_priced_goods
+        label: 市场定价商品
+        description: 行纪人可行使介入权的具有市场定价的商品范围
+        example: 证券交易所上市证券
+        required: true
+  - family: 交易价差利益归属
+    section: 价款及支付
+    body: >
+      行纪人高于委托人指定的价格卖出或者低于委托人指定的价格买入的，可以按照约定增加报酬{{extra_reward}}；没有约定或者约定不明确，依据本法第五百一十条的规定仍不能确定的，该利益属于委托人。行纪人低于指定价格卖出或者高于指定价格买入的，应当经委托人同意{{consent_required}}；未经委托人同意，行纪人补偿其差额的，该买卖对委托人发生效力。
+      （《中华人民共和国民法典》第九百五十五条）
+    stance: balanced
+    strength: standard
+    why: 价差利益归属是行纪合同特有利益平衡点，通用模板多直接写"差价归委托人"，忽略行纪人可争取增加报酬的激励信号
+    verdict: real
+    slot_instructions:
+      - name: extra_reward
+        label: 额外报酬
+        description: 行纪人高于指定价卖出或低于指定价买入时可增加的报酬约定
+        example: 按差价的20%增加报酬
+        required: false
+      - name: consent_required
+        label: 同意条件
+        description: 行纪人低于指定价格卖出或高于指定价格买入时须经委托人同意的条件
+        example: 须经委托人书面同意
+        required: true
+  - family: 行纪人留置权
+    section: 违约责任
+    body: >
+      委托人逾期不支付报酬{{overdue_days}}的，行纪人对已合法占有的委托物享有留置权，并依法就该财产优先受偿，但是当事人另有约定的除外。双方约定排除留置权适用的，从其约定。
+      （《中华人民共和国民法典》第九百五十九条）
+    stance: pro_b
+    strength: strong
+    why: 行纪人对委托物的留置权是行纪合同特有担保手段，示范文本常遗漏而仅写起诉追偿，忽略行纪人对物的实际控制优势
+    verdict: real
+    slot_instructions:
+      - name: overdue_days
+        label: 逾期天数
+        description: 委托人逾期支付报酬触发留置权的期限
+        example: 30日
+        required: true
+  - family: 第三人违约责任与披露
+    section: 权利义务
+    body: >
+      行纪人与第三人订立合同的，行纪人对该合同直接享有权利、承担义务。因第三人不履行义务致使委托人受到损害的，行纪人应当承担赔偿责任{{compensation_scope}}，但是行纪人与委托人另有约定的除外。行纪人应当及时向委托人披露第三人主体及违约情形。
+      （《中华人民共和国民法典》第九百五十八条）
+    stance: pro_a
+    strength: strong
+    why: 行纪人以自己名义与第三人交易（间接代理特性），对委托人负结果责任；通用代理合同常让代理人免责，示范文本模糊此责任链条
+    verdict: real
+    slot_instructions:
+      - name: compensation_scope
+        label: 赔偿范围
+        description: 因第三人不履行义务致委托人受损时行纪人的赔偿范围
+        example: 赔偿委托人实际损失及可得利益损失
+        required: true
+  - family: 交易费用默认承担
+    section: 价款及支付
+    body: >
+      除当事人另有约定外，行纪人处理委托事务支出的费用{{cost_items}}（包括但不限于运输费、仓储费、税费等）由行纪人负担，报酬中已包含相关成本考量。双方约定费用由委托人承担的，应在价款及支付中单列。
+      （《中华人民共和国民法典》第九百五十二条）
+    stance: pro_a
+    strength: standard
+    why: 行纪合同默认费用由行纪人负担，与委托合同（费用由委托人承担）相反；示范文本常照搬委托合同模板致行纪人成本失控
+    verdict: real
+    slot_instructions:
+      - name: cost_items
+        label: 费用项目
+        description: 行纪人处理委托事务支出的费用项目范围
+        example: 运输费、仓储费、税费
+        required: true
+skipped:
+  - item: 保密义务条款
+    reason: 属通用商业秘密保护，买卖/租赁/委托均通用，无行纪特异性
+  - item: 不可抗力条款
+    reason: 属通用免责事由，base"违约责任/附则"已覆盖，冗余
+  - item: 争议解决管辖
+    reason: 属通用程序性条款，base"争议解决"已覆盖，冗余
+  - item: 通知与送达
+    reason: 属通用程序性条款，base"附则/签署信息"已覆盖，冗余
+  - item: 知识产权归属
+    reason: 除非涉及特定行纪服务成果，否则多为通用条款，非行纪合同核心特征
+  - item: 基础定义解释
+    reason: 如"甲方/乙方"定义，base"当事人"已覆盖，冗余
+  - item: 完整协议条款
+    reason: 属通用合同效力条款，base"附则"已覆盖，冗余

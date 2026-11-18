@@ -1,0 +1,98 @@
+name: Knowledge Surface Integrity
+
+# harden-knowledge-surfaces 5.2：知识面完整性契约在 law-bench 侧的断言闸。
+#
+# 本仓此前没有任何测试 CI（`.github/workflows` 只有 docs 与 image）——顶层套件
+# 需要一个可达的 PostgreSQL（见 pyproject 的 pytest 注释），所以一直没接。
+# 这里只跑**hermetic 子集**：检索降级断言不碰 DB，不需要 PG 服务。
+#
+# 断言覆盖（fd-coding-law-bench-mcp/tests/test_rag_tool.py）：
+#   R3 读路径三态——命中 / 有效但无匹配 / 上游不可用，三者必须可判别。
+#   把 `tools/rag.py` 的 `except: return []` 改回去，这个作业会红。
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  retrieval-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install (root + MCP sub-package + test tooling)
+        run: |
+          python -m pip install --upgrade pip
+          # 本体内核只能从 vendored wheel 装（establish-ontology-kernel 8.1）：
+          # pyproject 里那条依赖在 PyPI 上不存在，`[tool.uv.sources]` 又只有 uv 认，
+          # 所以必须先就地把 wheel 装上，`pip install -e .` 才不会解析失败。
+          pip install vendor/*.whl
+          pip install -e .
+          pip install -e fd-coding-law-bench-mcp
+          pip install pytest pytest-asyncio
+
+      # The sub-package wraps the law-bench `src.*` modules in place, so both
+      # trees must be importable: `src` from the root, `fd_coding_law_bench_mcp`
+      # from the sub-package.
+      - name: Retrieval degradation assertions
+        env:
+          PYTHONPATH: '.:fd-coding-law-bench-mcp/src'
+        run: |
+          pytest -q fd-coding-law-bench-mcp/tests/test_rag_tool.py
+
+  # 本体符合性闸门（establish-ontology-kernel / add-law-bench-conformance-adapter）。
+  #
+  # 这一面的端口就是 psycopg + PG 方言（JSONB / RETURNING / now()），所以闸门
+  # **必须**跑在真 PG 上：换成内存沙箱，验的就只是内核自带的内存端口，那是假绿。
+  # 沙箱每次运行现造一个一次性库、退出时删掉，不碰任何业务数据。
+  #
+  # 不装成 pre-commit 钩子也是这个原因：要活 PG，隧道一断钩子就会把「连不上库」
+  # 报成拦截，与「SKIP 不等于 PASS」是同一类假读数。提交钩子只留密钥扫描。
+  ontology-conformance:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: app
+          # 一次性服务容器的口令，随作业销毁；不是凭据。写成变量再由下面的步骤
+          # 拼进 DSN——仓里不留 `scheme://user:pass@` 形态（密钥扫描会拦，且
+          # 拦得对：那种形态一旦是真凭据就已经泄露了）。
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: law_bench
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d law_bench"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install (vendored kernel wheel + this repo)
+        run: |
+          python -m pip install --upgrade pip
+          pip install vendor/*.whl
+          pip install -e .
+
+      # 16 条断言逐条可失败（闸门先自检「每条断言都能红」再跑适配方）。
+      # --list 只打印元数据，真正执行的是默认的 --all（本仓是单入口登记）。
+      - name: Ontology conformance gate
+        env:
+          PGPASSWORD: postgres
+        run: |
+          export database_url="postgresql://app@localhost:5432/law_bench"
+          python scripts/ontology_gate.py --list
+          python scripts/ontology_gate.py

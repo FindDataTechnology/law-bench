@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.inbox.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'inbox' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 提案箱：三态列表 + 确认/驳回。
+
+    状态一律 tint × 同族文字色（pending=rate 蓝 / confirmed=pass 绿 /
+    rejected=fail 红），不用图标、不用新色相徽章。
+    确认/驳回只在 cap.can_confirm 时渲染；服务端路由仍独立判权限。
+    自提自确认的说明只在「这条是我提交的」时出现 —— 按钮干脆不渲染。 -#}
+<div class="toolbar between">
+  <h1>{{ t.console.inbox.h1 }}</h1>
+  <span class="badge">{% if cap.role == 'admin' %}{{ t.console.role.admin }}{% elif cap.role %}{{ t.console.role[cap.role] }}{% endif %}</span>
+</div>
+<p class="hint">{{ t.console.inbox.intro }}</p>
+
+<div class="toolbar">
+  {% for value in [none, 'pending', 'confirmed', 'rejected'] %}
+  <a class="btn btn-sm{% if state_filter == value %} btn-primary{% endif %}"
+     href="{{ url_for('console_inbox', domain_key=domain.key) }}{% if value %}?state={{ value }}{% endif %}">
+    {% if value == 'pending' %}{{ t.console.inbox.filter_pending }}
+    {% elif value == 'confirmed' %}{{ t.console.inbox.filter_confirmed }}
+    {% elif value == 'rejected' %}{{ t.console.inbox.filter_rejected }}
+    {% else %}{{ t.console.inbox.filter_all }}{% endif %}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="panel">
+{% if proposals %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{{ t.console.inbox.col_source }}</th>
+      <th>{{ t.console.inbox.col_kind }}</th>
+      <th>{{ t.console.inbox.col_key }}</th>
+      <th>{{ t.console.inbox.col_evidence }}</th>
+      <th>{{ t.console.inbox.col_submitted }}</th>
+      <th>{{ t.console.inbox.col_state }}</th>
+      <th>{{ t.console.inbox.col_actions }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in proposals %}
+    <tr>
+      <td>
+        {#- 解析后的来源：登记过的舰队显示「舰队名 · 岗位」，未解析的原样显示并
+            标 legacy——那种行没有任何登记能约束它，标出来才能被清理。 -#}
+        {% set sv = source_views.get(p.source) %}
+        {% if sv and sv.fleet_name %}
+          <strong>{{ sv.fleet_name }}</strong><span class="muted"> · <code>{{ sv.post_id }}</code></span>
+          {% if sv.legacy %}<span class="badge badge-warn">legacy</span>{% endif %}
+        {% elif sv %}
+          <code>{{ p.source }}</code>
+          {% if sv.legacy %}<span class="badge badge-warn">legacy</span>{% endif %}
+        {% else %}
+          <code>{{ p.source }}</code>
+        {% endif %}
+      </td>
+      <td><code>{{ p.kind }}</code></td>
+      <td class="muted"><code>{{ p.external_key }}</code></td>
+      <td class="muted">{{ p.evidence_digest[:12] }}</td>
+      <td class="muted nowrap">{{ p.submitted_at[:16] | replace('T', ' ') }}</td>
+      <td class="nowrap">
+        {% if p.state == 'pending' %}<span class="state-pending">{{ t.console.inbox.state_pending }}</span>
+        {% elif p.state == 'confirmed' %}<span class="state-confirmed">{{ t.console.inbox.state_confirmed }}</span>
+        {% else %}<span class="state-rejected">{{ t.console.inbox.state_rejected }}</span>{% endif %}
+      </td>
+      <td class="proposal-actions">
+        {% if p.state == 'pending' and cap.can_confirm %}
+          {% if p.submitted_by == user.sub and not cap.is_platform_admin %}
+          <span class="hint">{{ t.console.inbox.self_confirm_note }}</span>
+          {% else %}
+          <form method="POST" action="{{ url_for('console_inbox_confirm', domain_key=domain.key, proposal_id=p.id) }}" class="inline-form">
+            <button type="submit" class="btn btn-sm btn-primary">{{ t.console.inbox.confirm }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('console_inbox_reject', domain_key=domain.key, proposal_id=p.id) }}" class="inline-form">
+            <input type="text" name="note" placeholder="{{ t.console.inbox.reject_note_ph }}" aria-label="{{ t.console.inbox.reject_note }}" required>
+            <button type="submit" class="btn btn-sm btn-danger">{{ t.console.inbox.reject }}</button>
+          </form>
+          {% endif %}
+        {% endif %}
+        {% if p.decision_note and p.state == 'rejected' %}
+        <div class="hint">{{ p.decision_note }}</div>
+        {% endif %}
+      </td>
+    </tr>
+    {% if p.impact %}
+    <tr class="proposal-impact">
+      <td colspan="7" class="hint">{{ t.console.inbox.impact }}：{{ p.impact }}</td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  {% if state_filter %}
+  {% with message=t.console.inbox.empty_state %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% else %}
+  {% with message=t.console.inbox.empty_all, hint=t.console.inbox.empty_all_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+{% endif %}
+</div>
+
+{#- 派给「人/舰队」的缺口任务。
+
+    总览页只列 assignee 恰好等于本人 id 的任务；批量派单的负责人是自由文本
+    （某人的邮箱、某支舰队），所以不在这里列出来，这些任务就谁看不见——而且
+    它们开着会让幂等检查永久拒绝再次派同一缺口。关闭动作是让这条链路可重跑
+    的那一步。 -#}
+{% if batches %}
+<div class="panel">
+  <h2>{{ t.console.inbox.batches_h2 }}</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ t.console.inbox.col_batch }}</th>
+        <th>{{ t.console.inbox.col_pending }}</th>
+        <th>{{ t.console.inbox.col_confirmed }}</th>
+        <th>{{ t.console.inbox.col_rejected }}</th>
+        <th>{{ t.console.inbox.col_usable }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in batches %}
+      <tr>
+        <td><a href="{{ url_for('console_inbox', domain_key=domain.key) }}?batch={{ b.batch }}"><code>{{ b.batch }}</code></a></td>
+        <td>{{ b.pending }}</td>
+        <td>{{ b.confirmed }}</td>
+        <td>{{ b.rejected }}</td>
+        <td>
+          {% if b.usable_rate is not none %}
+            {{ '%.0f%%'|format(b.usable_rate * 100) }}
+            {% if b.low_yield %}<span class="badge badge-warn">{{ t.console.inbox.low_yield }}</span>{% endif %}
+          {% else %}<span class="muted">-</span>{% endif %}
+        </td>
+        <td>
+          {% if cap.can_assign and b.pending %}
+          <form method="POST" class="inline" action="{{ url_for('console_proposal_batch', domain_key=domain.key) }}">
+            <input type="hidden" name="batch" value="{{ b.batch }}">
+            <input type="hidden" name="action" value="confirm">
+            <button type="submit" class="btn btn-sm">{{ t.console.inbox.batch_confirm }}</button>
+          </form>
+          <form method="POST" class="inline" action="{{ url_for('console_proposal_batch', domain_key=domain.key) }}">
+            <input type="hidden" name="batch" value="{{ b.batch }}">
+            <input type="hidden" name="action" value="reject">
+            <button type="submit" class="btn btn-sm btn-danger">{{ t.console.inbox.batch_reject }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if batch %}<p class="hint">{{ t.console.inbox.batch_filtered }} <a href="{{ url_for('console_inbox', domain_key=domain.key) }}">{{ t.console.inbox.batch_clear }}</a></p>{% endif %}
+</div>
+{% endif %}
+
+{% if tasks %}
+<div class="panel">
+  <h2>{{ t.console.inbox.tasks_h2 }} <span class="muted">{{ open_tasks|length }}</span></h2>
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.inbox.col_task }}</th>
+      <th>{{ t.console.inbox.col_assignee }}</th>
+      <th>{{ t.console.inbox.col_status }}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+      {% for task in tasks %}
+      <tr>
+        <td>{{ task.title }}{% if task.target_key %} <span class="muted">· {{ task.target_key }}</span>{% endif %}</td>
+        <td><code>{{ task.assignee }}</code></td>
+        <td>{{ task.status }}</td>
+        <td>
+          {% if task.status in ('pending', 'in_progress') and cap.can_write %}
+          <form method="POST" class="inline"
+                action="{{ url_for('console_task_transition', domain_key=domain.key, task_id=task.id) }}">
+            <input type="hidden" name="to" value="done">
+            <button type="submit" class="btn btn-sm">{{ t.console.inbox.task_done }}</button>
+          </form>
+          <form method="POST" class="inline"
+                action="{{ url_for('console_task_transition', domain_key=domain.key, task_id=task.id) }}">
+            <input type="hidden" name="to" value="cancelled">
+            <button type="submit" class="btn btn-sm">{{ t.console.inbox.task_cancel }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

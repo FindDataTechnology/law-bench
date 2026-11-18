@@ -1,0 +1,97 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# technology (技术合同) - consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: technology
+tags:
+  - name: tech_achievement_ownership
+    values: [principal_exclusive, developer_retained, joint_ownership, public_domain]
+    why: 技术合同核心在于无形资产产出（专利/软著/Know-how），通用合同仅关注物权转移，无法界定研发成果知识产权归属，通用4维无法表达
+  - name: rd_risk_bearing
+    values: [principal_bears, shared, developer_bears, exempted]
+    why: 技术开发存在"无法克服的技术困难"致失败的风险（《民法典》第858条），与商业违约风险性质不同，须专门约定失败后费用结算，通用4维无法表达
+  - name: subsequent_improvement_rights
+    values: [improver_owned, jointly_shared, original_holder_preemption, improvement_prohibited]
+    why: 技术具迭代性，合同履行后产生的新改进技术如何分配是技术合同特有利益博弈点，通用条款通常忽略此动态过程
+  - name: technical_acceptance_metrics
+    values: [quantitative_metrics, qualitative_expert_review, third_party_testing, trial_run_period]
+    why: 技术交付非仅"交货"而是"功能实现"，通用验收仅看数量外观，技术合同须定义性能参数、稳定性等非标指标
+clauses:
+  - family: 研发失败风险分配
+    section: 权利义务
+    body: >
+      在履行合同过程中，因出现无法克服的技术困难，致使研究开发全部或部分失败的，该风险责任由{{risk_bearer}}承担。一方发现可能致使研究开发失败的情形时，应当及时通知另一方并采取适当措施减少损失；未通知或未采取措施致使损失扩大的，应当就扩大的损失承担责任。（依据：《民法典》第858条）
+    slot_instructions:
+      - name: risk_bearer
+        label: 风险承担方
+        description: 研发失败时承担风险责任的一方
+        example: "委托方"
+        required: true
+    stance: balanced
+    strength: standard
+    why: 通用模板常将研发失败直接视为违约，忽略技术探索的不确定性；该条区分技术风险与商业违约，对委托方与受托方均公平，示范文本常漏
+    verdict: real
+  - family: 委托开发成果归属
+    section: 合同标的
+    body: >
+      本项目开发完成的发明创造，申请专利的权利属于{{patent_owner}}（委托方/受托方/双方）。若为双方共有，一方转让其共有的专利申请权的，其他方享有以同等条件优先受让的权利。（依据：《民法典》第859条）
+    slot_instructions:
+      - name: patent_owner
+        label: 专利申请权归属方
+        description: 开发完成的发明创造申请专利的权利归属方
+        example: "双方共有"
+        required: true
+    stance: balanced
+    strength: strong
+    why: 示范文本常遗漏专利申请权这一核心资产；法定默认归受托方（研发人），委托方易误以为付款即获所有权，故须显式约定
+    verdict: real
+  - family: 技术秘密保密义务
+    section: 权利义务
+    body: >
+      对于本合同履行过程中知悉的对方技术秘密（包括但不限于源代码、算法逻辑、实验数据），无论合同是否终止，保密义务均持续有效，直至该技术信息由合法渠道公开为止。（依据：《民法典》第868条）
+    stance: balanced
+    strength: strong
+    why: 通用保密条款多设固定年限，而技术秘密价值周期不定；技术合同要求保密义务随技术生命周期存续，非合同期限；经复核，第868条规定技术秘密转让/许可方承担保密义务，原引第866条实为专利实施许可条款
+    verdict: real
+  - family: 后续改进技术分享
+    section: 权利义务
+    body: >
+      任何一方在合同有效期内或期满后，利用本合同技术成果所作出的后续改进技术成果，其权利归属于{{improvement_owner}}。另一方如需使用，应另行协商授权费用。（依据：《民法典》第875条）
+    slot_instructions:
+      - name: improvement_owner
+        label: 后续改进成果归属方
+        description: 后续改进技术成果的权利归属方
+        example: "改进方"
+        required: true
+    stance: balanced
+    strength: standard
+    why: 示范文本多关注当前交付物而忽略未来迭代；不约定则后续升级或成技术壁垒，阻碍原合作方业务连续性
+    verdict: real
+  - family: 技术验收标准确认
+    section: 履行期限
+    body: >
+      乙方交付技术成果后，甲方应在{{days}}日内组织验收。验收依据为本合同附件《技术需求规格说明书》，主要考核指标包括：{{metrics}}。逾期未提出书面异议视为验收通过。
+    slot_instructions:
+      - name: days
+        label: 验收期限（日）
+        description: 甲方收到技术成果后组织验收的日数
+        example: "15"
+        required: true
+      - name: metrics
+        label: 考核指标
+        description: 技术验收的主要考核指标内容
+        example: "系统响应时间≤200ms，并发用户数≥1000"
+        required: true
+    stance: pro_b
+    strength: standard
+    why: 通用模板仅写"收到货物后验收"，技术交付涉代码运行、接口联调，须有量化指标与异议期，否则易陷"无限修改"陷阱
+    verdict: real
+skipped:
+  - item: 一般逾期付款违约金
+    reason: 已包含在base「价款及支付」基础条款中，属通用商事规则，无技术特异性
+  - item: 不可抗力条款
+    reason: 适用于所有合同类型，技术合同中虽涉技术风险，但不可抗力定义与通用合同无异，无需单独设立
+  - item: 争议解决管辖法院
+    reason: 已在base「争议解决」章节覆盖，管辖地选择逻辑与买卖合同一致，无特殊法定倾向
+  - item: 样品/样机交付
+    reason: 纯软件/技术服务不涉物理样品；涉硬件通常归买卖合同部分，非技术合同特有
+  - item: 人员资质保证
+    reason: 通常归入base「权利义务」通用陈述与保证，无特定行业准入时不构成独立特有条款

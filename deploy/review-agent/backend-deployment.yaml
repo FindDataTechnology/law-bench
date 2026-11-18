@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: review-agent-backend
+  namespace: law-bench
+  labels:
+    app: review-agent-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: review-agent-backend
+  template:
+    metadata:
+      labels:
+        app: review-agent-backend
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull
+      containers:
+        - name: backend
+          image: harbor.local/law-bench/review-agent-backend:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - secretRef:
+                name: review-agent-secrets
+          env:
+            - name: CORS_ORIGINS
+              value: "http://23.144.68.246:30830,http://23.144.68.246:30831,http://localhost:3000"
+            # DOCX->PDF via the shared render service (extract-render-service);
+            # the review-backend image no longer carries LibreOffice.
+            - name: DOCS_PDF_BACKEND
+              value: "http"
+            - name: RENDER_SERVICE_URL
+              value: "http://render-service.law-bench.svc.cluster.local:8090"
+          ports:
+            - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10

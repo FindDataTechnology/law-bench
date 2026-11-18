@@ -1,0 +1,63 @@
+# 【已退役 2026-11-07；2026-11-08 移出 deploy/ 整棵树】
+#
+# 本文件是留档，不是可部署清单 —— 它在 docs/ops/ 下，argocd 的 app 只读 deploy/，
+# 因此永远不进入期望状态。CronJob 与历史失败 Job 已从集群删除。
+#
+# 踩过的两个坑（写在这里，免得下次再踩）：
+#   1. 只在注释里写「已退役」不算退役：文件还在 deploy/ 顶层时，argo 每轮同步把它
+#      按回集群，每 30 分钟起一个必然失败的 job（origin MinIO svc 早已不存在）。
+#   2. 移进 deploy/retired/ 也不算：该 app 的 directory 源会递归读到子目录里的
+#      *.yaml，于是 argo 又把 CronJob 建了回来。退役 = 移出 deploy/ 这棵树。
+#
+# 【原退役说明 2026-11-07】origin MinIO 实况已死（svc 不存在），无真源可镜像——本清单仅留档，CronJob 已从集群删除；公共读面 MinIO=windows RustFS 直连（见 law-bench-public.yaml env MINIO_PUBLIC_HOST + design D3）。
+# 公共 pod 的 artifacts 镜像链（tasks 1.3）：origin MinIO bucket → windows 数据机 RustFS。
+# 用 python minio client（RustFS S3 兼容；host dl.min.io 的 mc 二进制已 410）。双密钥 secret 隔离。
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: law-bench-public-minio-sync
+  namespace: law-bench
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: minio-sync
+              image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-b1d8a66
+              imagePullPolicy: IfNotPresent
+              envFrom:
+                - secretRef:
+                    name: law-bench-public-sync-creds
+                - secretRef:
+                    name: law-bench-minio
+              env:
+                - name: ORIGIN_MINIO_HOST
+                  value: "http://100.64.0.8:30900"
+
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  pip install -q minio
+                  # 规范同步脚本（docs 任务 5.1）：origin bucket artifacts/ 前缀 → China-local MinIO；
+                  # origin 端点从 law-bench-db secret 无法用（它只含 DSN），显式 --origin-host 指向
+                  # windows 数据机对侧——origin MinIO 实际宿主未在本集群（见 design）。
+                  # 但本集群内 origin 的 artifacts 读面=origin pod 同一 minio_host（svc 名），
+                  # dnsConfig 污染导致 svc 名不可解析——mirror 改从 origin pod 经 NodePort 30620
+                  # 不可行（那是 API 不是 MinIO）。故直接读 origin MinIO 的**实际宿主**：
+                  # cheap 集群内 MinIO 未找到（svc 不存在），按用户裁决改用 windows 数据机
+                  # RustFS 作为公共 pod 的 MinIO；同步方向=「origin 有而 RustFS 无」的对象。
+                  # origin MinIO 实际地址见 design D2 修订。
+                  python /app/scripts/infra/sync_minio_artifacts.py \
+                    --origin-host "$ORIGIN_MINIO_HOST" \
+                    --local-host "$WIN_ENDPOINT" \
+                    --local-user "$WIN_ACCESS_KEY" \
+                    --local-pass "$WIN_SECRET_KEY"

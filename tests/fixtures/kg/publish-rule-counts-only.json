@@ -1,0 +1,21 @@
+{
+  "case": "counts-only-surface",
+  "source": "synthetic",
+  "note": "合成发布门用例：registry 条目为 pre-enrichment 形态——metadata.surface 只有计数 tools_commercial、无 commercial_tools 名单；真实发布门跳过商业闭包并记可观察 note（不猜测），存在性腿照常对账 tool_list 快照。",
+  "pack_manifest": {
+    "name": "counts-only-pack",
+    "mcpServers": [
+      {"registryName": "fd-text-core", "allowTools": ["law_search", "case_search"]}
+    ],
+    "agents": [],
+    "skills": []
+  },
+  "registry_index": {
+    "fd-text-core": {
+      "tool_list": ["law_search", "case_search", "news_ingest"],
+      "metadata": {
+        "surface": {"tools_commercial": 3}
+      }
+    }
+  }
+}

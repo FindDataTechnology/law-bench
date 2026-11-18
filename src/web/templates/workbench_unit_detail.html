@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{{ t.workbench.unit.detail_h1 }} {{ unit.external_key }} · {{ domain.name }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<style>
+  /* polish-bench-workbench 0.3, this page only: kernel-managed JSON
+     (attrs/provenance) keeps its preformat but wraps long lines instead of
+     stretching the panel on narrow screens. */
+  .wb-pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
+</style>
+
+<p><a href="{{ url_for('workbench_browse', domain_key=domain.key, kind=kind) }}">{{ t.workbench.unit.back_browse }}</a></p>
+<h1>{{ t.workbench.unit.detail_h1 }} <code>{{ unit.external_key }}</code> <span class="badge">{{ t.workbench.browse['lane_' ~ lane] }}</span></h1>
+
+{% if deleted %}
+<div class="flash error" role="alert">{{ t.workbench.unit.deleted_notice }}</div>
+{% endif %}
+
+{# All fields, including the kernel-managed provenance / tier / tags / attrs. #}
+<div class="panel">
+  <table class="data-table">
+    <tbody>
+      <tr><th>{{ t.workbench.browse.col_key }}</th><td><code>{{ unit.external_key }}</code></td></tr>
+      <tr><th>{{ t.workbench.overview.col_kind }}</th><td><span class="badge">{{ unit.kind }}</span></td></tr>
+      {% if lane == 'relationship' %}
+      <tr><th>{{ t.workbench.unit.from_key_label }}</th><td><code>{{ unit.attrs.get('from_key', '') }}</code></td></tr>
+      <tr><th>{{ t.workbench.unit.to_key_label }}</th><td><code>{{ unit.attrs.get('to_key', '') }}</code></td></tr>
+      {% endif %}
+      <tr><th>{{ t.workbench.unit.body_label }}</th><td style="white-space: pre-wrap; overflow-wrap: anywhere;">{{ unit.body }}</td></tr>
+      <tr><th>{{ t.workbench.unit.field_tags }}</th><td>{% for tk, tv in (unit.tags or {}).items() %}<span class="badge">{{ tk }}={{ tv }}</span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}</td></tr>
+      <tr><th>{{ t.workbench.unit.field_tier }}</th><td><span class="badge">{{ unit.tier }}</span></td></tr>
+      <tr><th>{{ t.workbench.unit.field_attrs }}</th><td><pre class="muted wb-pre">{{ attrs_json }}</pre></td></tr>
+      <tr><th>{{ t.workbench.unit.field_provenance }}</th><td><pre class="muted wb-pre">{{ provenance_json }}</pre></td></tr>
+      <tr><th>{{ t.workbench.unit.field_created }}</th><td class="muted">{{ unit.created_at }}</td></tr>
+      <tr><th>{{ t.workbench.unit.field_updated }}</th><td class="muted">{{ unit.updated_at }}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{# Edit + soft delete: writer forms (annotator renders neither — the gates on
+   the POST routes stay authoritative). Edit is entity-lane only: the kernel's
+   update entry gates against entity_types, so a relationship is corrected by
+   delete + recreate (its endpoints are its identity). A soft-deleted unit is
+   no longer editable; its event history below stays the record. #}
+{% if cap.can_write and not deleted and lane == 'entity' %}
+<div class="panel">
+  <h2>{{ t.workbench.unit.edit_h1 }}</h2>
+  <form method="POST" action="{{ url_for('workbench_unit_edit', domain_key=domain.key, kind=kind, unit_key=unit.external_key) }}" class="filter-form form-vertical">
+    <div class="filter-group">
+      <label for="unit-key-ro">{{ t.workbench.unit.external_key_label }}</label>
+      <input type="text" id="unit-key-ro" value="{{ unit.external_key }}" readonly class="muted">
+    </div>
+    <div class="filter-group">
+      <label for="unit-tags-edit">{{ t.workbench.unit.tags_label }}</label>
+      <input type="text" name="tags" id="unit-tags-edit" value="{{ tags_text }}">
+      <span class="hint">{{ t.workbench.unit.tags_hint }}</span>
+    </div>
+    <div class="filter-group">
+      <label for="unit-body-edit">{{ t.workbench.unit.body_label }}</label>
+      <textarea name="body" id="unit-body-edit" rows="8" required>{{ unit.body }}</textarea>
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.workbench.unit.save_btn }}</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+{% if cap.can_write and not deleted %}
+<div class="panel">
+  <h2>{{ t.workbench.unit.delete_btn }}</h2>
+  <form method="POST" action="{{ url_for('workbench_unit_delete', domain_key=domain.key, kind=kind, unit_key=unit.external_key) }}" data-confirm="{{ t.workbench.unit.delete_confirm }}">
+    <button type="submit" class="btn btn-danger">{{ t.workbench.unit.delete_btn }}</button>
+  </form>
+</div>
+{% endif %}
+
+{# Append-only event history for THIS unit (kernel writes events in the same
+   transaction as the content write; rows are never updated or deleted). #}
+<div class="panel">
+  <h2>{{ t.workbench.events.h2 }}</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.workbench.events.col_op }}</th>
+        <th>{{ t.workbench.events.col_operator }}</th>
+        <th>{{ t.workbench.events.col_time }}</th>
+        <th>{{ t.workbench.events.col_change }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ev in events %}
+      {% set before = ev.before if ev.before is mapping else {} %}
+      {% set after = ev.after if ev.after is mapping else {} %}
+      <tr>
+        <td><span class="badge">{{ t.workbench.events['op_' ~ ev.op] }}</span></td>
+        <td>{{ ev.operator }}</td>
+        <td class="muted">{{ ev.created_at }}</td>
+        <td class="muted">
+          {% if ev.op == 'update' %}
+            {% if before.get('body') != after.get('body') %}
+            <div>{{ (before.get('body') or '') | truncate(80) }} → {{ (after.get('body') or '') | truncate(80) }}</div>
+            {% endif %}
+            {% if before.get('tags') != after.get('tags') %}
+            <div>{{ t.workbench.unit.field_tags }}: {{ before.get('tags') or {} }} → {{ after.get('tags') or {} }}</div>
+            {% endif %}
+          {% else %}
+            <div>{{ (after.get('body') or '') | truncate(80) }}</div>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not events %}
+      <tr><td colspan="4" class="muted">{{ t.workbench.events.empty }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

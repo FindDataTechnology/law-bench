@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.domains.title }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.admin.domains.title }}</h1>
+</div>
+<p class="muted">{{ t.admin.domains.intro }}</p>
+
+<div class="panel">
+  <details {% if not domains %}open{% endif %}>
+    <summary>{{ t.admin.domains.create_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_domain_create') }}" class="filter-form">
+      <div class="filter-group">
+        <label for="dom-key">{{ t.admin.domains.key_label }}</label>
+        <input type="text" name="key" id="dom-key" required>
+      </div>
+      <div class="filter-group">
+        <label for="dom-name">{{ t.admin.domains.name_label }}</label>
+        <input type="text" name="name" id="dom-name" required>
+      </div>
+      <div class="filter-group">
+        <label for="dom-template-name">{{ t.admin.domains.template_name_label }}</label>
+        <input type="text" name="template_name" id="dom-template-name" required>
+      </div>
+      <div class="filter-group">
+        <label for="dom-template-version">{{ t.admin.domains.template_version_label }} {{ t.admin.domains.template_version_hint }}</label>
+        <input type="number" name="template_version" id="dom-template-version" min="1">
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">{{ t.admin.domains.create_btn }}</button>
+      </div>
+    </form>
+  </details>
+</div>
+
+{# Honest empty: no domains yet — the instantiate form above stays open and
+   the card names the next step. #}
+{% if domains %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.domains.col_key }}</th>
+        <th>{{ t.admin.domains.col_name }}</th>
+        <th>{{ t.admin.domains.col_template }}</th>
+        <th>{{ t.admin.domains.col_version }}</th>
+        <th>{{ t.admin.domains.col_members }}</th>
+        <th>{{ t.admin.domains.col_created_by }}</th>
+        <th>{{ t.admin.domains.col_created_at }}</th>
+        <th>{{ t.admin.domains.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for d in domains %}
+      <tr>
+        <td><a href="{{ url_for('admin_domain_detail', domain_key=d.key) }}"><code>{{ d.key }}</code></a></td>
+        <td><strong>{{ d.name }}</strong></td>
+        <td>{{ d.template_name }}</td>
+        <td><span class="badge">v{{ d.template_version }}</span></td>
+        <td>{{ member_counts.get(d.id, 0) }}</td>
+        <td>{{ d.created_by }}</td>
+        <td class="muted">{{ d.created_at }}</td>
+        <td>
+          <a class="btn btn-sm" href="{{ url_for('admin_domain_detail', domain_key=d.key) }}">{{ t.admin.domains.view }}</a>
+          {% if d.archived_at %}
+          <span class="badge bad">{{ t.console.estate.archived_badge }}</span>
+          <form method="POST" class="inline" action="{{ url_for('console_domain_archive', domain_key=d.key) }}">
+            <input type="hidden" name="restore" value="1">
+            <button type="submit" class="btn btn-sm">{{ t.console.estate.restore_btn }}</button>
+          </form>
+          {% else %}
+          <form method="POST" class="inline" action="{{ url_for('console_domain_archive', domain_key=d.key) }}">
+            <button type="submit" class="btn btn-sm">{{ t.console.estate.archive_btn }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% with message=t.admin.domains.empty,
+        hint=t.admin.domains.empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% endif %}
+{% endblock %}

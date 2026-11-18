@@ -1,0 +1,56 @@
+[project]
+name = "chinese-contract-drafter"
+version = "0.1.0"
+description = "Multi-agent system for drafting Chinese legal contracts using CrewAI and Volcengine Ark"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "crewai[litellm]>=1.15.5",
+    "deepeval>=3.9.6",
+    "python-dotenv>=1.2.2",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "jinja2>=3.1",
+    "markdown-it-py>=3.0",
+    "psycopg[binary]>=3.2",
+    "llama-index-core>=0.12",
+    "llama-index-vector-stores-elasticsearch>=0.4",
+    "llama-index-embeddings-openai-like>=0.3",
+    "llama-index-readers-minio>=0.3",
+    "elasticsearch>=8.15",
+    "boto3>=1.34",
+    "python-docx>=1.1",
+    "pypdf>=6.14.2",
+    "itsdangerous>=2.2",
+    "fd-ontology-kernel",
+]
+
+[tool.uv.sources]
+# The ontology kernel is vendored as a wheel (establish-ontology-kernel 8.1):
+# keys, vocabularies, the single write path, manifests/digests, proposals and the
+# ledger live there once, and every surface adapts to them.
+#
+# Why a wheel instead of the sibling checkout: the kernel is **not a git
+# repository**, so a standalone CI checkout cannot fetch it, and pip cannot
+# resolve the name from any index either (`tool.uv.sources` is uv-only). Measured
+# 2026-11-12: `pip install fd-ontology-kernel` → "No matching distribution
+# found", the same requirement from this wheel → "Would install
+# fd-ontology-kernel-0.1.0". So uv resolves it here and CI/pip installs
+# `vendor/*.whl` before `pip install -e .`.
+fd-ontology-kernel = { path = "vendor/fd_ontology_kernel-0.1.0-py3-none-any.whl" }
+
+[dependency-groups]
+dev = [
+    "fastmcp>=3.2,<4",
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+# `external`: needs a live service (MinIO / Elasticsearch / LLM endpoint) or a
+# populated object store; the release gate runs with `-m "not external"` and
+# prints what it dropped. The suite is otherwise hermetic — it needs only a
+# reachable PostgreSQL for the per-test databases.
+markers = [
+    "external: requires a live external service; excluded from the release gate",
+]

@@ -1,0 +1,26 @@
+name: kg-gate
+version: 0.1.0
+description: KG 车道验收与市场发布门域包：fd-text-core kg_graph_checks 四条硬判据（条级分裂清零/同名不同文号可分/规模统计/脏文号清零）对导入图快照单元的离线复核，加 paas publish-tool-gate 发布门判定内核（商业闭包+存在性，probe/registry fetch 后置）；零 LLM、零网络。
+kinds:
+  - graph-snapshot
+  - publish-rule
+components:
+  - type: module
+    path: packs/kg-gate/adapters.py
+  - type: module
+    path: packs/kg-gate/checks.py
+  - type: data
+    path: tests/fixtures/kg/legal-v2-synthetic.json
+  - type: data
+    path: tests/fixtures/kg/lane-drift-synthetic.json
+  - type: data
+    path: tests/fixtures/kg/collapsed-samename-synthetic.json
+  - type: data
+    path: tests/fixtures/kg/publish-rule-law-bench-clean.json
+  - type: data
+    path: tests/fixtures/kg/publish-rule-internal-violation.json
+  - type: data
+    path: tests/fixtures/kg/publish-rule-counts-only.json
+eval_suites:
+  - kg-lane-acceptance
+  - market-publish-gate

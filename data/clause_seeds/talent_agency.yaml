@@ -1,0 +1,96 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# talent_agency (演艺经纪合同); consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: talent_agency
+tags:
+  - name: exclusivity_nature
+    values: [exclusive, non_exclusive, regional_exclusive, category_exclusive]
+    why: 决定经纪公司核心商业价值与艺人自由度，直接影响后续招商排他性谈判，通用"利益倾向"无法界定业务模式结构，演艺经纪特有
+  - name: persona_maintenance
+    values: [none, maintain_status, active_improvement, no_negative]
+    why: 演艺人员核心价值在于公众形象，此义务直接关联商业变现能力，通用"权利义务"仅描述一般行为，未覆盖"形象管理"这一核心标的
+  - name: digital_asset_ownership
+    values: [artist_owned, company_owned, joint, license_transfer]
+    why: 微博、抖音等账号是新型核心资产，其所有权/控制权在旧版模板常被忽略或模糊，通用"财产"概念无法涵盖虚拟身份权益
+clauses:
+  - family: 舆情危机应对机制
+    section: 违约责任
+    body: >
+      若因艺人个人行为导致网络负面舆情累计阅读量超过{{threshold}}次，视为根本违约，经纪公司有权单方解除合同并要求赔偿损失（依据《民法典》第1024条名誉权保护原则）。
+    stance: pro_a
+    strength: strong
+    why: 通用模板多写"不得违法"，缺乏量化标准与具体应对流程，易引发解约纠纷
+    verdict: real
+    slot_instructions:
+      - name: threshold
+        label: 舆情阅读量阈值
+        description: 触发根本违约的负面舆情累计阅读量次数
+        example: 1000000
+        required: true
+  - family: 新媒体账号权属约定
+    section: 合同标的
+    body: >
+      合作期间注册的所有社交媒体账号（包括但不限于微博、抖音），其注册主体为{{owner}}，账号内粉丝数据及商业价值归{{party}}所有，合同终止后账号移交方式见附则。
+    stance: balanced
+    strength: standard
+    why: 传统模板基于线下演出，常忽略线上流量资产，极易在解约时产生账号争夺战（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: owner
+        label: 注册主体
+        description: 社交媒体账号的注册主体方
+        example: 乙方
+        required: true
+      - name: party
+        label: 权益归属方
+        description: 账号粉丝数据及商业价值的归属方
+        example: 甲方
+        required: true
+  - family: 衍生商品开发收益分配
+    section: 价款及支付
+    body: >
+      基于艺人形象开发的周边商品、联名产品等衍生收益，除本合同另有约定外，按{{ratio}}比例进行分成，结算周期为{{cycle}}。
+    stance: balanced
+    strength: standard
+    why: 通用模板仅笼统写"全部收入分成"，未区分劳务报酬与知识产权衍生收益，税务与核算易混淆
+    verdict: real
+    slot_instructions:
+      - name: ratio
+        label: 分成比例
+        description: 衍生商品收益的分成比例
+        example: 30%
+        required: true
+      - name: cycle
+        label: 结算周期
+        description: 衍生商品收益的结算周期
+        example: 每季度
+        required: true
+  - family: 竞业限制具体化
+    section: 履行期限
+    body: >
+      合同期内及终止后{{months}}个月内，未经书面同意，艺人不得自行或通过第三方从事与经纪公司签约同类业务（如{{category}}）。
+    stance: pro_a
+    strength: standard
+    why: 通用模板常缺竞业限制，或限制过宽被认定无效，需结合行业特性明确"同类业务"范围（属合同约定，无直接法条依据）
+    verdict: real
+    slot_instructions:
+      - name: months
+        label: 竞业限制期限
+        description: 合同终止后艺人竞业限制的月数
+        example: 12
+        required: true
+      - name: category
+        label: 同类业务范围
+        description: 竞业限制所涵盖的同类业务类型
+        example: 演艺经纪、影视签约
+        required: true
+skipped:
+  - item: 保密义务
+    reason: 属于所有商事合同的通用条款，已在"附则"或"权利义务"通用层覆盖，无需作为演艺特有新增
+  - item: 不可抗力
+    reason: 《民法典》第590条通用规定，适用于所有合同类型，非演艺经纪特有，归入通用层即可
+  - item: 争议解决管辖
+    reason: 已在"争议解决"章节 base 条文中包含，属于程序性通用条款，无需针对演艺行业做特殊拆分
+  - item: 通知送达地址
+    reason: 属于合同履行中的通用程序性条款，不体现演艺经纪业务的特殊性，归入"附则"通用项
+  - item: 违约金比例上限
+    reason: 虽重要但属于《民法典》第585条通用调整范畴，司法实践通常以实际损失为准，不宜作为特定业务条款固化

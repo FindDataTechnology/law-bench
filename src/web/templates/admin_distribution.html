@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.distribution.title }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<style>
+  /* polish-bench-workbench 0.3, this page only: the per-consumer inline
+     action forms (update binding / revoke) flow on one row inside the nowrap
+     action cell, and their text input sizes to content instead of the global
+     width:100% (the cell scrolls at ≤720px). */
+  .data-table td.dl-cell .inline-form { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; margin-right: 0.3rem; vertical-align: middle; }
+  .data-table td.dl-cell .inline-form input[type=text] { width: auto; min-width: 11rem; }
+</style>
+
+<div class="toolbar between">
+  <h1>{{ t.admin.distribution.title }}</h1>
+</div>
+<p class="muted">{{ t.admin.distribution.intro }}</p>
+
+{# Consumer registration: the machine token is generated server-side, stored
+   as sha256 only, and its plaintext is shown exactly once — in the creation
+   flash (same discipline as the C1 invitations). #}
+<div class="panel">
+  <details {% if not consumers %}open{% endif %}>
+    <summary>{{ t.admin.distribution.register_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_consumer_register') }}" class="filter-form">
+      <div class="filter-group">
+        <label for="cons-name">{{ t.admin.distribution.name_label }}</label>
+        <input type="text" name="name" id="cons-name" required>
+      </div>
+      <div class="filter-group">
+        <label for="cons-domains">{{ t.admin.distribution.domains_label }}</label>
+        <input type="text" name="domains" id="cons-domains" placeholder="{{ t.admin.distribution.domains_ph }}" required>
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">{{ t.admin.distribution.register_btn }}</button>
+      </div>
+    </form>
+  </details>
+</div>
+
+{# Honest empty: no consumers yet — the register form above stays open and the
+   card names the next step. #}
+{% if consumers %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.distribution.col_name }}</th>
+        <th>{{ t.admin.distribution.col_kind }}</th>
+        <th>{{ t.admin.distribution.col_domains }}</th>
+        <th>{{ t.admin.distribution.col_created_by }}</th>
+        <th>{{ t.admin.distribution.col_created_at }}</th>
+        <th>{{ t.admin.distribution.col_status }}</th>
+        <th>{{ t.admin.distribution.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in consumers %}
+      <tr>
+        <td><strong>{{ c.name }}</strong></td>
+        <td>
+          {# 种类必须显示：machine → fleet 的原地升级只改 kind/fleet_ref，界面上看不出来
+             就意味着「这一行是不是舰队」只能靠 SQL 核对，而这正是本变更要拆掉的静默态。 #}
+          {% if c.kind == 'fleet' %}
+          <span class="badge">{{ t.admin.distribution.kind_fleet }}</span>
+          {% if c.fleet_ref %}<br><code class="muted">{{ c.fleet_ref }}</code>{% endif %}
+          {% else %}
+          <span class="badge muted">{{ t.admin.distribution.kind_machine }}</span>
+          {% endif %}
+        </td>
+        <td>
+          {% for d in c.domains or [] %}<span class="badge"><code>{{ d }}</code></span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}
+        </td>
+        <td>{{ c.created_by }}</td>
+        <td class="muted">{{ c.created_at }}</td>
+        <td>
+          {% if c.revoked_at %}
+          <span class="badge">{{ t.admin.distribution.revoked_badge }}</span>
+          {% else %}
+          <span class="badge">{{ t.admin.distribution.active_badge }}</span>
+          {% endif %}
+        </td>
+        <td class="dl-cell">
+          {% if not c.revoked_at %}
+          <form method="POST" action="{{ url_for('admin_consumer_domains', name=c.name) }}" class="inline-form">
+            <input type="text" name="domains" value="{{ (c.domains or []) | join(',') }}"
+                   placeholder="{{ t.admin.distribution.domains_ph }}"
+                   aria-label="{{ t.admin.distribution.set_domains_label }}">
+            <button type="submit" class="btn btn-sm">{{ t.admin.distribution.set_domains_btn }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('admin_consumer_revoke', name=c.name) }}" class="inline-form">
+            <button type="submit" class="btn btn-sm btn-danger">{{ t.admin.distribution.revoke_btn }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% with message=t.admin.distribution.empty,
+        hint=t.admin.distribution.empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% endif %}
+{% endblock %}

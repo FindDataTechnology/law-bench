@@ -1,0 +1,44 @@
+clarify_requirements:
+  description: >
+    整理用户的合同起草需求：{user_request}
+
+    请输出结构化的需求说明，包含：
+    1. 合同类型
+    2. 合同双方身份
+    3. 核心商业条款要点
+    4. 特殊要求
+  expected_output: >
+    一份清晰、结构化的合同需求说明，只用中文输出
+  agent: intake_clarifier
+
+draft_contract:
+  description: >
+    根据整理好的需求起草一份完整的中文合同。
+
+    你已经获得了用户需求的结构化整理，参考对应类型的合同模板结构，使用规范的法律用语，保持格式清晰。
+  expected_output: >
+    一份完整的合同草案，包含所有必要章节和条款，格式正确
+  agent: drafter
+
+audit_contract:
+  description: >
+    独立审查前面已经起草好的合同草案，找出问题：
+    1. 缺失必备条款
+    2. 法律条文引用错误
+    3. 明显不公平条款
+    4. 潜在法律风险
+    5. 格式/用语不规范问题
+
+    针对每个问题，请指出具体位置并给出修改建议。
+  expected_output: >
+    一份详细的审查报告，分条列出所有问题和修改建议，只用中文输出
+  agent: auditor
+
+revise_contract:
+  description: >
+    根据前面的审查报告修改合同草案，解决所有指出的问题，同时保持原有合同结构和语言风格的一致性。
+
+    你已经获得了原合同草案和审查意见，请输出修改后的最终合同。
+  expected_output: >
+    修改完成的最终合同全文，格式清晰，可以直接交付使用
+  agent: drafter

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.areas.knowledge }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'knowledge' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 知识库区：本域**实际能检索到的**取材范围。
+
+    这个范围由检索侧同一个函数算出（library_index.explain_scope），所以页面
+    不可能声明一个检索并不遵守的范围。每个库标明来源：本域自订 / 继承自哪一级；
+    被收窄掉的源不在此列——收窄是减法，页面只展示结果与来源。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.areas.knowledge }}</h1>
+    <p class="hint">{{ domain.path }}</p>
+  </div>
+</div>
+
+{#- 检索入口：这是「取材」真正发生的地方。
+
+    走的就是下面这份范围的同一个解析器（library_index.search 内部用
+    effective_sources），所以「页面说能取到什么」与「查询实际返回什么」
+    不可能分叉。命中带库与源，才能判断一条内容算哪一类知识。 -#}
+<div class="panel">
+  <form method="GET" action="{{ url_for('console_knowledge', domain_key=domain.key) }}" class="toolbar gap">
+    <label for="kb-q">{{ t.console.knowledge.search_label }}</label>
+    <input type="text" name="q" id="kb-q" value="{{ q }}" placeholder="{{ t.console.knowledge.search_placeholder }}">
+    <button type="submit" class="btn btn-primary">{{ t.console.knowledge.search_btn }}</button>
+  </form>
+  {% if search_error %}
+  {#- 检索失败与「没命中」必须分开：连不通时显示空结果会让人以为语料里没有。 -#}
+  <p class="hint">{{ t.console.knowledge.search_error }} {{ search_error }}</p>
+  {% elif q %}
+  <h2>{{ t.console.knowledge.results_h2 }} {{ hits|length }}</h2>
+  {% if hits %}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.knowledge.col_score }}</th>
+      <th>{{ t.console.knowledge.col_source }}</th>
+      <th>{{ t.console.knowledge.col_locator }}</th>
+      <th>{{ t.console.knowledge.col_text }}</th>
+    </tr></thead>
+    <tbody>
+      {% for h in hits %}
+      <tr>
+        <td>{{ '%.3f'|format(h.score) }}</td>
+        <td><code>{{ h.source_key }}</code>{% if h.library_key %}<br><span class="muted">{{ h.library_key }}</span>{% endif %}</td>
+        <td>{{ h.source_path }}</td>
+        <td>{{ h.text[:180] }}{% if h.text|length > 180 %}…{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">{{ t.console.knowledge.no_hits }}</p>
+  {% endif %}
+  {% endif %}
+</div>
+
+{#- 声明 vs 现状：模板里声明的语料需求，是否真被本域的取材范围覆盖。
+
+    声明是域表达意图的唯一地方，所以这里的漂移最值得显示：一个「声明了但没
+    订阅」的源，在别处完全看不见。自由文本标签（旧的管道名）不判健康——把
+    「出现过」当成「已覆盖」正是盖住缺口的绿。 -#}
+{% if declared.entries %}
+<div class="panel">
+  <h2>{{ t.console.knowledge.declared_h2 }}</h2>
+  {% if declared.error %}
+  <p class="hint">{{ declared.error }}</p>
+  {% endif %}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.knowledge.col_declared }}</th>
+      <th>{{ t.console.knowledge.col_status }}</th>
+    </tr></thead>
+    <tbody>
+      {% for e in declared.entries %}
+      <tr>
+        <td><code>{{ e.entry }}</code></td>
+        <td>
+          {% if e.satisfied %}
+            <span class="badge">{{ t.console.knowledge.declared_ok }}</span>
+          {% elif e.satisfied is none %}
+            <span class="muted">{{ t.console.knowledge.declared_unknown }}</span>
+          {% else %}
+            <span class="badge badge-warn">{{ t.console.knowledge.declared_missing }}</span>
+            <span class="muted">{{ e.reason }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if declared.missing %}
+  <p class="hint">{{ t.console.knowledge.declared_hint }}</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if scope.error %}
+<div class="panel">
+  <p class="hint">{{ scope.error }}</p>
+</div>
+{% elif scope.libraries %}{#- 外部库连不通时不能把「读不到」显示成「没有」：计数错误单列一条。 -#}
+{% if scope.count_error %}
+<div class="panel">
+  <p class="hint">{{ t.console.knowledge.count_error }} {{ scope.count_error }}</p>
+</div>
+{% endif %}
+{% for lib in scope.libraries %}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ lib.library_key }}</h2>
+    <span class="badge">
+      {% if lib.origin == 'own' %}{{ t.console.knowledge.origin_own }}
+      {% else %}{{ t.console.knowledge.origin_inherited }} · {{ lib.inherited_from }}{% endif %}
+    </span>
+  </div>
+  <p class="hint">
+    {{ t.console.knowledge.sources_count }} {{ lib.sources|length }}
+    {% if lib.chunks is not none %}· <strong>{{ lib.chunks }}</strong> {{ t.console.knowledge.col_blocks }}{% endif %}
+    {% if lib.backend %}· <code>{{ lib.backend }}</code>{% endif %}
+    {% if lib.dims %}· {{ lib.dims }} {{ t.console.knowledge.col_dims }}{% endif %}
+    {% if lib.embedding_model %}· <code>{{ lib.embedding_model }}</code>{% endif %}
+  </p>
+  {% if lib.sources|length > 1 %}
+  {#- 按源分列块数：「收窄到哪几个源」应当按数字决定，而不是按源名猜。
+      一次 facet 请求给出所有分类的计数，不是每个源发一次请求。 -#}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.knowledge.col_source }}</th>
+      <th>{{ t.console.knowledge.col_blocks }}</th>
+    </tr></thead>
+    <tbody>
+      {% for s in lib.sources %}
+      <tr>
+        <td><code>{{ s }}</code></td>
+        <td>
+          {% if lib.source_counts and lib.source_counts.get(s) is not none %}
+            {{ lib.source_counts.get(s) }}
+          {% else %}<span class="muted">—</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <ul class="plain">
+    {% for s in lib.sources %}<li><code>{{ s }}</code></li>{% endfor %}
+  </ul>
+  {% endif %}
+  {% if cap.can_assign %}
+  {#- 收窄是减法：勾掉的源本域就检索不到，父域未授予的源根本不列出来。
+      提交时后端再对父域有效集校验一次，勾选器骗不过去。 -#}
+  <details>
+    <summary>{{ t.console.knowledge.narrow_h2 }}</summary>
+    <form method="POST" action="{{ url_for('console_knowledge_narrow', domain_key=domain.key) }}">
+      <input type="hidden" name="library_key" value="{{ lib.library_key }}">
+      {% for s in lib.sources %}
+      <label class="block">
+        <input type="checkbox" name="source" value="{{ s }}" checked>
+        <code>{{ s }}</code>
+        {% if lib.source_counts and lib.source_counts.get(s) is not none %}
+        <span class="muted">{{ lib.source_counts.get(s) }}</span>
+        {% endif %}
+      </label>
+      {% endfor %}
+      <button type="submit" class="btn">{{ t.console.knowledge.narrow_btn }}</button>
+    </form>
+    <p class="hint">{{ t.console.knowledge.narrow_hint }}</p>
+  </details>
+  {% endif %}
+</div>
+{% endfor %}
+{% else %}
+<div class="panel">
+  <p class="hint">{{ t.console.knowledge.empty }}</p>
+</div>
+{% endif %}
+
+{#- 库台账：全局只读投影，说明每个库有哪些源、被多少域订阅。 -#}
+{% if libraries %}
+<div class="panel">
+  <h2>{{ t.console.knowledge.libraries_h2 }}</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ t.console.knowledge.col_key }}</th>
+        <th>{{ t.console.knowledge.col_backend }}</th>
+        <th>{{ t.console.knowledge.col_sources }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for l in libraries %}
+      <tr>
+        <td><code>{{ l.library_key }}</code></td>
+        <td>{{ l.backend }}</td>
+        <td>{{ l.source_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{#- 工具区：法规库/合同模板/条款库这些**语料侧**的旧页面同理——入口留在
+    知识库区，顶栏不再平铺。 -#}
+{% if cap.can_read %}
+<div class="panel">
+  <h2>{{ t.console.knowledge.tools_h2 }}</h2>
+  <p class="hint">{{ t.console.knowledge.tools_hint }}</p>
+  <ul class="plain">
+    <li><a href="{{ url_for('page_law_info') }}">{{ t.nav.law_info }}</a></li>
+    <li><a href="{{ url_for('page_law_references') }}">{{ t.nav.law_references }}</a></li>
+    <li><a href="{{ url_for('page_contracts') }}">{{ t.nav.contracts }}</a></li>
+    <li><a href="{{ url_for('page_samples') }}">{{ t.nav.samples }}</a></li>
+    <li><a href="{{ url_for('page_clauses') }}">{{ t.nav.clauses }}</a></li>
+    <li><a href="{{ url_for('page_search') }}">{{ t.nav.search }}</a></li>
+    <li><a href="/dashboard">{{ t.nav.dashboard }}</a></li>
+  </ul>
+</div>
+{% endif %}
+{% endblock %}

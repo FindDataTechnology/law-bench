@@ -1,0 +1,74 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# labor_dispatch (劳务派遣合同) consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: labor_dispatch
+tags:
+  - name: job_nature_three_characteristics
+    values: [temporary, auxiliary, substitutive]
+    why: 《劳动合同法》第六十六条强制要求派遣岗位限于临时性/辅助性/替代性之一，此维度是派遣合法性闸门，通用4维无法区分岗位性质合规与否
+  - name: dispatch_ratio_compliance
+    values: [within_10pct, over_10pct, unspecified]
+    why: 《劳务派遣暂行规定》第四条设定用工总量10%法定红线，通用强度/风险标签无法量化此行政监管指标
+  - name: joint_liability_trigger
+    values: [work_injury, wage_arrears, tort, mixed]
+    why: 《劳动合同法》第九十二条规定用工单位与派遣单位对外连带赔偿，需区分触发事由(工伤/欠薪/侵权)以界定连带范围，通用"违约责任"不区分对外连带与对内追偿
+  - name: return_scenario_classification
+    values: [statutory_return, agreed_return, prohibited_return]
+    why: 派遣特有"退回"环节(区别于解除劳动合同)，涉及法定退回/约定退回/禁止退回的不同法律后果，通用"终止/解除"标签会混淆退回与解除
+clauses:
+  - family: 岗位三性合规声明
+    section: 合同标的
+    body: >
+      甲方确认乙方提供的劳务人员仅用于以下性质的工作岗位：{{job_nature}}（临时性/辅助性/替代性）。双方确认该安排符合《中华人民共和国劳动合同法》第六十六条关于劳务派遣用工范围的强制性规定。
+    slot_instructions:
+      - name: job_nature
+        label: 岗位性质
+        description: 派遣人员所从事岗位的三性分类，即临时性、辅助性或替代性
+        example: 辅助性
+        required: true
+    stance: balanced
+    strength: standard
+    why: 通用模板常忽略"三性"定义，易导致合同因违法而部分无效；此为派遣核心合规点
+    verdict: real
+  - family: 同工同酬保障机制
+    section: 价款及支付
+    body: >
+      甲方承诺对乙方派遣员工实行同工同酬。若甲方同类岗位工资标准调整，应同步调整乙方派遣员工工资。依据《中华人民共和国劳动合同法》第六十三条，甲方不得克扣乙方应付工资。
+    stance: pro_b
+    strength: standard
+    why: 通用服务合同只谈服务费，不谈底层劳动者薪酬公平性，此条是派遣特有的法定义务
+    verdict: real
+  - family: 用工单位退回权限制
+    section: 权利义务
+    body: >
+      除《中华人民共和国劳动合同法》第六十五条及《劳务派遣暂行规定》第十二条规定的情形外，甲方不得随意退回乙方派遣员工。若甲方违法退回，应承担由此产生的赔偿金。
+    stance: pro_b
+    strength: standard
+    why: 通用模板多写"解除合同"，未区分"退回"这一派遣特有环节，易引发二次纠纷
+    verdict: real
+  - family: 连带赔偿责任承担
+    section: 违约责任
+    body: >
+      因甲方原因导致乙方被派遣劳动者权益受损，或乙方依法需承担赔偿责任时，甲乙双方对外承担连带责任。内部责任划分以本协议为准。依据《中华人民共和国劳动合同法》第九十二条。
+    stance: balanced
+    strength: standard
+    why: 通用合同无"对外连带"概念，这是三方关系下特有的风险分配条款
+    verdict: real
+  - family: 派遣比例合规承诺
+    section: 附则
+    body: >
+      甲方承诺其使用乙方派遣劳动者的数量不超过其用工总量的10%。若违反《劳务派遣暂行规定》第四条，甲方愿承担行政罚款及整改责任。
+    stance: pro_b
+    strength: standard
+    why: 通用模板无用工比例限制，但派遣业务有明确的行政监管红线，需显性化
+    verdict: real
+skipped:
+  - item: 保密义务条款
+    reason: 属于通用商业合同条款，买卖/租赁/服务合同均存在，非派遣特有
+  - item: 不可抗力条款
+    reason: 属于通用法律原则条款，所有合同类型均需包含，无特殊性
+  - item: 争议解决管辖
+    reason: 仲裁/诉讼选择属于通用程序条款，已存在于 base 条文知识库中
+  - item: 一般违约金计算
+    reason: 通用违约责任条款，未针对派遣特有的"退回费"或"社保补缴"做特殊设计
+  - item: 廉洁从业条款
+    reason: 虽重要但属于通用企业风控条款，非劳动法领域派遣特有强制内容

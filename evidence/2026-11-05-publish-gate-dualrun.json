@@ -1,0 +1,127 @@
+{
+ "date": "2026-11-05",
+ "purpose": "close-wire-real-loop 6.x 发布门 live 双跑（task 6.1/6.2 收账）",
+ "method": "生产 registry 只读拉取 mcp_servers_default（29 条，mongosh admin 凭据经集群内执行，凭据不入档）→ 构建 registry_index → 同一 (manifest, index) 输入双跑：原 paas publish-tool-gate.js（node harness，probe 缺席分支、零网络） vs packs/kg-gate/checks.py 内核 → 逐字段比对 errors/notes 文案与 declared/face/closure 结构",
+ "focused_cases": "6 例（真实闭包合法/越界/counts-only 哨兵/无 surface/本地引用豁免+混合/存在性缺名）→ 6/6 AGREE",
+ "wide_sweep": "61/61 AGREE（29 条目×各自变体：全名单/单工具/越界/计数哨兵/存在性腿），diverge=[]",
+ "index_shape": {
+  "/airegistry-tools/": {
+   "tool_list_count": 7,
+   "surface_shape": "none"
+  },
+  "/law-bench": {
+   "tool_list_count": 52,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-open-data-mcp": {
+   "tool_list_count": 71,
+   "surface_shape": "none"
+  },
+  "/fd-daas-mcp": {
+   "tool_list_count": 161,
+   "surface_shape": "counts-only"
+  },
+  "/fd-cn-report": {
+   "tool_list_count": 44,
+   "surface_shape": "none"
+  },
+  "/fd-find-data-business-mcp": {
+   "tool_list_count": 34,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-health-config": {
+   "tool_list_count": 1,
+   "surface_shape": "none"
+  },
+  "/fd-legal-search-mcp": {
+   "tool_list_count": 10,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-daas-mcp-cust1": {
+   "tool_list_count": 161,
+   "surface_shape": "none"
+  },
+  "/fd-wire-cell-drillcust001": {
+   "tool_list_count": 193,
+   "surface_shape": "none"
+  },
+  "/eco-mcp-time": {
+   "tool_list_count": 2,
+   "surface_shape": "none"
+  },
+  "/eco-mcp-fetch": {
+   "tool_list_count": 1,
+   "surface_shape": "none"
+  },
+  "/fd-text-core": {
+   "tool_list_count": 23,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-wire-cell-pgauto001": {
+   "tool_list_count": 193,
+   "surface_shape": "none"
+  },
+  "/facet-ops-mcp": {
+   "tool_list_count": 6,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/facet-market-mcp": {
+   "tool_list_count": 7,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-paper-trading": {
+   "tool_list_count": 19,
+   "surface_shape": "counts-only"
+  },
+  "/vaas-wanxing": {
+   "tool_list_count": 17,
+   "surface_shape": "none"
+  },
+  "/wanxing-ops-mcp": {
+   "tool_list_count": 8,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/wire-ops-mcp": {
+   "tool_list_count": 22,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/lex-ops-mcp": {
+   "tool_list_count": 8,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/wire-build-mcp": {
+   "tool_list_count": 17,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-quant": {
+   "tool_list_count": 50,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-sentiment": {
+   "tool_list_count": 10,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-info": {
+   "tool_list_count": 5,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/fd-wire-cell-wiretester2": {
+   "tool_list_count": 193,
+   "surface_shape": "none"
+  },
+  "/fd-zhengxin-reference": {
+   "tool_list_count": 5,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/infra-telemetry": {
+   "tool_list_count": 5,
+   "surface_shape": "commercial_tools-list"
+  },
+  "/edu-catalog": {
+   "tool_list_count": 5,
+   "surface_shape": "commercial_tools-list"
+  }
+ },
+ "verdict": "EQUIVALENT on real data — NOT EQUIVALENT 定谳为 fixture 假象：registry 未 seed 真实条目时原 JS 逻辑对『index 里没有的条目』放行（serverInfo=null→非 local-binding 也放行），内核 fail-closed 拒绝；真实数据下两侧行为逐字段一致。裁决：迁入版保留 fail-closed（比原门更严的一处已如实标注），双跑零漂移以此实证收账",
+ "honest_notes": "probe 腿仍走缺席分支（迁入版比真实门严的存在性语义不变）；若未来原门带 live probe 对账，属另一轮"
+}

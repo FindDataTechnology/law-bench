@@ -1,0 +1,28 @@
+{
+  "case": "law-bench-clean",
+  "source": "synthetic",
+  "note": "合成发布门用例：pack 声明的工具全部落在 registry 条目 metadata.surface.commercial_tools 名单内且在 tool_list 快照中存在（真形参照 MCP-REGISTRY.md law-bench 条目的双字段形态，工具名为构造值）。",
+  "pack_manifest": {
+    "name": "law-bench-contract-pack",
+    "mcpServers": [
+      {"registryName": "law-bench", "allowTools": ["contract_draft", "clause_search"]}
+    ],
+    "agents": [
+      {"id": "reviewer", "resources": {"mcpTools": {"law-bench": ["verify_contract"]}}}
+    ],
+    "skills": [
+      {"name": "drafting", "content": "起草时调用 mcp__law-bench__contract_draft，查条款用 mcp__law-bench__clause_search。"}
+    ]
+  },
+  "registry_index": {
+    "law-bench": {
+      "tool_list": ["contract_draft", "clause_search", "verify_contract", "admin_purge"],
+      "metadata": {
+        "surface": {
+          "commercial_tools": ["contract_draft", "clause_search", "verify_contract"],
+          "tools_commercial": 3
+        }
+      }
+    }
+  }
+}

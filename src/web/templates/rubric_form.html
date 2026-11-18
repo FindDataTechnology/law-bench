@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ (t.h1.edit_rubric if mode == 'edit' else t.nav.new_local_rubric) }}{% if rubric %} {{ rubric.name }}{% endif %} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<h1>{{ t.h1.create_local_rubric if mode == 'create' else t.h1.edit_rubric }}</h1>
+
+<form method="post"
+      action="{{ url_for('page_create_rubric') if mode == 'create' else url_for('page_update_rubric', name=rubric.name) }}">
+  <div class="panel">
+    <div class="row">
+      <label for="rf-name">{{ t.form.name }} <span class="muted">{{ t.form.unique_among_local }}</span></label>
+      <input type="text" id="rf-name" name="name" required value="{{ rubric.name if rubric else '' }}"
+             placeholder="{% if lang == 'zh' %}如：contract_sale_v2{% else %}e.g. contract_sale_v2{% endif %}">
+    </div>
+    <div class="row">
+      <label for="rf-context">{{ t.form.context }}</label>
+      <input type="text" id="rf-context" name="context" required value="{{ rubric.context if rubric else '' }}"
+             placeholder="{% if lang == 'zh' %}如：合同{% else %}e.g. contract{% endif %}">
+    </div>
+    <div class="row">
+      <label for="rf-description">{{ t.form.description }}</label>
+      <textarea id="rf-description" name="description">{{ rubric.description if rubric else '' }}</textarea>
+    </div>
+  </div>
+
+  {% if mode == 'create' %}
+  <div class="panel">
+    <h2>{{ t.h1.initial_criteria }} <span class="muted">{{ t.form.optional }}</span></h2>
+    <p class="hint">{{ t.hint.seed_criteria }}</p>
+    <div id="criteria-list"></div>
+    <button type="button" id="add-criterion" class="btn btn-sm">{{ t.form.add_criterion_row }}</button>
+  </div>
+  {% endif %}
+
+  <div class="toolbar">
+    <button type="submit" class="btn btn-primary">{{ t.form.create_rubric if mode == 'create' else t.form.save_changes }}</button>
+    <a class="btn" href="{{ url_for('page_list_rubrics') }}">{{ t.form.cancel }}</a>
+  </div>
+</form>
+{% endblock %}

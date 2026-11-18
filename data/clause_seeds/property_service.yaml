@@ -1,0 +1,92 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# property_service is generated (consulted Kimi 2026-07-30); mirrors employment.yaml format.
+contract_type: property_service
+tags:
+  - name: public_revenue_disclosure_frequency
+    values: [月度, 季度, 半年度, 年度]
+    why: 物业行业核心痛点在于利用共有部分经营所得（广告、停车费等）的资金透明度，需控制公示机制；通用 Risk 仅提示风险、不量化披露频率，无法替代
+  - name: emergency_repair_authorization_limit
+    values: [单笔限额, 总额比例, 免审批情形]
+    why: 区分预算内维修与紧急避险，涉及维修资金使用程序的合法性阈值，界定触发条件；通用 Mandatory 仅标识强制力、不界定触发阈值，物业服务合同特有
+  - name: owner_info_desensitization_level
+    values: [L1公开, L2内部, L3加密, L4销毁]
+    why: 物业掌握大量业主隐私信息，需按《个人信息保护法》与《民法典》人格权编分级管控数据合规技术等级；通用 Risk 无法覆盖具体技术分级
+clauses:
+  - family: 公共收益独立核算
+    section: 价款及支付
+    body: >
+      双方确认，利用小区共有部分经营所得（如广告、停车费）在扣除合理成本后，剩余收益归全体业主所有。物业公司应设立独立账户，按{{frequency}}频率公示收支明细。
+      依据：《民法典》第 282 条。
+    stance: pro_a
+    strength: strong
+    why: 示范文本常笼统写"费用结算"，未明确"独立账户"和"扣除成本后归属"，易引发侵占纠纷，非买卖/租赁通用大路货
+    verdict: real
+    slot_instructions:
+      - name: frequency
+        label: 公示频率
+        description: 公共收益收支明细的公示频率
+        example: 季度
+        required: true
+  - family: 物业档案移交清单
+    section: 附则
+    body: >
+      合同终止或解除时，乙方应在{{days}}日内向甲方移交包括物业图纸、设施台账、业主清册在内的全部档案资料。拒不移交的，视为违约。
+      依据：《民法典》第 949 条。
+    stance: pro_a
+    strength: standard
+    why: 示范文本多关注"交接现场"，忽略"资料完整性"的法律后果，导致新物业进场难；系物业服务合同终止环节特有
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 档案移交天数
+        description: 合同终止后乙方移交档案资料的期限（日）
+        example: 15
+        required: true
+  - family: 电梯年检报告公示
+    section: 权利义务
+    body: >
+      乙方应将电梯、消防等特种设备的定期检验合格标志张贴于显著位置，并每{{period}}向业主公示检测报告原件。
+      依据：《特种设备安全法》第 40 条。
+    stance: pro_a
+    strength: standard
+    why: 示范文本仅提"维护保养"，未强制要求"公示法定检验结果"，存在安全隐患且违法；特种设备公示系物业特有义务
+    verdict: real
+    slot_instructions:
+      - name: period
+        label: 公示周期
+        description: 向业主公示特种设备检测报告的周期
+        example: 每年
+        required: true
+  - family: 维修资金紧急使用
+    section: 履行期限
+    body: >
+      发生危及房屋安全等紧急情况时，乙方可启动应急维修程序，但需在事后{{days}}日内向业主委员会备案并提供第三方鉴定报告。
+      依据：《民法典》第 281 条。
+    stance: balanced
+    strength: standard
+    why: 示范文本通常回避维修资金使用流程，此条为法定紧急通道，需明确备案时限以防滥用；赋予乙方应急权同时设业主监督
+    verdict: real
+    slot_instructions:
+      - name: days
+        label: 备案天数
+        description: 应急维修后向业主委员会备案的期限（日）
+        example: 5
+        required: true
+  - family: 业主隐私数据访问
+    section: 权利义务
+    body: >
+      乙方不得将业主姓名、电话、房号等个人信息用于商业推广。因业务需要查询的，须经业主书面同意或系统自动脱敏处理。
+      依据：《民法典》第 1034 条。
+    stance: pro_a
+    strength: strong
+    why: 示范文本极少涉及数据合规，随着《个保法》实施此为高风险必补条款，物业服务合同特有（非买卖/租赁通用）
+    verdict: real
+skipped:
+  - item: 空置房物业费折扣
+    reason: 各地政策差异极大（如有的规定 70%，有的无规定），国家法律无统一标准，不宜写入全国通用模板
+  - item: 违约金具体比例
+    reason: 法院可根据实际损失调整过高违约金，建议留白或引用"法律规定"，避免条款因显失公平被认定无效；base"违约责任"已覆盖
+  - item: 日常保洁频次细节
+    reason: 属于具体服务标准附件内容，若写入主合同易导致僵化，且通用"权利义务"已涵盖基本服务要求
+  - item: 禁止饲养宠物条款
+    reason: 违反《民法典》关于物权行使的限制，完全禁止可能无效，建议改为"文明饲养约定"，故不作为独立强条

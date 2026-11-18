@@ -1,0 +1,68 @@
+# 公共 pod 数据链=快照轨（15 分钟 pg_dump --clean --if-exists 幂等恢复）。
+# origin Postgres 为共享实例且 wal_level=replica（开 logical 须重启共享库）——见 change design D2。
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: law-bench-public-sync
+  namespace: law-bench
+spec:
+  schedule: "*/15 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: sync
+              # 底座换成 `alpine:3.20` + `apk add postgresql16-client`（2026-11-14）。
+              #
+              # 原来是 `postgres:16-alpine`，而本作业**没有任何卷/节点约束** ⇒ 调度器可以把它
+              # 放到任意节点，落到没缓存该镜像的那台上就是永久 `ImagePullBackOff`：docker.io 的
+              # 代理专属域名当天已注销、拉取永久失效。实测七台节点里只有 cheap-6 / cheap-8 /
+              # 两台 liuliang 缓存了 `postgres:16-alpine`，cheap-4 / cheap-5 / cheap-7 没有；
+              # 而 `alpine:3.20` **七台全有**（所有卷备份作业的底座都是它）。
+              # 卷保护闸现在按「每个可落节点都有该镜像」判，会点名这条为 `⚠`（不是通过）。
+              #
+              # 客户端版本必须与服务端同为 16：实测 `postgresql16-client` → pg_dump/psql **16.14**。
+              # 不改成 `nodeSelector` 钉节点：那等于把这条数据链押在单台机上，而它本来无卷、可去任意节点。
+              image: docker.io/library/alpine:3.20
+              imagePullPolicy: IfNotPresent
+              env:
+                - name: PGORIGIN
+                  valueFrom: {secretKeyRef: {name: law-bench-db, key: database_url}}
+                - name: PGREPLICA
+                  valueFrom: {secretKeyRef: {name: law-bench-public, key: database_url}}
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  # 底座没有 pg_dump/psql，现装（tuna 镜像；七台节点都能连）。
+                  # 装不上即失败——不要退化成"跑了一遍但什么都没同步"。
+                  echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.20/main" > /etc/apk/repositories
+                  echo "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.20/community" >> /etc/apk/repositories
+                  apk add --quiet --no-cache postgresql16-client >/dev/null 2>&1 \
+                    || { echo "FATAL: 装不上 postgresql16-client（离线？）"; exit 1; }
+                  echo "sync start $(date -Iseconds)"
+                  pg_dump "$PGORIGIN" --no-owner --clean --if-exists > /tmp/seed.sql
+                  BYTES=$(wc -c < /tmp/seed.sql)
+                  echo "sync dumped $(date -Iseconds) bytes=$BYTES"
+                  # 1) 拒绝残缺快照：截断包恢复进去＝静默丢数据，而计数看起来仍"正常"。
+                  #    判据取尾部 40 行内的结束标记——注意 PG16 近版 dump 末尾会再追加一行
+                  #    `\unrestrict <token>`（CVE 缓解），标记因此不在最后 3 行里；首版写
+                  #    tail -n 3 时把 26 MB 好包误判成残缺（2026-11-12 实历）。
+                  #    实测：好包 GOOD=PASS、截断至 20 MB 的包 TRUNC=REFUSED。
+                  if ! tail -n 40 /tmp/seed.sql | grep -qE -- "(-- PostgreSQL database dump complete|^\\unrestrict )"; then
+                    echo "sync aborted at verify: dump incomplete (bytes=$BYTES)" >&2
+                    exit 1
+                  fi
+                  # 2) 原子 + 遇错即停：-1 单事务（失败整体回滚，副本继续服务上一份完整快照）、
+                  #    ON_ERROR_STOP=1（否则 psql 遇语句错误**默认继续并返回 0**，作业假绿）。
+                  #    2026-11-12 隔离库实测：裸 -f 在中途注入 1/0 时 exit=0 且留下新旧混合；
+                  #    -1 + ON_ERROR_STOP 时 exit=3 且副本内容原样保留。
+                  psql "$PGREPLICA" -1 -v ON_ERROR_STOP=1 -f /tmp/seed.sql > /dev/null
+                  echo "sync done $(date -Iseconds) bytes=$BYTES"

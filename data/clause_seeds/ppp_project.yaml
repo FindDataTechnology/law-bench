@@ -1,0 +1,94 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# ppp_project (PPP项目合同) - consulted Kimi 2026-07-30; mirrors employment.yaml format.
+contract_type: ppp_project
+tags:
+  - name: risk_bearer
+    values: [政府方承担, 社会资本方承担, 双方共担]
+    why: PPP 核心在于"风险最优分配"，通用 risk 标签仅标记"有风险"，无法区分是政策风险（政府方）还是运营风险（社会资本方），直接影响定价与补偿逻辑，通用4维无法替代
+  - name: payment_model
+    values: [可用性付费, 使用者付费, 可行性缺口补助]
+    why: 决定项目现金流结构及政府财政承受能力，通用"价款"标签仅关注金额与时间，不体现付费来源与计算逻辑差异，PPP项目合同特有
+  - name: exit_compensation
+    values: [投资本金返还, 折现现金流, 无偿移交]
+    why: PPP 周期长（20-30 年），提前终止时的资产处置与补偿公式是融资关键，通用"违约责任"通常仅指违约金，不包含终止清算逻辑，PPP项目合同特有
+clauses:
+  - family: 股权锁定与转让限制
+    section: 权利义务
+    body: >
+      未经政府方书面同意，社会资本方及其控股的 SPV 公司在项目运营期内不得转让其持有的项目公司股权，但{{exemption}}除外。依据《中华人民共和国公司法》第八十四条。
+    stance: pro_a
+    strength: strong
+    why: 通用合同允许自由转让，PPP 涉及公共稳定性，需锁定社会资本身份；非买卖/租赁也通用的大路货
+    verdict: real
+    slot_instructions:
+      - name: exemption
+        label: 转让例外情形
+        description: 股权转让限制的例外情形，如经政府方同意的关联方内部转让
+        example: 经政府方书面同意的关联方内部重组
+        required: false
+  - family: 绩效挂钩付费机制
+    section: 价款及支付
+    body: >
+      政府方将按季度对项目进行绩效评价，评价结果作为当期付费调整依据：合格率为{{pass_rate}}%，对应付费系数为{{payment_coefficient}}。依据《关于规范实施政府和社会资本合作新机制的指导意见》（国办函〔2023〕115号）。
+    stance: balanced
+    strength: standard
+    why: 通用合同付款多基于交付节点，PPP 强调"按效付费"，且政策文件更新快；示范文本常漏；经核国办函〔2023〕115号明确"运营补贴支付与绩效评价结果挂钩"
+    verdict: real
+    slot_instructions:
+      - name: pass_rate
+        label: 合格率
+        description: 绩效评价合格率的百分比阈值
+        example: 95
+        required: true
+      - name: payment_coefficient
+        label: 付费系数
+        description: 对应合格率的付费调整系数
+        example: 1.0
+        required: true
+  - family: 法律变更补偿条款
+    section: 权利义务
+    body: >
+      因法律法规或政策变化导致项目成本增加或收益减少，双方应协商调整付费标准；协商不成，政府方应给予合理补偿。依据《中华人民共和国民法典》第五百三十三条。
+    stance: pro_b
+    strength: standard
+    why: 通用合同多约定"不可抗力"，PPP 特有的"法律变更"属于情势变更范畴，需明确补偿路径；非大路货
+    verdict: real
+  - family: 提前终止补偿公式
+    section: 违约责任
+    body: >
+      若因政府方原因导致合同提前终止，政府方应支付终止补偿金，计算公式为：{{formula}}。依据《基础设施和公用事业特许经营管理办法》第四十一条第二款。
+    stance: pro_b
+    strength: standard
+    why: 通用违约多为固定违约金，PPP 终止涉及长期投资回收，需特定公式；示范文本常漏；经核现行2024年版办法提前终止补偿见第四十一条（区分政府方/特许经营者原因），非原引第三十条
+    verdict: real
+    slot_instructions:
+      - name: formula
+        label: 终止补偿公式
+        description: 因政府方原因提前终止时终止补偿金的计算公式
+        example: 未收回投资本金×(1+年化收益率×剩余年限)
+        required: true
+  - family: 禁止转包与分包限制
+    section: 履行期限
+    body: >
+      社会资本方不得将项目的主要建设内容转包，分包比例不得超过合同总价的{{percent}}%，且需经政府方认可。依据《中华人民共和国招标投标法》第四十八条。
+    stance: pro_a
+    strength: standard
+    why: 通用工程合同允许合法分包，PPP 强调社会资本方的全程实施能力，限制更严；非大路货
+    verdict: real
+    slot_instructions:
+      - name: percent
+        label: 分包比例上限
+        description: 允许分包的比例不得超过合同总价的百分比
+        example: 30
+        required: true
+skipped:
+  - item: 通用不可抗力条款
+    reason: 已有 base 条文覆盖，PPP 虽特殊但不可抗力定义无本质区别，无需单独拆分
+  - item: 争议解决管辖法院
+    reason: 已有 base 条文（争议解决章节），PPP 虽常涉行政诉讼，但民事部分仍依合同约定，不属新增特有实体条款
+  - item: 保密义务
+    reason: 属于商业合同通用条款，PPP 虽有信息公开要求，但保密本身无特殊性
+  - item: 财政部财金〔2015〕167号文引用
+    reason: 该文件部分规定已被后续新规（如2023年新机制）调整或废止，直接引用存在合规风险，建议用上位法代替
+  - item: 融资增信措施细节
+    reason: 属于项目融资协议内容，非 PPP 项目合同核心法律关系，易与 base 条文中的"权利义务"重复

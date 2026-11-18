@@ -1,0 +1,19 @@
+metric,value,note
+sample_pairs,126,合同-评审项对（类型分层，每类 3 对）
+sample_types,42,评估集 43 类中有带草稿运行的类型数
+decisions,252,126 对 × 2 独立标注槽位
+human_human_agreement,0.857,标注者间一致率（126 对双标）
+human_human_kappa,0.522,Cohen's κ
+human_judge_agreement,0.365,人-判官一致率（252 判定）
+human_judge_kappa,0.075,Cohen's κ（边缘分布偏斜，数值不稳）
+confusion_both_pass,49,
+confusion_human_pass_judge_fail,157,分歧主体：人判通过、判官判不通过
+confusion_both_fail,43,
+confusion_human_fail_judge_pass,3,
+human_pass_total,206,206/252 = 81.7%
+judge_pass_pairs,26,26/126 = 20.6%（按去重对计）
+judge_fail_rate_decisions,0.794,200/252 判定为不通过
+annotator1_pass_rate,0.832,104/125
+annotator2_pass_rate,0.802,101/126
+batch_id,v4-validity-pilot-202609,生产评估库 review_tasks
+export_command,web_review_export.py --batch-id v4-validity-pilot-202609,2026-09-22 于生产 pod 执行

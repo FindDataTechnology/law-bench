@@ -1,0 +1,104 @@
+# Per-type seed manifest - produced by the analyze -> evaluate -> decide flow.
+# work (承揽合同) seed; consulted Kimi 2026-07-30. Citations verified against 民法典 承揽合同章 (第770-787条).
+contract_type: work
+tags:
+  - name: material_provider
+    values: [定作人提供, 承揽人提供, 混合]
+    why: 决定原材料成本归属及毁损灭失风险转移时点（定作人供料时承揽人仅负保管义务），区别于买卖合同的货权转移；通用Risk标签无法区分风险源于所有权还是占有权，无法指导成本核算条款起草
+  - name: inspection_objection_period
+    values: [具体天数, 合理期间, 视为合格]
+    why: 承揽合同强调工作成果符合约定，存在法定检验义务（民法典第780条），逾期不通知可能视为合格，是程序性除斥期间对权利消灭的影响，通用Strength/Risk无法表达
+  - name: arbitrary_termination_right
+    values: [保留, 放弃, 限制条件]
+    why: 定作人享有法定随时解除权（民法典第787条）但需赔偿损失，是承揽合同特有的单方形成权（非基于违约的解除），通用Stance无法体现该权利的法定性与赔偿义务的强制性关联
+clauses:
+  - family: 定作人任意解除权
+    section: 权利义务
+    body: >
+      依据《民法典》第 787 条，定作人有权随时解除本合同，但应赔偿承揽人因此造成的直接损失。损失计算方式为：已完成工作量价款 + 已备材料费。
+    stance: pro_a
+    strength: strong
+    why: 通用模板多聚焦违约解除，常遗漏法定随时解除权及其赔偿范围，导致定作人行使权利时产生额外争议
+    verdict: real
+  - family: 材料风险与保管
+    section: 合同标的
+    body: >
+      若由{{定作人}}提供材料，承揽人应及时检验；发现不符合约定的应在{{days}}日内通知。材料毁损灭失风险在交付前由{{提供方}}承担（依据《民法典》第 774/775 条）。
+    slot_instructions:
+      - name: 定作人
+        label: 定作人
+        description: 提供材料的定作人名称
+        example: "甲方"
+        required: true
+      - name: days
+        label: 通知期限（日）
+        description: 承揽人发现材料不符合约定后通知定作人的日数
+        example: "3"
+        required: true
+      - name: 提供方
+        label: 材料提供方
+        description: 承担材料毁损灭失风险的材料提供方
+        example: "定作人"
+        required: true
+    stance: balanced
+    strength: standard
+    why: 示范文本常忽略材料来源导致的保管责任差异；买卖/租赁不涉及加工过程中的材料风险分配逻辑
+    verdict: real
+  - family: 主要工作分包限制
+    section: 权利义务
+    body: >
+      未经{{定作人}}书面同意，承揽人不得将主要工作交由第三人完成。辅助工作可分包，但承揽人仍需就第三人工作成果向定作人负责（依据《民法典》第 772 条）。
+    slot_instructions:
+      - name: 定作人
+        label: 定作人
+        description: 需出具书面同意的分包许可方
+        example: "甲方"
+        required: true
+    stance: pro_a
+    strength: standard
+    why: 通用模板多允许转包，而承揽合同严格限制主要工作分包，防止定作人对特定技能依赖落空
+    verdict: real
+  - family: 隐蔽工程验收
+    section: 履行期限
+    body: >
+      承揽人在工作期间应当接受{{定作人}}必要的监督检验。对于需要隐蔽的工序（如{{具体工序}}），承揽人应在隐蔽前通知{{定作人}}检验；未通知即隐蔽的，定作人有权要求揭开检查，费用由过错方承担（依据《民法典》第 779 条）。
+    slot_instructions:
+      - name: 定作人
+        label: 定作人
+        description: 享有监督检验权及隐蔽前通知义务的权利人
+        example: "甲方"
+        required: true
+      - name: 具体工序
+        label: 隐蔽工序名称
+        description: 需要在隐蔽前通知定作人检验的具体工序
+        example: "水电管线预埋"
+        required: true
+    stance: pro_a
+    strength: standard
+    why: 示范文本多关注最终交付，忽略中间过程验收节点；承揽合同章无隐蔽工程专门条款，本条系第779条定作人监督检验权的延伸约定
+    verdict: real
+  - family: 技术成果保密义务
+    section: 权利义务
+    body: >
+      承揽人应当按照约定保守{{定作人}}的技术秘密，不得留存复制品或技术资料。违反保密义务造成损失的，应承担赔偿责任（依据《民法典》第 785 条）。
+    slot_instructions:
+      - name: 定作人
+        label: 定作人
+        description: 技术秘密的所有权人
+        example: "甲方"
+        required: true
+    stance: pro_a
+    strength: standard
+    why: 通用模板虽有保密条款，但承揽合同涉及技术秘密与工作成果绑定，需明确禁止留存技术底稿，具有行业特异性
+    verdict: real
+skipped:
+  - item: 不可抗力条款
+    reason: 买卖/租赁/服务合同通用条款，已在基础库附则或违约责任中覆盖，无承揽特有性
+  - item: 逾期付款违约金
+    reason: 价款及支付章节核心内容，已有通用计算模型，无需单独增加承揽特有条款
+  - item: 管辖法院约定
+    reason: 争议解决章节通用内容，各地司法实践一致，无承揽合同特殊管辖规则
+  - item: 一般违约责任
+    reason: 基础库违约责任已包含迟延履行、瑕疵履行等通用兜底条款，重复起草会导致条款冲突
+  - item: 知识产权归属
+    reason: 除非涉及委托开发（著作权法），否则普通承揽成果通常归定作人；通用模板已涵盖，无需单独列为承揽特有维度

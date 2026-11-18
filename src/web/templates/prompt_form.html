@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ (t.h1.edit_prompt if mode == 'edit' else t.btn.new_prompt) }}{% if prompt %} {{ prompt.name }}{% endif %} · {{ t.nav.brand }}{% endblock %}
+{% block content %}
+<h1>{{ t.h1.create_prompt if mode == 'create' else t.h1.edit_prompt }}</h1>
+
+<form method="post"
+      action="{{ url_for('page_create_prompt') if mode == 'create' else url_for('page_update_prompt', name=prompt.name) }}">
+  <div class="panel">
+    <div class="row">
+      <label for="pf-name">{{ t.form.name }} <span class="muted">{{ t.form.unique_among_prompts }}</span></label>
+      <input type="text" id="pf-name" name="name" required value="{{ prompt.name if prompt else '' }}"
+             placeholder="{% if lang == 'zh' %}如：draft_sale{% else %}e.g. draft_sale{% endif %}">
+    </div>
+    <div class="grid2">
+      <div class="row">
+        <label for="pf-contract-type">{{ t.form.contract_type }}</label>
+        <input type="text" id="pf-contract-type" name="contract_type" required value="{{ prompt.contract_type if prompt else '' }}"
+               placeholder="{% if lang == 'zh' %}如：买卖合同{% else %}e.g. sale{% endif %}">
+      </div>
+      <div class="row">
+        <label for="pf-purpose">{{ t.form.purpose }}</label>
+        <input type="text" id="pf-purpose" name="purpose" required value="{{ prompt.purpose if prompt else 'drafting' }}"
+               placeholder="{% if lang == 'zh' %}如：起草{% else %}e.g. drafting{% endif %}">
+      </div>
+    </div>
+    <div class="row">
+      <label for="pf-prompt-type">{{ t.form.prompt_type }} <span class="muted">{{ t.form.prompt_type_hint }}</span></label>
+      <input type="text" id="pf-prompt-type" name="prompt_type" value="{{ prompt.prompt_type if prompt else '' }}"
+             placeholder="{% if lang == 'zh' %}如：基线{% else %}e.g. baseline{% endif %}">
+    </div>
+    <div class="row">
+      <label for="pf-description">{{ t.form.description }}</label>
+      <textarea id="pf-description" name="description">{{ prompt.description if prompt else '' }}</textarea>
+    </div>
+    <div class="row">
+      <label for="pf-content">{{ t.form.content }} <span class="muted">{{ t.form.content_hint }}</span></label>
+      <textarea id="pf-content" name="content" required rows="14">{{ prompt.content if prompt else '' }}</textarea>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button type="submit" class="btn btn-primary">{{ t.form.create_prompt_btn if mode == 'create' else t.form.save_changes }}</button>
+    <a class="btn" href="{{ url_for('page_list_prompts') }}">{{ t.form.cancel }}</a>
+  </div>
+</form>
+{% endblock %}
