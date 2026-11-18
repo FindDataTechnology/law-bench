@@ -1,0 +1,15 @@
+{
+  "kernel_contract": "1.0",
+  "adapters": [
+    {
+      "name": "law-bench-internal",
+      "system": "law-bench-internal",
+      "module": "bench.conformance_adapter",
+      "factory": "build",
+      "kernel_contract": "1.0",
+      "manifest_shape": 2,
+      "paths": ["src", "."],
+      "notes": "this repo's own entry; the workspace view lives in fd-ontology-kernel/adapters.json"
+    }
+  ]
+}
