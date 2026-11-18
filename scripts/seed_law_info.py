@@ -79,6 +79,7 @@ def main() -> None:
     contract_types = load_contract_types()
     seed = _seed_dir()
     conn = connect()
+    missed: list[str] = []
     try:
         create_schema(conn)
         now_iso = datetime.now(timezone.utc).isoformat()
@@ -87,12 +88,25 @@ def main() -> None:
             key, zh = ct["key"], ct["zh"]
             for source in SOURCES:
                 path = seed / source / f"{key}.md"
+                # 2026-11-11：registry 66 类型，但每源只有 43 份 markdown——原来直接
+                # read_text 会在第一个缺失类型上抛 FileNotFoundError，整个种子跑不完。
+                # 缺文件是语料事实，不是异常：跳过并累计，最后点名报出来。
+                if not path.is_file():
+                    missed.append(f"{key}/{source}")
+                    continue
                 content = path.read_text(encoding="utf-8")
                 lid = upsert_law_info(conn, key, source, zh, content, now_iso)
                 print(f"  upserted {key:24} [{source:7}] zh={zh} (law_info_id={lid})")
                 n += 1
         conn.commit()
         print(f"\nSeeded {n} law_info rows ({len(contract_types)} types × {len(SOURCES)} sources) into {args.db}")
+        if missed:
+            types_missed = sorted({m.split("/")[0] for m in missed})
+            print(
+                f"⚠️ 跳过 {len(missed)} 个缺失种子文件，涉及 {len(types_missed)} 个合同类型："
+                f"{', '.join(types_missed)}"
+            )
+            print("   （这些类型在 law_info 里查不到属预期，不是服务缺陷）")
         print_summary(conn)
     finally:
         conn.close()

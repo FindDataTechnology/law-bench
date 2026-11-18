@@ -1,0 +1,238 @@
+[
+ {
+  "case": "real-clean-closure",
+  "agree": true,
+  "py": {
+   "declared": [
+    [
+     "law-bench",
+     [
+      "clause_get",
+      "clause_list",
+      "clause_review"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'law-bench' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  },
+  "js": {
+   "declared": [
+    [
+     "law-bench",
+     [
+      "clause_get",
+      "clause_list",
+      "clause_review"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'law-bench' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  }
+ },
+ {
+  "case": "real-violation",
+  "agree": true,
+  "py": {
+   "declared": [
+    [
+     "law-bench",
+     [
+      "compare_run"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'law-bench' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  },
+  "js": {
+   "declared": [
+    [
+     "law-bench",
+     [
+      "compare_run"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'law-bench' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  }
+ },
+ {
+  "case": "real-counts-only",
+  "agree": true,
+  "py": {
+   "declared": [
+    [
+     "fd-daas-mcp",
+     [
+      "whatever"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'fd-daas-mcp' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  },
+  "js": {
+   "declared": [
+    [
+     "fd-daas-mcp",
+     [
+      "whatever"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'fd-daas-mcp' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  }
+ },
+ {
+  "case": "real-no-surface",
+  "agree": true,
+  "py": {
+   "declared": [
+    [
+     "airegistry-tools",
+     [
+      "x"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'airegistry-tools' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  },
+  "js": {
+   "declared": [
+    [
+     "airegistry-tools",
+     [
+      "x"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'airegistry-tools' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  }
+ },
+ {
+  "case": "real-mixed-exempt",
+  "agree": true,
+  "py": {
+   "declared": [
+    [
+     "my-local-binding",
+     [
+      "anything"
+     ]
+    ],
+    [
+     "fd-info",
+     [
+      "list_since",
+      "get_item"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'my-local-binding' is not a registry entry; its declarations ride as the local binding contract",
+    "'fd-info' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  },
+  "js": {
+   "declared": [
+    [
+     "my-local-binding",
+     [
+      "anything"
+     ]
+    ],
+    [
+     "fd-info",
+     [
+      "list_since",
+      "get_item"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'my-local-binding' is not a registry entry; its declarations ride as the local binding contract",
+    "'fd-info' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  }
+ },
+ {
+  "case": "real-existence-missing",
+  "agree": true,
+  "py": {
+   "declared": [
+    [
+     "law-bench",
+     [
+      "definitely_not_in_snapshot"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'law-bench' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  },
+  "js": {
+   "declared": [
+    [
+     "law-bench",
+     [
+      "definitely_not_in_snapshot"
+     ]
+    ]
+   ],
+   "face": [],
+   "closure": [],
+   "errors": [],
+   "notes": [
+    "'law-bench' is not a registry entry; its declarations ride as the local binding contract"
+   ]
+  }
+ }
+]

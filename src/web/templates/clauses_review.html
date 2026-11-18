@@ -10,7 +10,7 @@
 {% for c in pending %}
 <div class="panel">
   <h3 style="margin-top:0">{{ zh.get(c.contract_type, c.contract_type) }} · {{ c.section }} · #{{ c.id }}</h3>
-  <div class="muted small">{{ c.body[:150] }}…</div>
+  <div class="muted small">{{ c.body[:150] }}{% if c.body|length > 150 %}…{% endif %}</div>
   <p>{{ t.clauses.tags_label }}
     {% for dim, val in c.tags.items() %}
       <code>{{ dim }}={{ val }}</code>
@@ -20,10 +20,14 @@
   </p>
   <div class="inline">
     <form method="post" action="{{ url_for('page_clauses_review_tag_route', contract_type=c.contract_type, clause_id=c.id) }}" class="inline">
-      <select name="dim" style="width:10em">
+      {# Visible labels (checklist ④): ids are suffixed with the clause id — one
+         panel per pending clause on this page. #}
+      <label class="muted" for="cr-dim-{{ c.id }}">{{ t.clauses.tag_dim_label }}</label>
+      <select name="dim" id="cr-dim-{{ c.id }}" style="width:10em">
         {% for dim in c.tags %}<option value="{{ dim }}">{{ dim }}</option>{% endfor %}
       </select>
-      <select name="status" style="width:7em">
+      <label class="muted" for="cr-status-{{ c.id }}">{{ t.clauses.tag_status_label }}</label>
+      <select name="status" id="cr-status-{{ c.id }}" style="width:7em">
         <option value="approved">{{ t.clauses.approve }}</option>
         <option value="rejected">{{ t.clauses.reject }}</option>
         <option value="pending">{{ t.clauses.reset_pending }}</option>
@@ -37,6 +41,9 @@
   </div>
 </div>
 {% else %}
-<p class="muted">{{ t.clauses.review_empty }}</p>
+{# Honest empty (checklist ②): the review queue is genuinely drained. #}
+{% with message=t.clauses.review_empty %}
+  {% include '_empty_state.html' %}
+{% endwith %}
 {% endfor %}
 {% endblock %}

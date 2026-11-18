@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.areas.team }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'team' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 值班长一页：质量比、运行台账、按批待确认。
+
+    三者同屏的理由：它们是同一个判断的三个面——哪里薄、谁在跑、人该看什么。
+    分成三页，值班的人得自己在脑子里拼。
+
+    这一页只读。确认/退回的按钮指向既有的 inbox 批量端点，权限由那条路由的
+    lead 闸判定：看得见按钮不代表点得动。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.areas.team }}</h1>
+    <p class="hint">{{ domain.path }} · {{ t.console.team.intro }}</p>
+  </div>
+  {#- 工单从这一页进：值班的人先看到「谁在跑」，再问「谁该跑」。 -#}
+  <a class="btn btn-sm" href="{{ url_for('console_work_orders', domain_key=domain.key) }}">{{ t.console.team.goto_work_orders }}</a>
+</div>
+
+{#- ① 质量比：每项都给分子/分母与算法，缺分母时报「无物可算」而不是 0。 -#}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.team.quality_h2 }}</h2>
+    <span class="muted">{{ t.console.team.quality_hint }}</span>
+  </div>
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.team.col_metric }}</th>
+      <th>{{ t.console.team.col_value }}</th>
+      <th>{{ t.console.team.col_ratio }}</th>
+      <th>{{ t.console.team.col_how }}</th>
+    </tr></thead>
+    <tbody>
+      {% for name, m in metrics.items() %}
+      {% set floor = thresholds.get(name) %}
+      {% set bad = m.value is not none and floor is not none and (
+            (m.value < floor) if name != 'key_hygiene' and name != 'review_lag' else (m.value > floor)) %}
+      <tr>
+        <td><code>{{ name }}</code></td>
+        <td>
+          {% if m.value is none %}<span class="muted">{{ t.console.team.not_measurable }}</span>
+          {% else %}{{ m.value }}{% endif %}
+          {% if bad %}<span class="badge badge-warn">{{ t.console.team.below_floor }}</span>{% endif %}
+        </td>
+        <td>{{ m.numerator }}/{{ m.denominator if m.denominator is not none else '—' }}</td>
+        <td class="muted">{{ m.how }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if review.pending %}
+  <p class="hint">{{ t.console.team.review_line }} {{ review.pending }} · {{ t.console.team.review_age }}
+    {{ review.value }}h · {{ t.console.team.review_oldest }} {{ review.oldest_hours }}h
+    {% if review.over_threshold %}<span class="badge badge-warn">{{ t.console.team.overdue }}</span>{% endif %}
+  </p>
+  {% endif %}
+</div>
+
+{#- ② 运行台账：四态。thin 与 failed 分开显示，因为处置不同（升级 vs 不重试）。 -#}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.team.orders_h2 }}</h2>
+    <a class="btn btn-sm" href="{{ url_for('console_work_orders', domain_key=domain.key) }}">{{ t.console.team.goto_work_orders }}</a>
+  </div>
+  {% if open_orders %}
+  {#- 只报「没做完的」并按档位分组：三档的等待方不同，混一个总数等于没回答
+      「还在等谁」。数据与工单页同源，不另写口径。 -#}
+  <p class="hint">
+    {% for kind in ['kernel-role', 'fleet', 'human'] %}
+    {% set n = order_counts.get(kind, 0) %}
+    <span class="badge{% if not n %} badge-quiet{% endif %}">{{ t.console.workorders['kind_' ~ (kind | replace('-', '_'))] }} {{ n }}</span>
+    {% endfor %}
+  </p>
+  <ul class="plain">
+    {% for task in open_orders[:5] %}
+    <li>
+      <span class="badge">{{ t.console.workorders['status_' ~ task.status] }}</span>
+      {{ task.title }}
+      <span class="muted"><code>{{ task.assignee_ref or task.assignee }}</code></span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="hint">{{ t.console.team.no_orders }}</p>
+  {% endif %}
+</div>
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.team.ledger_h2 }}</h2>
+    <span class="muted">
+      {% for state, n in (ledger.by_outcome or {}).items() %}
+      <code>{{ state }}</code> {{ n }}{% if not loop.last %} · {% endif %}
+      {% else %}{{ t.console.team.no_runs }}{% endfor %}
+    </span>
+  </div>
+  {% if runs %}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.team.col_when }}</th>
+      <th>{{ t.console.team.col_origin }}</th>
+      <th>{{ t.console.team.col_role }}</th>
+      <th>{{ t.console.team.col_runner }}</th>
+      <th>{{ t.console.team.col_outcome }}</th>
+      <th>{{ t.console.team.col_counts }}</th>
+      <th>{{ t.console.team.col_detail }}</th>
+    </tr></thead>
+    <tbody>
+      {% for r in runs %}
+      <tr>
+        <td class="muted">{{ r.started_at }}</td>
+        {#- 来源只分列，不参与排序：台账是一条时间线，按来源排序会让迟到的舰队在
+            它最该被看见的时候排到最后。 -#}
+        <td class="nowrap">
+          {% if r.origin == 'fleet' %}<span class="badge">{{ t.console.team.origin_fleet }}</span>
+          {% else %}<span class="badge badge-quiet">{{ t.console.team.origin_kernel }}</span>{% endif %}
+        </td>
+        <td><code>{{ r.role }}</code></td>
+        <td class="muted">{% if r.runner_ref %}<code>{{ r.runner_ref }}</code>{% else %}—{% endif %}</td>
+        <td>{% if r.outcome == 'ok' %}<code>ok</code>
+            {% elif r.outcome == 'thin' %}<span class="badge badge-warn">thin</span>
+            {% else %}<span class="badge badge-bad">{{ r.outcome }}</span>{% endif %}</td>
+        <td class="muted">{{ r.counts }}</td>
+        <td class="muted">{{ (r.detail or '')[:120] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">{{ t.console.team.no_runs_hint }}</p>
+  {% endif %}
+</div>
+
+{#- ③ 按批待确认：逐批决策，不是逐条。入口指向既有批量端点。 -#}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.team.batches_h2 }}</h2>
+    <span class="muted">{{ t.console.team.batches_hint }}</span>
+  </div>
+  {% if batches %}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.team.col_batch }}</th>
+      <th>{{ t.console.team.col_pending }}</th>
+      <th>{{ t.console.team.col_rate }}</th>
+      <th>{{ t.console.team.col_actions }}</th>
+    </tr></thead>
+    <tbody>
+      {% for b in batches %}
+      <tr>
+        <td><code>{{ b.batch }}</code></td>
+        <td>{{ b.pending }}</td>
+        <td>{{ b.usable_rate if b.usable_rate is not none else '—' }}</td>
+        <td class="toolbar gap">
+          {% if cap.can_write %}
+          <form method="POST" action="{{ url_for('console_proposal_batch', domain_key=domain.key) }}">
+            <input type="hidden" name="batch" value="{{ b.batch }}">
+            <input type="hidden" name="action" value="confirm">
+            <button type="submit" class="btn">{{ t.console.team.confirm_batch }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('console_proposal_batch', domain_key=domain.key) }}">
+            <input type="hidden" name="batch" value="{{ b.batch }}">
+            <input type="hidden" name="action" value="reject">
+            <button type="submit" class="btn">{{ t.console.team.reject_batch }}</button>
+          </form>
+          {% else %}
+          <span class="muted">{{ t.console.team.needs_lead }}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">{{ t.console.team.no_batches }}</p>
+  {% endif %}
+</div>
+
+{#- ④ 岗位声明：这条线声明了哪些岗位、多久一次、哪些没起。 -#}
+<div class="panel">
+  <h2>{{ t.console.team.plan_h2 }}</h2>
+  {% if plan.declared %}
+  <p class="hint">{{ t.console.team.plan_running }}
+    {% for r in plan.runnable %}<code>{{ r.role }}</code>/{{ r.cadence_minutes }}m{% if not loop.last %} · {% endif %}{% endfor %}
+  </p>
+  {% if plan.skipped %}
+  <p class="hint">{{ t.console.team.plan_skipped }} {% for s in plan.skipped %}<code>{{ s }}</code>{% if not loop.last %} · {% endif %}{% endfor %}</p>
+  {% endif %}
+  {% else %}
+  <p class="hint">{{ t.console.team.plan_undeclared }} {{ plan.reason }}</p>
+  {% endif %}
+</div>
+{% endblock %}

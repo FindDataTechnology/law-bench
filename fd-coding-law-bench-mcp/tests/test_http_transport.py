@@ -98,6 +98,37 @@ def test_extract_no_headers():
     assert _extract_access_token([]) is None
 
 
+# Relayed calls carry two credentials: the gateway identity in `Authorization`
+# and this server's own token in `X-Authorization`. Taking the gateway identity
+# would mean a call holding the right token still gets 401, so the line
+# credential must win (gateway-reach-for-shared-token-mcp).
+
+
+def test_extract_x_authorization_header():
+    assert _extract_access_token(_headers(**{"X-Authorization": f"Bearer {TOKEN}"})) == TOKEN
+
+
+def test_extract_x_authorization_wins_over_authorization():
+    hdrs = _headers(
+        Authorization="Bearer gateway-identity-not-ours",
+        **{"X-Authorization": f"Bearer {TOKEN}"},
+    )
+    assert _extract_access_token(hdrs) == TOKEN
+
+
+def test_extract_malformed_x_authorization_falls_back_to_authorization():
+    hdrs = _headers(
+        Authorization=f"Bearer {TOKEN}",
+        **{"X-Authorization": "Basic dXNlcjpwYXNz"},
+    )
+    assert _extract_access_token(hdrs) == TOKEN
+
+
+def test_extract_gateway_identity_alone_is_not_accepted():
+    # The negative half: accepting two headers must not become "either passes".
+    assert _extract_access_token(_headers(Authorization="Bearer gateway-identity")) != TOKEN
+
+
 # ---------------------------------------------------------------------------
 # Guard ASGI behavior (dummy downstream app records invocation)
 
@@ -162,6 +193,24 @@ async def test_guard_forwards_valid_api_key_header():
     scope = _http_scope(_headers(**{"X-API-Key": TOKEN}))
     await _TokenGuard(dummy, TOKEN)(scope, _receive, send)
     assert dummy.called
+
+
+@pytest.mark.asyncio
+async def test_guard_forwards_relayed_call_with_gateway_identity_and_line_token():
+    # The whole point of the relay path: `Authorization` is the gateway's
+    # identity (not ours) and `X-Authorization` is our line token. The guard
+    # must dispatch, not 401 — this is the case that was broken in production.
+    dummy = _DummyApp()
+    messages, send = _capture_send()
+    scope = _http_scope(
+        _headers(
+            Authorization="Bearer gateway-identity-not-ours",
+            **{"X-Authorization": f"Bearer {TOKEN}"},
+        )
+    )
+    await _TokenGuard(dummy, TOKEN)(scope, _receive, send)
+    assert dummy.called
+    assert not [m for m in messages if m.get("status") == 401]
 
 
 @pytest.mark.asyncio

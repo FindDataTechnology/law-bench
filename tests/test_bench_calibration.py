@@ -1,14 +1,18 @@
 """Tests for the judge calibration machine, the gold-signal gate, and the
-judge prompt structure fix (change add-knowledge-bench-platform, group 4).
+judge prompt structure fix (change add-knowledge-bench-platform group 4;
+stratified gate + vote-share provenance added by add-judge-model-selection).
 
 Covers:
 
 - ``src/bench/calibration.py``: bucket arithmetic (including the separate
   no-confidence bucket, the below-range catch-all, and the closed top
-  interval), monotonicity true/false/tolerance paths, ``run_calibration``
-  persisting an honest ``channel='meta'`` / ``unit_kind='judge'`` run with one
-  criteria row per bucket, and the three ``is_calibrated`` fail paths plus the
-  pass path (most recent run wins);
+  interval), monotonicity true/false/tolerance paths, the human-stratified
+  ``confusion_matrix`` (degenerate/single-class edges, kappa), the
+  balanced-accuracy run gate (a class-balanced bar that an all-fail judge on
+  imbalanced gold cannot game), bake-off provenance fields
+  (``candidate``/``samples``/``n_calls``), ``run_calibration`` persisting an
+  honest ``channel='meta'`` / ``unit_kind='judge'`` run, and the
+  ``is_calibrated`` fail paths plus the pass path (most recent run wins);
 - ``src/bench/packs.py``: ``gold_judge`` is an optional manifest field (shape
   validation only, never required) and ``require_calibrated_gold_judge``
   passes undeclared manifests, passes a calibrated declaration, and raises
@@ -37,6 +41,7 @@ from src.bench.calibration import (
     CALIBRATION_MIN_AGREE,
     CALIBRATION_MIN_SAMPLES,
     bucket_accuracy,
+    confusion_matrix,
     is_calibrated,
     monotonicity,
     run_calibration,
@@ -57,6 +62,8 @@ BUCKET_LABELS = [
     "no-confidence",
 ]
 
+GATE_TITLE = "balanced accuracy (gate)"
+
 
 # --- record builders (synthetic pairs; judge/human verdicts fully controlled) -
 
@@ -66,21 +73,30 @@ def _rec(conf, judge, human):
 
 
 def _agreeing(conf, n):
-    """n records where the judge agrees with the human."""
+    """n records where the judge agrees with the human (positive stratum)."""
     return [_rec(conf, True, True) for _ in range(n)]
 
 
 def _disagreeing(conf, n):
-    """n records where the judge disagrees with the human."""
+    """n records where the judge disagrees with the human (human-pass)."""
     return [_rec(conf, False, True) for _ in range(n)]
 
 
+def _true_negatives(conf, n):
+    """n human-fail records the judge also fails (agreement, negative stratum)."""
+    return [_rec(conf, False, False) for _ in range(n)]
+
+
 def _passing_gold_records():
-    """60 pairs: agree rate 0.9, per-bucket accuracy rising with confidence."""
+    """63 pairs, both human strata present: balanced accuracy ~0.95, agree
+    rate ~0.92, per-bucket accuracy rising with confidence."""
     return (
-        _agreeing(0.55, 16) + _disagreeing(0.55, 4)  # [0.5,0.6): 0.8
-        + _agreeing(0.75, 18) + _disagreeing(0.75, 2)  # [0.7,0.8): 0.9
-        + _agreeing(0.95, 20)  # [0.9,1.0]: 1.0
+        # [0.5,0.6): n=18, agrees=15 -> 0.8333 (tp=12, fn=3, tn=3)
+        _agreeing(0.55, 12) + _disagreeing(0.55, 3) + _true_negatives(0.55, 3)
+        # [0.7,0.8): n=20, agrees=18 -> 0.9 (tp=15, fn=2, tn=3)
+        + _agreeing(0.75, 15) + _disagreeing(0.75, 2) + _true_negatives(0.75, 3)
+        # [0.9,1.0]: n=25, agrees=25 -> 1.0 (tp=20, tn=5)
+        + _agreeing(0.95, 20) + _true_negatives(0.95, 5)
     )
 
 
@@ -218,8 +234,62 @@ class TestMonotonicity:
 # --- run_calibration ---------------------------------------------------------
 
 
+class TestConfusionMatrix:
+    def test_counts_and_derived_metrics(self):
+        # tp=3, fn=1, fp=1, tn=5 -> sens 0.75, spec 0.8333, bal 0.7917
+        records = (
+            _agreeing(0.95, 3) + _disagreeing(0.95, 1)
+            + [_rec(0.95, True, False)] + _true_negatives(0.95, 5)
+        )
+        m = confusion_matrix(records)
+        assert (m["tp"], m["fn"], m["fp"], m["tn"]) == (3, 1, 1, 5)
+        assert m["sensitivity"] == pytest.approx(0.75)
+        assert m["specificity"] == pytest.approx(5 / 6)
+        assert m["balanced_accuracy"] == pytest.approx((0.75 + 5 / 6) / 2)
+        assert 0 < m["kappa"] < 1
+
+    def test_perfect_judge_kappa_is_one(self):
+        m = confusion_matrix(_agreeing(0.95, 4) + _true_negatives(0.95, 4))
+        assert m["kappa"] == pytest.approx(1.0)
+        assert m["balanced_accuracy"] == 1.0
+
+    def test_all_fail_judge_on_imbalanced_gold_cannot_pass(self):
+        # human 94 pass / 14 fail; judge fails everything: specificity 1.0,
+        # sensitivity 0, balanced accuracy 0.5 — the failure mode the old
+        # global agree-rate gate could not name.
+        records = [_rec(0.95, False, True) for _ in range(94)] + _true_negatives(0.95, 14)
+        m = confusion_matrix(records)
+        assert m["specificity"] == 1.0
+        assert m["sensitivity"] == 0.0
+        assert m["balanced_accuracy"] == pytest.approx(0.5)
+        assert m["kappa"] == 0.0
+
+    def test_single_class_gold_has_undefinable_balanced_accuracy(self):
+        m = confusion_matrix(_agreeing(0.95, 10))
+        assert m["specificity"] is None
+        assert m["balanced_accuracy"] is None
+        assert m["kappa"] is None  # pe=1 degenerate marginals
+
+    def test_empty_input_is_explicit_not_a_silent_zero(self):
+        m = confusion_matrix([])
+        assert (m["tp"], m["fp"], m["fn"], m["tn"]) == (0, 0, 0, 0)
+        assert m["balanced_accuracy"] is None and m["kappa"] is None
+
+    def test_confidence_source_passthrough_and_validation(self):
+        records = [
+            {**_rec(0.8, True, True), "confidence_source": "vote_share"},
+        ]
+        assert confusion_matrix(records)["tp"] == 1
+        for bad in ("", 3, "  "):
+            with pytest.raises(ValueError, match="confidence_source"):
+                confusion_matrix([{**_rec(0.8, True, True), "confidence_source": bad}])
+
+
+# --- run_calibration ---------------------------------------------------------
+
+
 class TestRunCalibration:
-    def test_persists_meta_run_with_one_criteria_row_per_bucket(self, db_conn):
+    def test_persists_meta_run_with_gate_row_plus_one_row_per_bucket(self, db_conn):
         res = run_calibration(
             db_conn,
             judge_model="judge-x",
@@ -237,29 +307,30 @@ class TestRunCalibration:
         assert row["unit_kind"] == "judge"
         assert row["rubric_name"] == "judge-calibration:judge-x@v2-structure"
         assert row["judge_model"] == "judge-x"
-        assert row["score"] == pytest.approx(0.9)
+        assert row["score"] == pytest.approx(58 / 63)  # agree rate is diagnostic
         assert row["max_score"] == 1.0
         assert row["all_pass"] in (1, True)
         assert row["task_desc"] == "prompt_version=v2-structure"
         # machine-readable fragments is_calibrated parses back
-        assert "n=60" in row["summary"]
+        assert "n=63" in row["summary"]
         assert "monotonic=yes" in row["summary"]
+        assert "balanced_accuracy=0.9519" in row["summary"]
 
         crits = db_conn.execute(
             "SELECT criterion_id, title, verdict, reasoning, ordinal "
             "FROM eval_criteria_results WHERE run_id = %s ORDER BY ordinal",
             (res["run_id"],),
         ).fetchall()
-        assert [c["title"] for c in crits] == BUCKET_LABELS
-        assert [c["ordinal"] for c in crits] == list(range(7))
-        # per-bucket verdict: pass iff non-empty and accuracy >= 0.80
-        assert [c["verdict"] for c in crits] == [
+        assert [c["title"] for c in crits] == [GATE_TITLE] + BUCKET_LABELS
+        assert [c["ordinal"] for c in crits] == list(range(8))
+        assert crits[0]["criterion_id"] == "stratified:balanced_accuracy"
+        assert crits[0]["verdict"] == "pass"
+        assert "kappa=" in crits[0]["reasoning"]
+        # per-bucket verdict (diagnostic): pass iff non-empty and accuracy >= bar
+        assert [c["verdict"] for c in crits[1:]] == [
             "fail", "pass", "fail", "pass", "fail", "pass", "fail",
         ]
-        assert crits[1]["criterion_id"] == "bucket:[0.5,0.6)"
-        assert crits[1]["reasoning"] == "n=20, accuracy=0.8000"
-        assert crits[0]["reasoning"] == "n=0, empty bucket (no signal)"
-        assert (row["n_criteria"], row["n_passed"]) == (7, 3)
+        assert (row["n_criteria"], row["n_passed"]) == (8, 4)
 
     def test_result_dict_shape(self, db_conn):
         res = run_calibration(
@@ -270,19 +341,100 @@ class TestRunCalibration:
             db_path=db_conn,
         )
         for key in (
-            "run_id", "rubric", "judge_model", "prompt_version", "n", "agrees",
-            "agree_rate", "buckets", "monotonic", "monotonic_detail", "all_pass",
-            "min_agree",
+            "run_id", "rubric", "judge_model", "prompt_version", "candidate",
+            "samples", "n_calls", "n", "agrees", "agree_rate", "matrix",
+            "balanced_accuracy", "kappa", "buckets", "monotonic",
+            "monotonic_detail", "all_pass", "min_agree",
         ):
             assert key in res
-        assert res["n"] == 60
-        assert res["agree_rate"] == pytest.approx(0.9)
+        assert res["n"] == 63
+        assert res["agree_rate"] == pytest.approx(58 / 63)
+        assert res["balanced_accuracy"] == pytest.approx((47 / 52 + 1.0) / 2)
+        assert res["matrix"]["tp"] == 47 and res["matrix"]["tn"] == 11
         assert res["monotonic"] is True
         assert res["all_pass"] is True
         # the reported bar is whatever the configured constant says, not a
         # frozen number (the user has already moved it once: 0.80 → 0.70)
         assert res["min_agree"] == pytest.approx(CALIBRATION_MIN_AGREE)
         assert [b["bucket"] for b in res["buckets"]] == BUCKET_LABELS
+
+    def test_stratified_gate_blocks_degenerate_all_fail_judge(self, db_conn):
+        records = [_rec(0.95, False, True) for _ in range(94)] + _true_negatives(0.95, 14)
+        res = run_calibration(
+            db_conn, judge_model="judge-degenerate",
+            prompt_version="v2-structure", gold_records=records, db_path=db_conn,
+        )
+        assert res["agree_rate"] == pytest.approx(14 / 108)
+        assert res["balanced_accuracy"] == pytest.approx(0.5)
+        assert res["all_pass"] is False
+        row = db_conn.execute(
+            "SELECT all_pass, summary FROM eval_runs WHERE id = %s",
+            (res["run_id"],),
+        ).fetchone()
+        assert row["all_pass"] in (0, False)
+        assert "balanced_accuracy=0.5000" in row["summary"]
+
+    def test_no_confidence_bucket_cannot_be_pass_evidence(self, db_conn):
+        # High *global* agree rate, all confidences None (the run-8 failure
+        # mode): monotonicity is vacuously true, but the stratified gate
+        # still decides. Sensitivity 0.5 -> balanced 0.75 would pass; make
+        # it 0.3 -> balanced 0.65 -> fail explicitly.
+        records = (
+            _agreeing(None, 30) + _disagreeing(None, 70)
+            + _true_negatives(None, 20)
+        )
+        res = run_calibration(
+            db_conn, judge_model="judge-no-channel",
+            prompt_version="v2-structure", gold_records=records, db_path=db_conn,
+        )
+        assert res["monotonic"] is True  # vacuous, no confidence buckets
+        assert res["buckets"][-1]["n"] == 120
+        assert res["balanced_accuracy"] == pytest.approx((0.3 + 1.0) / 2)
+        assert res["all_pass"] is False
+
+    def test_single_class_gold_fails_with_explicit_none_fragment(self, db_conn):
+        res = run_calibration(
+            db_conn, judge_model="judge-single",
+            prompt_version="v2-structure",
+            gold_records=_agreeing(0.95, 60), db_path=db_conn,
+        )
+        assert res["balanced_accuracy"] is None
+        assert res["all_pass"] is False
+        row = db_conn.execute(
+            "SELECT summary FROM eval_runs WHERE id = %s", (res["run_id"],)
+        ).fetchone()
+        assert "balanced_accuracy=none" in row["summary"]
+
+    def test_bakeoff_provenance_lands_in_task_desc_and_summary(self, db_conn):
+        res = run_calibration(
+            db_conn, judge_model="judge-x", prompt_version="v2-structure",
+            gold_records=_passing_gold_records(), db_path=db_conn,
+            candidate="flash-vote-k5", samples=5, n_calls=310,
+        )
+        row = db_conn.execute(
+            "SELECT summary, task_desc FROM eval_runs WHERE id = %s",
+            (res["run_id"],),
+        ).fetchone()
+        assert "candidate=flash-vote-k5" in row["summary"]
+        assert "samples=5" in row["summary"]
+        assert "calls=310" in row["summary"]
+        assert row["task_desc"] == (
+            "prompt_version=v2-structure candidate=flash-vote-k5 samples=5"
+        )
+        assert res["candidate"] == "flash-vote-k5"
+        assert res["samples"] == 5 and res["n_calls"] == 310
+
+    def test_bakeoff_param_validation(self, db_conn):
+        kwargs = dict(
+            judge_model="judge-x", prompt_version="v2-structure",
+            gold_records=_passing_gold_records(), db_path=db_conn,
+        )
+        with pytest.raises(ValueError, match="candidate"):
+            run_calibration(db_conn, **kwargs, candidate="  ")
+        with pytest.raises(ValueError, match="samples"):
+            run_calibration(db_conn, **kwargs, samples=0)
+        with pytest.raises(ValueError, match="n_calls"):
+            run_calibration(db_conn, **kwargs, n_calls=-1)
 
     def test_below_bar_agree_rate_fails_the_run(self, db_conn):
         records = _agreeing(0.55, 1) + _disagreeing(0.55, 9)  # agree rate 0.1
@@ -303,8 +455,13 @@ class TestRunCalibration:
         assert row["score"] == pytest.approx(0.1)
 
     def test_non_monotonic_buckets_fail_the_run_even_with_high_agree_rate(self, db_conn):
-        # agree rate 0.9 >= bar, but accuracy falls 1.0 -> 0.8 with confidence.
-        records = _agreeing(0.55, 10) + _agreeing(0.95, 8) + _disagreeing(0.95, 2)
+        # balanced accuracy 0.95 and agree rate 0.9, but accuracy falls
+        # 1.0 -> 0.833 with confidence (both strata present).
+        records = (
+            _agreeing(0.55, 10) + _true_negatives(0.55, 2)
+            + _agreeing(0.95, 8) + _disagreeing(0.95, 2)
+            + _true_negatives(0.95, 2)
+        )
         res = run_calibration(
             db_conn,
             judge_model="judge-y",
@@ -319,7 +476,7 @@ class TestRunCalibration:
             (res["run_id"],),
         ).fetchone()
         assert row["all_pass"] in (0, False)
-        assert row["score"] == pytest.approx(0.9)
+        assert row["score"] == pytest.approx(22 / 24)
 
     def test_empty_gold_records_raise(self, db_conn):
         with pytest.raises(ValueError, match="empty"):
@@ -368,8 +525,12 @@ class TestIsCalibrated:
         assert self.JUDGE in reason and self.VERSION in reason
 
     def test_insufficient_samples_fails_even_when_gates_pass(self, db_conn):
-        # gates pass (agree rate 1.0, monotonic) but only n=10 pairs.
-        self._calibrate(db_conn, _agreeing(0.55, 4) + _agreeing(0.95, 6))
+        # gates pass (balanced accuracy 1.0, monotonic) but only n=10 pairs.
+        self._calibrate(
+            db_conn,
+            _agreeing(0.55, 4) + _true_negatives(0.55, 1)
+            + _agreeing(0.95, 4) + _true_negatives(0.95, 1),
+        )
         ok, reason = is_calibrated(
             db_conn, judge_model=self.JUDGE, prompt_version=self.VERSION,
             db_path=db_conn,
@@ -379,18 +540,36 @@ class TestIsCalibrated:
         assert f"minimum {CALIBRATION_MIN_SAMPLES}" in reason
         assert CALIBRATION_MIN_SAMPLES == 50
 
-    def test_below_agree_bar_reports_the_gate(self, db_conn):
-        self._calibrate(db_conn, _agreeing(0.55, 1) + _disagreeing(0.55, 9))
+    def test_below_bar_reports_the_stratified_gate(self, db_conn):
+        # tp=1, fn=9, tn=2 -> balanced accuracy 0.55 < 0.70
+        self._calibrate(
+            db_conn,
+            _agreeing(0.55, 1) + _disagreeing(0.55, 9) + _true_negatives(0.55, 2),
+        )
         ok, reason = is_calibrated(
             db_conn, judge_model=self.JUDGE, prompt_version=self.VERSION,
             db_path=db_conn,
         )
         assert ok is False
+        assert "balanced_accuracy" in reason
+        assert "0.5500" in reason
         assert "below the required" in reason
-        assert "0.1000" in reason
+
+    def test_single_class_gold_reports_undefinable_gate(self, db_conn):
+        self._calibrate(db_conn, _agreeing(0.95, 60))
+        ok, reason = is_calibrated(
+            db_conn, judge_model=self.JUDGE, prompt_version=self.VERSION,
+            db_path=db_conn,
+        )
+        assert ok is False
+        assert "undefinable" in reason
 
     def test_non_monotonic_reports_the_gate(self, db_conn):
-        records = _agreeing(0.55, 10) + _agreeing(0.95, 8) + _disagreeing(0.95, 2)
+        records = (
+            _agreeing(0.55, 10) + _true_negatives(0.55, 2)
+            + _agreeing(0.95, 8) + _disagreeing(0.95, 2)
+            + _true_negatives(0.95, 2)
+        )
         self._calibrate(db_conn, records)
         ok, reason = is_calibrated(
             db_conn, judge_model=self.JUDGE, prompt_version=self.VERSION,
@@ -401,7 +580,11 @@ class TestIsCalibrated:
 
     def test_calibrated_once_a_sufficient_run_passes(self, db_conn):
         # an earlier insufficient run does not count; the most recent run decides.
-        self._calibrate(db_conn, _agreeing(0.55, 4) + _agreeing(0.95, 6))
+        self._calibrate(
+            db_conn,
+            _agreeing(0.55, 4) + _true_negatives(0.55, 1)
+            + _agreeing(0.95, 4) + _true_negatives(0.95, 1),
+        )
         ok, reason = is_calibrated(
             db_conn, judge_model=self.JUDGE, prompt_version=self.VERSION,
             db_path=db_conn,
@@ -414,8 +597,8 @@ class TestIsCalibrated:
             db_path=db_conn,
         )
         assert ok is True
-        assert "0.9000" in reason
-        assert "n=60" in reason
+        assert "balanced_accuracy 0.9519" in reason
+        assert "n=63" in reason
 
     def test_versions_are_separately_calibrated(self, db_conn):
         self._calibrate(db_conn, _passing_gold_records())
@@ -518,8 +701,11 @@ class TestRequireCalibratedGoldJudge:
         assert "no calibration run" in msg
 
     def test_declared_but_below_bar_is_rejected(self, db_conn):
+        # tp=1, fn=9, tn=2 -> balanced accuracy 0.55 < 0.70
         self._calibrate(
-            db_conn, _agreeing(0.55, 1) + _disagreeing(0.55, 9), judge="judge-w"
+            db_conn,
+            _agreeing(0.55, 1) + _disagreeing(0.55, 9) + _true_negatives(0.55, 2),
+            judge="judge-w",
         )
         manifest = self._manifest({"model": "judge-w", "prompt_version": self.VERSION})
         with pytest.raises(UncalibratedJudgeError) as exc:

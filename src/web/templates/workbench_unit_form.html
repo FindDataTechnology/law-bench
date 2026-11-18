@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}{{ t.workbench.unit.new_h1 }} {{ kind }} · {{ domain.name }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('workbench_browse', domain_key=domain.key, kind=kind) }}">{{ t.workbench.unit.back_browse }}</a></p>
+<h1>{{ t.workbench.unit.new_h1 }} <code>{{ kind }}</code> <span class="badge">{{ t.workbench.browse['lane_' ~ lane] }}</span></h1>
+
+{# Create form, driven by the anchored template's vocabulary (the route 404s
+   kinds outside it). Relationship kinds never take an external_key: the
+   kernel derives `{from_key}->{kind}:{to_key}` via relationship_external_key;
+   the read-only field below previews it live (the server derives the
+   authoritative value on submit). Tags use the one documented convention:
+   comma-separated key=value pairs. Every control carries a for/id label pair. #}
+<form method="POST" action="{{ url_for('workbench_unit_create', domain_key=domain.key, kind=kind) }}" class="filter-form form-vertical">
+  {% if lane == 'relationship' %}
+  <div class="filter-group">
+    <label for="from_key">{{ t.workbench.unit.from_key_label }}</label>
+    <input type="text" name="from_key" id="from_key" required>
+  </div>
+  <div class="filter-group">
+    <label for="to_key">{{ t.workbench.unit.to_key_label }}</label>
+    <input type="text" name="to_key" id="to_key" required>
+  </div>
+  <div class="filter-group">
+    <label for="derived_key">{{ t.workbench.unit.derived_key_label }}</label>
+    <input type="text" id="derived_key" readonly class="muted">
+  </div>
+  <p class="hint">{{ t.workbench.unit.relationship_note }}</p>
+  {% else %}
+  <div class="filter-group">
+    <label for="unit-external-key">{{ t.workbench.unit.external_key_label }}</label>
+    <input type="text" name="external_key" id="unit-external-key" required>
+  </div>
+  <div class="filter-group">
+    <label for="unit-tags">{{ t.workbench.unit.tags_label }}</label>
+    <input type="text" name="tags" id="unit-tags" placeholder="domain=law, status=draft">
+    <span class="hint">{{ t.workbench.unit.tags_hint }}</span>
+  </div>
+  {% endif %}
+  <div class="filter-group">
+    <label for="unit-body">{{ t.workbench.unit.body_label }}</label>
+    <textarea name="body" id="unit-body" rows="8" required></textarea>
+  </div>
+  <div class="filter-group">
+    <label>&nbsp;</label>
+    <button type="submit" class="btn btn-primary">{{ t.workbench.unit.create_btn }}</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+{% if lane == 'relationship' %}
+<script>
+(function () {
+  var tpl = {{ rel_key_template | tojson }};
+  var kind = {{ kind | tojson }};
+  var from = document.getElementById('from_key');
+  var to = document.getElementById('to_key');
+  var out = document.getElementById('derived_key');
+  function update() {
+    out.value = tpl
+      .replace('{from_key}', from.value)
+      .replace('{kind}', kind)
+      .replace('{to_key}', to.value);
+  }
+  from.addEventListener('input', update);
+  to.addEventListener('input', update);
+  update();
+})();
+</script>
+{% endif %}
+{% endblock %}

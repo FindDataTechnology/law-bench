@@ -25,6 +25,7 @@ from pathlib import Path
 os.environ.setdefault("NO_PROXY", "*")
 
 from minio import Minio
+from urllib3 import PoolManager, Timeout
 
 from src.settings import (
     ConfigError,
@@ -56,6 +57,14 @@ class CorpusDoc:
     stem: str
 
 
+#: 连接/读取超时。**不能省**：Minio 默认不设连接超时，端点不可达时
+#: ``urllib3.create_connection`` 会一直等 SYN（实测 0% CPU 挂死，把整个测试
+#: 进程拖住），于是下面那个 ``except -> ConfigError`` 永远执行不到——
+#: "不可达就报错"的承诺在真实故障里是空的。3 秒足够内网握手，又能在故障时
+#: 让人拿到一句人话。
+_MINIO_TIMEOUT = Timeout(connect=3, read=10)
+
+
 def _client() -> Minio:
     if not MINIO_ENDPOINT:
         raise ConfigError("minio_host is not set (MinIO corpus unreachable).")
@@ -65,6 +74,7 @@ def _client() -> Minio:
         secret_key=MINIO_SECRET_KEY,
         secure=MINIO_SECURE,
         cert_check=False,
+        http_client=PoolManager(timeout=_MINIO_TIMEOUT, retries=False),
     )
 
 

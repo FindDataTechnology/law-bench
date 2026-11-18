@@ -1,0 +1,86 @@
+# law-bench public API pod 的 read-replica（数据链=pg_dump cron 快照轨）。
+# 与 origin（ns postgres 共享实例）隔离：独立 PVC/凭据；同步见 law-bench-public-sync-cron.yaml。
+#
+# 凭据不在 Git 里。Secret `law-bench-public-replica` 由集群侧一次性创建（本 manifest
+# 只声明它存在，不承载值），argocd 的 syncPolicy 未开 prune，所以把 Secret 从这里
+# 移出不会删掉线上那份；pods 的 envFrom 继续按名字引用它。
+#
+# 首次部署 / 轮换口令时（在能 kubectl 的机器上跑，口令由 shell 生成，不落盘、不进 Git）：
+#
+#   NEW=$(openssl rand -base64 24 | tr -d '/+=' | cut -c1-24)
+#   kubectl -n law-bench create secret generic law-bench-public-replica \
+#     --from-literal=POSTGRES_DB=law_bench \
+#     --from-literal=POSTGRES_USER=app \
+#     --from-literal=POSTGRES_PASSWORD="$NEW" \
+#     --dry-run=client -o yaml | kubectl apply -f -
+#
+#   # 同步更新读面用的连接串（同一个口令，host 为 replica Service）
+#   kubectl -n law-bench patch secret law-bench-public --type merge \
+#     -p "{\"stringData\":{\"database_url\":\"postgresql://app:$NEW@law-bench-public-replica:5432/law_bench\"}}"
+#
+#   # 已初始化的库不会因换 Secret 而改口令，需在库内改一次（PVC 里是既存数据）：
+#   kubectl -n law-bench exec deploy/law-bench-public-replica -- \
+#     psql -U app -d law_bench -c "ALTER USER app WITH PASSWORD '$NEW'"
+#
+#   kubectl -n law-bench rollout restart deploy/law-bench-public
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: law-bench-public-replica-data
+  namespace: law-bench
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: law-bench-public-replica
+  namespace: law-bench
+  labels:
+    app: law-bench-public-replica
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: law-bench-public-replica
+  template:
+    metadata:
+      labels:
+        app: law-bench-public-replica
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          envFrom:
+            - secretRef:
+                name: law-bench-public-replica
+          ports:
+            - containerPort: 5432
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "app", "-d", "law_bench"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: law-bench-public-replica-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: law-bench-public-replica
+  namespace: law-bench
+spec:
+  selector:
+    app: law-bench-public-replica
+  ports:
+    - port: 5432
+      targetPort: 5432

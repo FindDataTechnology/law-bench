@@ -86,10 +86,41 @@ def test_law_references_lists_and_filters(app_client: TestClient, seeded_db):
     assert "中华人民共和国民法典" in r3.text
 
 
-def test_nav_links_present_on_other_pages(app_client: TestClient, seeded_db):
+def test_corpus_tools_are_reachable_from_the_knowledge_area(app_client: TestClient, seeded_db):
+    """§5: the corpus pages left the top bar; their entries live in the owning area.
+
+    Reachability is the contract — a reader must still be able to get to 法规库 /
+    法规索引 without knowing the URL, and the legacy routes themselves keep working.
+    """
     _seed_law_info(seeded_db)
-    r = app_client.get("/prompts")
-    assert r.status_code == 200
-    # both nav links rendered in zh (default locale)
-    assert "/law-info" in r.text
-    assert "/law-references" in r.text
+    # The shared seed carries no domain, so this test creates one to render the
+    # area page; the point is reachability, not seeding.
+    from src.bench import templates, workspaces
+    tmpl = templates.create_template(
+        conn=seeded_db,
+        name="tpl-knowledge-tools",
+        schema={
+            "entity_types": ["clause"],
+            "concept_structures": {"clause": ["id"]},
+            "relationship_kinds": ["cites_law"],
+            "tier_vocabulary": ["raw", "bronze", "silver", "gold"],
+            "sensitivity_vocabulary": ["public", "internal", "confidential"],
+            "corpus_declaration": {"source_types": ["uploaded"]},
+        },
+        created_by="tester",
+    )
+    workspaces.instantiate_domain(
+        seeded_db,
+        key="tools-key",
+        name="工具测试域",
+        template_name=tmpl["name"],
+        template_version=tmpl["version"],
+        created_by="tester",
+    )
+    area = app_client.get("/d/tools-key/knowledge")
+    assert area.status_code == 200
+    assert "/law-info" in area.text
+    assert "/law-references" in area.text
+    # the pages themselves still render (a 302 is deliberately NOT applied yet)
+    for path in ("/law-info", "/law-references"):
+        assert app_client.get(path).status_code == 200

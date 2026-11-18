@@ -1,9 +1,20 @@
 {% extends "base.html" %}
 {% block title %}{{ tr('clauses.clauses_of', name=zh) }} · {{ t.nav.brand }}{% endblock %}
 {% block content %}
+{# Local narrow-screen guard (checklist ⑥; template-scoped, recorded in the sweep
+   report): filter controls keep their compact widths on desktop but never exceed
+   the available width once the filter row wraps on narrow screens. #}
+<style>
+@media (max-width: 720px) {
+  .clauses-inline-forms input, .clauses-inline-forms select { max-width: 100%; }
+}
+</style>
 {% if not_found %}
 <div class="toolbar between"><h1>{{ t.clauses.not_found_h1 }}</h1></div>
-<p class="muted">{{ t.clauses.unknown_type }} <code>{{ contract_type }}</code>。</p>
+{# Error with cause (checklist ③): names the unknown type code, not a bare 404 line. #}
+{% with message=t.clauses.unknown_type, detail=contract_type %}
+  {% include '_error_card.html' %}
+{% endwith %}
 {% else %}
 <div class="toolbar between">
   <h1>{{ tr('clauses.clauses_of', name=zh) }}</h1>
@@ -18,22 +29,24 @@
 <div class="flash" role="status">{{ flash }}</div>
 {% endif %}
 
-<form method="get" class="inline" style="margin:0 0 1em">
-  <label class="muted">{{ t.clauses.filter }}</label>
-  <input type="text" name="q" value="{{ q }}" placeholder="{{ t.clauses.filter_ph }}" style="width:14em">
-  <select name="scenario">
+<form method="get" class="inline clauses-inline-forms" style="margin:0 0 1em">
+  <label class="muted" for="clauses-filter-q">{{ t.clauses.filter }}</label>
+  <input type="text" id="clauses-filter-q" name="q" value="{{ q }}" placeholder="{{ t.clauses.filter_ph }}" style="width:14em">
+  {# Compact toolbar filters: each select carries an accessible name from an
+     existing t.* key (a visible label would repeat its first option verbatim). #}
+  <select name="scenario" aria-label="{{ t.clauses.all_scenarios }}">
     <option value="">{{ t.clauses.all_scenarios }}</option>
     {% for p in scenarios %}
     <option value="{{ p }}" {% if p == scenario_filter %}selected{% endif %}>{{ p }}</option>
     {% endfor %}
   </select>
-  <select name="category">
+  <select name="category" aria-label="{{ t.clauses.all_categories }}">
     <option value="">{{ t.clauses.all_categories }}</option>
     {% for c in ['base','tagged','custom'] %}
     <option value="{{ c }}" {% if c == category_filter %}selected{% endif %}>{{ c }}</option>
     {% endfor %}
   </select>
-  <select name="stance" style="width:9em">
+  <select name="stance" style="width:9em" aria-label="{{ t.clauses.all_stances }}">
     <option value="">{{ t.clauses.all_stances }}</option>
     {% for v in tag_vocab.stance %}<option value="{{ v }}" {% if active_tags.get('stance') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}
   </select>
@@ -41,6 +54,7 @@
   <a class="btn btn-sm btn-ghost" href="{{ url_for('page_clauses_detail', contract_type=contract_type) }}">{{ t.clauses.reset }}</a>
 </form>
 
+{% set has_filters = q or scenario_filter or category_filter or active_tags %}
 {% for g in grouped %}
 <div class="panel">
   <h2 style="margin-top:0">{{ g.section }}</h2>
@@ -69,7 +83,25 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="panel muted">{{ t.clauses.empty_detail|safe }}</div>
+  {% if has_filters %}
+  {# Honest empty, filtered variant (checklist ②): data exists for the type but
+     the active filters excluded it — next step is resetting the filters. #}
+  <div class="panel">
+    {% with message=t.clauses.no_match, action_href=url_for('page_clauses_detail', contract_type=contract_type), action_label=t.clauses.reset %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+  </div>
+  {% else %}
+  {# Honest empty, true-empty variant (checklist ②): the type really has no
+     clauses yet. Inline markup because this t.* key carries <code> HTML that
+     the partial would escape (partial is reserved for plain-text keys). #}
+  <div class="panel">
+    <div class="empty-state" role="status">
+      <p class="empty-state-text">{{ t.clauses.empty_detail|safe }}</p>
+      <div class="empty-state-action"><a class="btn btn-sm" href="{{ url_for('page_clauses_new', contract_type=contract_type) }}">{{ t.clauses.new_custom }}</a></div>
+    </div>
+  </div>
+  {% endif %}
 {% endfor %}
 {% endif %}
 {% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ t.workbench.task.new_h1 }} · {{ domain.name }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('console_overview', domain_key=domain.key) }}">{{ t.workbench.task.back }}</a></p>
+<h1>{{ t.workbench.task.new_h1 }} · {{ domain.name }}</h1>
+
+{# Lead-only assignment (design D4): the assignee is a DOMAIN member (spec
+   「向域内成员指派」), so the form is a select over active memberships. The
+   target kind is vocabulary-driven (out-of-table kinds 404 server-side).
+   Every control carries a for/id label pair; a member-less domain shows the
+   honest cause (no members yet → fix it on the domain detail page) instead
+   of an empty select. #}
+<form method="POST" action="{{ url_for('workbench_task_create', domain_key=domain.key) }}" class="filter-form form-vertical">
+  <div class="filter-group">
+    <label for="task-assignee">{{ t.workbench.task.assignee_label }}</label>
+    <select name="assignee" id="task-assignee" required>
+      {% for m in members %}
+      <option value="{{ m.user_id }}">{{ m.user_id }} · {{ t.admin.role[m.role] }}</option>
+      {% endfor %}
+      {% if not members %}<option value=""></option>{% endif %}
+    </select>
+    {% if not members %}<span class="hint">{{ t.workbench.task.no_members_hint }}</span>{% endif %}
+  </div>
+  <div class="filter-group">
+    <label for="task-title">{{ t.workbench.task.title_label }}</label>
+    <input type="text" name="title" id="task-title" required>
+  </div>
+  <div class="filter-group">
+    <label for="task-detail">{{ t.workbench.task.detail_label }}</label>
+    <textarea name="detail" id="task-detail" rows="3"></textarea>
+  </div>
+  <div class="filter-group">
+    <label for="task-target-kind">{{ t.workbench.task.target_kind_label }}</label>
+    <select name="target_kind" id="task-target-kind">
+      <option value="">{{ t.workbench.task.none_kind }}</option>
+      <optgroup label="{{ t.admin.templates.entity_types }}">
+        {% for kind in entity_types %}
+        <option value="{{ kind }}">{{ kind }}</option>
+        {% endfor %}
+      </optgroup>
+      <optgroup label="{{ t.admin.templates.relationship_kinds }}">
+        {% for kind in relationship_kinds %}
+        <option value="{{ kind }}">{{ kind }}</option>
+        {% endfor %}
+      </optgroup>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label for="task-target-key">{{ t.workbench.task.target_key_label }}</label>
+    <input type="text" name="target_key" id="task-target-key">
+  </div>
+  <div class="filter-group">
+    <label>&nbsp;</label>
+    <button type="submit" class="btn btn-primary">{{ t.workbench.task.assign_btn }}</button>
+  </div>
+</form>
+{% endblock %}

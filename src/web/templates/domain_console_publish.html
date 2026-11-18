@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.publish.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'publish' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 发布区：版本历史 + 消费者 + 拉取足迹。
+
+    digest 全文展示（等宽可换行），不缩写 —— 缩写会让人无法与拉取面核对。
+    发布按钮只在 cap.can_publish 出现；动作复用既有发布实现，不新建发布面。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.publish.h1 }}</h1>
+    <p class="hint">{{ t.console.publish.intro }}</p>
+  </div>
+  {% if cap.can_publish %}
+  <form method="POST" action="{{ url_for('console_publish_action', domain_key=domain.key) }}"
+        data-confirm="{{ t.console.publish.publish_confirm }}">
+    <button type="submit" class="btn btn-primary">{{ t.console.publish.publish_btn }}</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.publish.latest_h2 }}</h2>
+  {% if publication.has_publication %}
+  <p>
+    <span class="badge">v{{ publication.latest.version }}</span>
+    <span class="muted">{{ publication.latest.published_at[:16] | replace('T', ' ') }} · {{ publication.latest.published_by }}</span>
+  </p>
+  <p><code class="digest">{{ publication.latest.digest }}</code></p>
+  <p class="hint">{{ t.console.publish.pull_api }}：<code>/api/v1/distribution/{{ domain.key }}/ontology</code></p>
+  {% else %}
+  {% with message=t.console.publish.no_publication, hint=t.console.publish.no_publication_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.publish.history_h2 }}</h2>
+  {% if publication.history %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th class="nowrap">{{ t.console.publish.col_version }}</th>
+        <th>{{ t.console.publish.col_digest }}</th>
+        <th class="nowrap">{{ t.console.publish.col_published_at }}</th>
+        <th class="nowrap">{{ t.console.publish.col_published_by }}</th>
+        <th>{{ t.console.publish.col_changelog }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in publication.history %}
+      <tr>
+        <td class="nowrap">v{{ p.version }}</td>
+        <td><code class="digest">{{ p.digest }}</code></td>
+        <td class="muted nowrap">{{ p.published_at[:16] | replace('T', ' ') }}</td>
+        <td class="muted nowrap">{{ p.published_by }}</td>
+        {#- Changelog is the kernel's diff, rendered as words instead of a JSON
+            dump: the shape is fixed by `distribution.diff_manifests`. -#}
+        <td class="muted">
+          {% if p.changelog is mapping and p.changelog.initial %}
+          {{ tr('console.publish.changelog_initial', entities=p.changelog.counts.entities, relationships=p.changelog.counts.relationships) }}
+          {% elif p.changelog is mapping %}
+          {{ tr('console.publish.changelog_diff',
+                added=p.changelog.added | default([], true) | length,
+                removed=p.changelog.removed | default([], true) | length,
+                changed=p.changelog.changed | default([], true) | length,
+                entities=p.changelog.counts.entities,
+                relationships=p.changelog.counts.relationships) }}
+          {% else %}{{ p.changelog }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% with message=t.console.ontology.no_history %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.publish.consumers_h2 }}</h2>
+  {% if consumption.consumers %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.console.ontology.col_consumer }}</th>
+        <th>{{ t.console.ontology.col_domains }}</th>
+        <th>{{ t.console.ontology.col_status }}</th>
+        <th>{{ t.console.ontology.col_last_pull }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in consumption.consumers %}
+      <tr>
+        <td>{{ c.name }}</td>
+        <td class="muted">{% for k in c.domains %}<code>{{ k }}</code> {% endfor %}</td>
+        <td>
+          {% if c.revoked %}<span class="badge harbor">{{ t.console.ontology.consumer_revoked }}</span>
+          {% else %}<span class="badge">{{ t.console.ontology.consumer_active }}</span>{% endif %}
+        </td>
+        <td class="muted">
+          {% if c.last_pull %}v{{ c.last_pull.version }} · {{ c.last_pull.happened_at[:16] | replace('T', ' ') }}
+          {% else %}{{ t.console.ontology.never_pulled }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% with message=t.console.publish.no_consumers, hint=t.console.ontology.no_consumers_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: newapi-www
+  namespace: ai-gateway
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`www.token118.com`)
+      kind: Rule
+      services:
+        - name: kong
+          port: 8000
+  tls:
+    certResolver: le
+    domains:
+      - main: www.token118.com

@@ -41,7 +41,7 @@
 
 | 概念 | 说明 |
 |---|---|
-| `contract_type` | 合同类目 key，如 `sale` / `lease` / `employment`，共 43 类。母版模板存于 `src/contracts/data/contracts.json`。 |
+| `contract_type` | 合同类目 key，如 `sale` / `lease` / `employment`，共 66 类（其中 41 类带种子条款）。母版模板存于 `src/contracts/data/contracts.json`。 |
 | `scenario` | 业务场景标签（如 `农产品买卖`、`驾校培训`、`住宅租赁`），用于筛选 **tagged** 条款。 |
 | `stance` | 立场标签（`pro_a` / `pro_b` / `balanced`），用于筛选 **custom** 条款。 |
 | **clauses 三层** | `base`（母版骨架，10 个规范分节）/ `tagged`（场景覆盖与扩展）/ `custom`（立场覆盖）。 |

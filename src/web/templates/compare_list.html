@@ -6,6 +6,7 @@
   {% if has_scope('content:write') %}<a class="btn btn-primary" href="{{ url_for('page_new_compare') }}">{{ t.btn.new_compare }}</a>{% endif %}
 </div>
 
+{%- if compares -%}
 <div class="panel">
   <table>
     <thead>
@@ -20,7 +21,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for c in compares %}
+      {%- for c in compares -%}
       <tr>
         <td><a href="{{ url_for('page_compare_detail', compare_id=c.id) }}"><strong>#{{ c.id }}</strong></a></td>
         <td>{{ c.label or '-' }}
@@ -32,15 +33,27 @@
         <td>{{ c.n_drafts or 0 }}</td>
         <td class="muted">{{ c.created_at }}</td>
       </tr>
-      {% endfor %}
-      {% if not compares %}
-      <tr><td colspan="7" class="muted">{{ t.empty.compares }}
-        {% if has_scope('content:write') %}<a href="{{ url_for('page_new_compare') }}">{{ t.btn.new_compare }}</a>{{ t.empty.compares_suffix }}{% endif %}
-      </td></tr>
-      {% endif %}
+      {%- endfor -%}
     </tbody>
   </table>
 </div>
+{%- else -%}
+{#- Honest empty ledger page. Writers keep the established inline-link copy
+    (t.empty.compares + "+ 新建对比" + t.empty.compares_suffix = "请从 … 开始")
+    composed into one safe string so the grammar stays intact inside the card.
+    Readers fall back to the reader key when it lands (empty.compares_reader,
+    reported to i18n); until then the writer fragments degrade gracefully —
+    no hardcoded single-language strings. -#}
+{% if has_scope('content:write') %}
+  {% set new_link = '<a href="' ~ url_for('page_new_compare') ~ '">' ~ t.btn.new_compare ~ '</a>' %}
+  {% set compare_empty_msg = (t.empty.compares ~ new_link ~ t.empty.compares_suffix) | safe %}
+{% else %}
+  {% set compare_empty_msg = t.empty.compares_reader | default(t.empty.compares ~ t.empty.compares_suffix, true) %}
+{% endif %}
+{% with message=compare_empty_msg %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{%- endif -%}
 
 <p class="hint">{{ t.hint.compare_list|safe }}</p>
 {% endblock %}

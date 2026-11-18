@@ -7,6 +7,7 @@
 <p class="muted">{{ t.contracts.intro }}</p>
 
 <div class="panel">
+  {% if types %}
   <table>
     <thead>
       <tr>
@@ -28,10 +29,15 @@
         </td>
       </tr>
       {% endfor %}
-      {% if not types %}
-      <tr><td colspan="3" class="muted">{{ t.contracts.empty }}</td></tr>
-      {% endif %}
     </tbody>
   </table>
+  {% else %}
+  {# Honest empty (checklist ②): real empty registry + the factual next step.
+     The type list is file-backed (src/eval/seed/law_info/contract_types.json),
+     so there is no in-UI action — the hint names the source of truth. #}
+  {% with message=t.contracts.empty, hint=t.contracts.empty_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
 </div>
 {% endblock %}

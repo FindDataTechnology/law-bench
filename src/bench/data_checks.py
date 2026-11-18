@@ -28,6 +28,7 @@ from src.settings import DEFAULT_DB
 
 from src.eval.store import store_result
 
+from . import verdicts
 from .store import list_knowledge_units
 
 # Upper bound for the "every unit of the kind" listing inside run_data_eval;
@@ -133,6 +134,42 @@ def run_data_eval(
             )
 
     n_criteria = len(criteria_results)
+
+    # ── verdict-ledger shape (add-eval-verdict-ledger 3.2) ──────────────────
+    # Subject = "the batch of units of this kind"; its version is a digest of
+    # the unit keys actually evaluated, so re-running the same batch is the same
+    # subject at the same version (comparable), while adding a unit moves the
+    # version (honestly incomparable — different evidence base).
+    #
+    # Ruler = the checker set. Its digest covers the kind and the checker names
+    # in registration order. ponytail: a checker whose BODY changes without a
+    # name change keeps the same digest, so a code-only edit is invisible here;
+    # the upgrade path is to fold each checker's source hash in once checkers
+    # stop being ad-hoc lambdas. The names are what the ledger can verify today.
+    unit_version = verdicts.ruler_digest_of(
+        {
+            "kind": kind,
+            "units": sorted(
+                f"{u['namespace']}/{u['external_key']}" for u in units
+            ),
+        }
+    )
+    checker_ruler = {
+        "kind": "checker-set",
+        "key": f"data-checks:{kind}",
+        "digest": verdicts.ruler_digest_of(
+            {"kind": kind, "checkers": list(checkers.keys())}
+        ),
+    }
+    # An empty selection never claims all-pass; here it also must not claim
+    # fail — nothing was checked, which is the definition of inconclusive.
+    if n_criteria == 0:
+        data_outcome = "inconclusive"
+    elif n_passed == n_criteria:
+        data_outcome = "pass"
+    else:
+        data_outcome = "fail"
+
     return store_result(
         {
             "rubric": f"data-checks:{kind}",
@@ -148,4 +185,12 @@ def run_data_eval(
         db_path=db_path,
         channel="data",
         unit_kind=kind,
+        subject_kind="knowledge-units",
+        subject_key=kind,
+        subject_version=unit_version,
+        ruler_kind=checker_ruler["kind"],
+        ruler_key=checker_ruler["key"],
+        ruler_digest=checker_ruler["digest"],
+        gate="regression",
+        outcome=data_outcome,
     )

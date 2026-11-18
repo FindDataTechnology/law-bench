@@ -31,6 +31,7 @@ from typing import Any, Optional
 
 import psycopg  # for psycopg.errors.UniqueViolation
 
+from src.bench.agent_ids import forbidden_scopes, is_agent
 from src.settings import DEFAULT_DB, READONLY_REPLICA  # noqa: F401 — see verify_key
 from src.eval.db import connect, now_iso
 from src.eval.store import ensure_schema
@@ -114,6 +115,17 @@ def create_key(
     regardless, but the insert is retried on a :class:`UniqueViolation` so a
     collision never surfaces to the user.
     """
+    # 智能体身份不得持有平台级权限。这不是约定而是铸凭据时的硬闸：一旦某个
+    # agent 拿到 admin/*，它就能通过 confirm 的 admin 豁免给自己的提案签字
+    # （见 proposals.confirm 的第二道闸）。两道闸都在，是因为任一道单独都不够。
+    if is_agent(user_id):
+        bad = forbidden_scopes(scopes)
+        if bad:
+            raise ValueError(
+                f"智能体身份不得持有平台级权限 {bad}；"
+                "它只能是目标域里 role=expert 的普通成员"
+            )
+
     ensure_schema(db_path)
     scopes_json = json.dumps(list(scopes) if scopes else [], ensure_ascii=False)
 

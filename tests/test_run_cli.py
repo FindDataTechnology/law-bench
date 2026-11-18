@@ -58,6 +58,16 @@ def test_evaluate_writes_scores_json(seeded_db: Path, monkeypatch, tmp_path: Pat
         ],
         "judge_model": "fake-judge",
         "scored_at": "2026-01-01T00:00:00+00:00",
+        # evaluate_contract now returns the ledger identity alongside the score
+        # (add-eval-verdict-ledger 3.1); the CLI writer refuses a verdict that
+        # cannot name its subject and ruler.
+        "verdict_subject": {
+            "subject_kind": "contract",
+            "subject_key": "sha256:deadbeef",
+            "subject_version": "sha256:" + "0" * 64,
+        },
+        "verdict_ruler": {"kind": "rubric", "key": "l_rubric", "digest": "f" * 64},
+        "verdict_outcome": "pass",
     }
     monkeypatch.setattr(
         "src.eval.scoring.evaluate_contract", lambda **kw: fake_result
@@ -66,8 +76,9 @@ def test_evaluate_writes_scores_json(seeded_db: Path, monkeypatch, tmp_path: Pat
     monkeypatch.setattr(
         store,
         "store_result",
-        lambda result, contract_path=None, task_desc=None, db_path=None: real_store(
-            result, contract_path=contract_path, task_desc=task_desc, db_path=seeded_db
+        lambda result, contract_path=None, task_desc=None, db_path=None, **kw: real_store(
+            result, contract_path=contract_path, task_desc=task_desc,
+            db_path=seeded_db, **kw,
         ),
     )
 

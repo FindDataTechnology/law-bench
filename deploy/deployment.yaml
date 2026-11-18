@@ -1,0 +1,228 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: law-bench
+  namespace: law-bench
+  labels:
+    app: law-bench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: law-bench
+  template:
+    metadata:
+      labels:
+        app: law-bench
+    spec:
+      # MIGRATED to cheap-8 2026-11-05: the whole law-bench stack (origin pod
+      # + postgres PV) moved off cheap-7's standing disk pressure. The old
+      # law-bench-db PVC (176K legacy sqlite, unused since the Postgres
+      # migration) was dropped and recreated here - the new PV's node
+      # affinity now pins the pod to cheap-8, so the selector below must stay
+      # in lockstep with it (same rule as before, new node). Image pulls from
+      # TCR via tcr-pull; the real DB is the remote PG service.
+      nodeSelector:
+        kubernetes.io/hostname: cheap-8
+      # (previous note: UNPINNED 2026-11-05 intermediate step; superseded same
+      # day by this pin because the recreated PVC's affinity decides the node)
+
+      # law-bench-db PVC (local-path node affinity), but that PVC now holds a
+      # 176K legacy sqlite (evaluation_rules.db, unused since the Postgres
+      # migration — real store is the `postgres` StatefulSet via
+      # law-bench-db secret). The pin kept crashing the pod on cheap-7's
+      # standing disk pressure (repeated Evicted/137). Any node works: the
+      # image pulls from TCR via tcr-pull below, the DB is the remote PG.
+      imagePullSecrets:
+        - name: tcr-pull
+      # Node resolv.conf picked up a wildcard `mesh.finddata.cn` search domain
+      # (returns 8.218.137.223 for everything). ClusterFirst inherits it, so new
+      # pods resolve postgres.postgres.svc.cluster.local -> 8.218.137.223 (black
+      # hole) and psycopg.connect() hangs at startup -> CrashLoopBackOff. Pin DNS
+      # to kube-dns + the clean 3-domain search (matches the working pre-pollution
+      # pod), and pin the public Logto/Lawbench domains via hostAliases so the
+      # fail-closed auth path never depends on upstream DNS.
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - law-bench.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      # token118.com is retired (foreign domain, no longer manageable) — the IdP
+      # now lives on auth.finddatatech.cloud (nginx on chengsi 124.220.7.175 →
+      # tailscale 100.64.0.3:3001 fd-logto), and cheap1 (public 103.236.89.212)
+      # fronts the web origin. These pins keep the fail-closed auth path off
+      # upstream DNS; if an IP changes, update the alias first.
+      hostAliases:
+        - ip: 124.220.7.175
+          hostnames:
+            - auth.finddatatech.cloud
+        - ip: 103.236.89.212
+          hostnames:
+            - lawbench.finddatatech.cloud
+      initContainers:
+        - name: seed-db
+          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-1d6ca60
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /data
+              name: db
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              if [ -f /data/evaluation_rules.db ]; then
+                echo "evaluation_rules.db already present in PVC, skipping seed."
+              else
+                echo "seeding evaluation_rules.db from image into PVC..."
+                cp /app/db/evaluation_rules.db /data/evaluation_rules.db
+              fi
+              chown -R 1001:1001 /data
+              ls -la /data
+      containers:
+        - name: law-bench
+          # sha-eb615c7（源 3a5037f）：外部语料库接入。真实法规语料 36.5 万块在
+          # Qdrant（law-rag/law_chunks_v2），此前只认自有摄取，这些语料无法成为
+          # 任何域的知识。本片加：qdrant / pgvector-external 只读后端、库表
+          # location（只存环境变量名）、按 embedding_model 路由嵌入器（两个
+          # 1024 维空间不可混用）、缺口矩阵按外部库自数。
+          # 出片=私有快照仓 law-ai-official/law-bench-images（快照 38ba5c4（源 de35711））。
+          # 本片=add-fleet-execution-loop：工单三档指派人、运行台账 origin/runner_ref、
+          # 舰队机器写/读面、提案结局回流；启动时 ensure_schema 落六列两索引（幂等，
+          # 失败即 crash-loop 而不是带半套 schema 提供服务）。
+          # 为什么换仓：真源是私有仓，而 FindDataTechnology 的私有 CI 额度已耗尽
+          # （2006/2000），它的 Actions 停摆；law-ai-official 是独立额度池。
+          # 该仓的 image.yml 就是本仓自己那份（通用平台的冒烟闸不认 8010/DSN，替换过）。
+          # 回滚=sha-afb4e71。
+          # 本片=公开载荷清理：line-manifest.json 剥离 5 段 note（2515B→798B），
+          # 证据移 docs/line-auth-evidence.md；tests/test_manifest_hygiene.py 防回归。
+          # 出片=共享池 testaction002/build-pool（快照 e11cfe6＝源 cb9f2c1，真 sha 记在
+          # BUILD-INFO.json）；SMOKE_MODE=skip——entrypoint 默认路径先跑 PG 迁移、
+          # 裸 boot 起不来，真判据=pullcheck 一次性 Pod + 滚版 readyReplicas。
+          # 回滚=sha-38ba5c4。
+          # 本片=提交口三类拒绝（refuse-unlandable-proposals + refuse-out-of-vocabulary-
+          # kinds）：键已在活单位上 / 关系端点不在本域 / kind 不在该域锚定模板词表内，
+          # 三类都在提交时拒绝并给出人话 hint，不再产生永远落不下去的 pending 行。
+          # 出片=共享池 testaction005/build-pool（快照 1d6ca60＝源 4b11076，真 sha 记在
+          # BUILD-INFO.json）；SMOKE_MODE=skip——entrypoint 默认路径先跑 PG 迁移、
+          # 裸 boot 起不来（实测 ConfigError: database_url is not set），
+          # 真判据=探针 Pod 内 import 路由表 + 滚版 readyReplicas + 端点实探。
+          # 本片内容：评测结论台账 + 建表引导修复 + 机器读面三条只读端点。
+          # 回滚=sha-1641e54（崩溃）/ sha-720ae6f（上一个稳定版）。
+          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-1d6ca60
+          imagePullPolicy: IfNotPresent
+          env:
+            # 提交方校验：**默认即 strict**（本片起不再设 BENCH_SUBMITTER_MODE）。
+            # 迁移窗口在这里结束，2026-11-14 20:0xZ：登记已完成、且现在再提交的来源
+            # 全部判 `ok`，所以删掉 lenient 那两行。
+            #
+            # 走过的路（留下是为了下次不再绕）：产库曾处在非法中间态——真舰队
+            # `fleet:fleet_1794335712751_wfa3ww` 已在提交（11 行），而承载它的登记
+            # `ontology-fleet-win` 还是旧 `machine` 档、没有 fleet_ref ⇒ 判
+            # `unregistered`、下一次提交会被 403。而它的凭据明文只在登记那一刻显示过
+            # 一次（`distribution_pull_events` 全表只有创建后 10 秒那一条探针），拿不出来。
+            # 收尾走的是 `register_fleet.py` 两条新路：`--promote-by-name`（升级不动
+            # token_hash，所以不需要凭据）＋ `--rotate-token`（把凭据换成一枚我们握得住
+            # 的，明文只打印一次、已写入 `fd-prod/platform-secrets.BENCH_FLEET_TOKEN`）。
+            # 翻硬前的实测：`resolve_submitter(fleet:fleet_1794335712751_wfa3ww/…)` → ok；
+            # 工单面 `GET /api/v1/distribution/legal/work-orders` → 200 + 该 fleet_ref。
+            #
+            # 为什么当初要设 lenient：本片之前那一版根本没有这道闸（旧镜像源码 703 行
+            # vs 908 行），不设变量＝部署当天把一支在跑的舰队切断。
+            # Admin-assistant runtime (add-admin-copilot-assistant). Non-secret
+            # config: the /copilotkit proxy target inside the cluster. Removing
+            # this var disables the assistant entirely (proxy 503s, island is
+            # not served).
+            - name: COPILOT_RUNTIME_URL
+              value: "http://copilot-runtime.law-bench.svc.cluster.local:3111"
+            # 抽取的 token 预算与超时。过去它们是 extraction.complete() 里的隐式默认
+            # （1500 / 240s），清单上看不见也改不了；实测一次概念抽取调用会超过
+            # 240s 而报 ReadTimeout，故障现场只剩一句 httpx.ReadTimeout。放到清单里
+            # 才能被看见、被调整、被审计。2026-11-11 实测：两块的提示词要花 3,531
+            # 个推理 token，2,000 的预算同样会被截断（finish=length、content 空）。
+            - name: EXTRACT_MAX_TOKENS
+              value: "4000"
+            - name: EXTRACT_TIMEOUT
+              value: "600"
+            # DOCX->PDF via the shared render service (extract-render-service);
+            # the image no longer carries LibreOffice. Rollback = flip both
+            # back to backend libreoffice on a fat (pre-extract) image tag.
+            - name: DOCS_PDF_BACKEND
+              value: "http"
+            - name: RENDER_SERVICE_URL
+              value: "http://render-service.law-bench.svc.cluster.local:8090"
+            # 外部语料库（add-domain-tree-and-shared-libraries）。
+            # 法规 36.5 万块的向量在 Qdrant 里，不是本库摄取的；库表只存**环境
+            # 变量名**，查询时才解析——所以这两个值必须在这里。Service `qdrant`
+            # 是本会话新建的（原生是 hostPort 6333 钉在 cheap-5 的 pod IP 上，
+            # 重建即漂）。embedding-svc 是那条线的嵌入口（Qwen3-0.6B / 1024）。
+            - name: QDRANT_URL
+              value: "http://qdrant.law-rag.svc.cluster.local:6333"
+            - name: LIBRARY_EMBED_LOCAL_URL
+              value: "http://embedding-svc.law-rag.svc.cluster.local:6100"
+          envFrom:
+            - secretRef:
+                name: law-bench-db
+            - secretRef:
+                name: law-bench-minio
+            - secretRef:
+                name: law-bench-judge
+            - secretRef:
+                name: law-bench-auth
+            # 法规语义检索（integrate-law-semantic-search）：LAW_API_KEY 为空时
+            # 功能整体关闭、零请求。集群侧 kubectl 建的 secret，与上面四个同管理模式。
+            - secretRef:
+                name: law-bench-law-api
+            # 文字引擎库只读接入（add-domain-tree-and-shared-libraries §7.9）。
+            # 只含一个键 FDTEXT_DATABASE_URL；该库**没有订阅者**，所以这个连接
+            # 串目前不会被任何请求使用——它的存在只是让「库台账」里能看见这
+            # 批语料。真要检索还需要 LIBRARY_EMBED_GATEWAY_KEY（8B 模型），
+            # 缺了会明确报错而不是静默降质。
+            - secretRef:
+                name: law-bench-fdtext
+            # 裁判要点只读接入（add-legal-concept-layer）：concept 候选必须来自
+            # 裁判说理而不是法条正文。只含一个键 LAW_DB_URL（law_db 只读角色），
+            # 与 fdtext 同样处理——库表只存环境变量名，值只在这里。
+            - secretRef:
+                name: law-bench-lawdb
+          ports:
+            - containerPort: 8010
+          # 实测 2026-11-11（容器内计时）：启动耗时几乎全在 `import src.web.app`
+          # = 15.6s；schema ensure 0.2s、harbor 自愈 0.3s、rubric 汇总打印 0.02s。
+          # 也就是说「89 条尺子让启动变慢」是错的归因——尺子只是被打印出来。
+          # 那次被杀发生在冷启动（页面缓存空 + 节点有负载）时，超过 liveness 的
+          # 15s 延迟 + 15s×3 次窗口。startupProbe 在它成功前不跑 liveness/readiness，
+          # 5s×30=150s 的预算覆盖一次冷启动；上早日志确认第二次滚版 restarts=0。
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8010
+            periodSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8010
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8010
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /app/db
+              name: db
+      volumes:
+        - name: db
+          persistentVolumeClaim:
+            claimName: law-bench-db

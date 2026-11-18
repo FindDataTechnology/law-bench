@@ -1,0 +1,35 @@
+{#- 面包屑 + 域内六区导航（change add-domain-first-workbench）。
+
+    三层导航的 L2/L3：上面是「我的域 / 域 / 区」，下面是六个分册。
+    六区只渲染 `areas`（服务端按该域角色算出的可见区，见
+    `domain_context.visible_areas`）；隐藏只是可用性，服务端每个区的路由
+    仍独立判权限（平台 scope ▶ 域角色）。
+
+    `area` 由页面传入（overview|ontology|bench|inbox|publish|settings），
+    用于 aria-current 与页签语义。 -#}
+{% set area_endpoints = {
+  'overview': 'console_overview',
+  'ontology': 'console_ontology',
+  'knowledge': 'console_knowledge',
+  'library': 'console_library',
+  'eval-standards': 'console_eval_standards',
+  'eval-runs': 'console_eval_runs',
+  'inbox': 'console_inbox',
+  'team': 'console_team',
+  'publish': 'console_publish',
+  'settings': 'console_settings',
+} %}
+<nav class="breadcrumb" aria-label="{{ t.console.list.h1 }}">
+  <ol>
+    <li><a href="{{ url_for('console_domain_list') }}">{{ t.console.breadcrumb_home }}</a></li>
+    <li><span>{{ domain.name }}</span></li>
+    <li aria-current="page">{{ t.console.areas[area] }}</li>
+  </ol>
+</nav>
+
+<nav class="zone-nav" aria-label="{{ domain.name }}">
+  {% for a in areas %}
+  <a href="{{ url_for(area_endpoints[a.id], domain_key=domain.key) }}"
+     {% if a.id == area %}aria-current="page"{% endif %}>{{ t.console.areas[a.id] }}</a>
+  {% endfor %}
+</nav>

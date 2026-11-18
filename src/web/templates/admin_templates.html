@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.templates.title }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<div class="toolbar between">
+  <h1>{{ t.admin.templates.title }}</h1>
+</div>
+<p class="muted">{{ t.admin.templates.intro }}</p>
+
+<div class="panel">
+  <details {% if not templates %}open{% endif %}>
+    <summary>{{ t.admin.templates.create_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_template_create') }}" class="filter-form">
+      <div class="filter-group">
+        <label for="tpl-name">{{ t.admin.templates.name_label }}</label>
+        <input type="text" name="name" id="tpl-name" required>
+      </div>
+      <div class="filter-group wide">
+        <label for="tpl-schema">{{ t.admin.templates.schema_label }}</label>
+        <textarea name="schema" id="tpl-schema" rows="14" required
+                  placeholder="{{ t.admin.templates.schema_ph }}"></textarea>
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">{{ t.admin.templates.create_btn }}</button>
+      </div>
+    </form>
+  </details>
+</div>
+
+{# Honest empty: no fake rows — the create form above stays open and the card
+   names the next step. #}
+{% if templates %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.templates.col_name }}</th>
+        <th>{{ t.admin.templates.col_version }}</th>
+        <th>{{ t.admin.templates.col_created_by }}</th>
+        <th>{{ t.admin.templates.col_created_at }}</th>
+        <th>{{ t.admin.templates.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for tmpl in templates %}
+      <tr>
+        <td><a href="{{ url_for('admin_template_detail', name=tmpl.name) }}"><strong>{{ tmpl.name }}</strong></a></td>
+        <td><span class="badge">v{{ tmpl.version }}</span></td>
+        <td>{{ tmpl.created_by }}</td>
+        <td class="muted">{{ tmpl.created_at }}</td>
+        <td><a class="btn btn-sm" href="{{ url_for('admin_template_detail', name=tmpl.name) }}">{{ t.admin.templates.view }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% with message=t.admin.templates.empty,
+        hint=t.admin.templates.empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% endif %}
+{% endblock %}

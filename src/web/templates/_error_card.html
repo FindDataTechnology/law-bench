@@ -1,0 +1,18 @@
+{#- Reusable error card (polish-bench-workbench 0.2): an in-flow error
+    report WITH its cause — never a bare "500" line. Caller passes
+    PRE-TRANSLATED strings (t.* keys); `detail` carries the reported
+    cause (what failed, why, what to try next).
+
+    {% with message=t.search.error_title, detail=error_detail %}
+      {% include '_error_card.html' %}
+    {% endwith %}
+
+    Visual: the established flash.error tint pair (fail tint field +
+    deep objection-red text + #fecaca border) at card weight, per the
+    Tint Verdict Rule — no icons, no new hues. role="alert". -#}
+<div class="error-card" role="alert">
+  <p class="error-card-text">{{ message | default('', true) }}</p>
+  {%- if detail is defined and detail -%}
+  <p class="error-card-detail">{{ detail }}</p>
+  {%- endif -%}
+</div>

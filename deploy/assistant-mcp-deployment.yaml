@@ -1,0 +1,132 @@
+# law-bench admin-assistant MCP server (fd-coding-law-bench-mcp) — dedicated
+# streamable-HTTP instance for the CopilotKit chat runtime.
+#
+# Change: add-admin-copilot-assistant. Unlike the gateway instance
+# (deploy/mcp-deployment.yaml, which runs the node-hosted package overlay
+# /opt/lawbench-mcp-pkgs because its image predates the MCP build context),
+# this instance runs the MCP package bundled inside the image's venv (the
+# Dockerfile installs fd-coding-law-bench-mcp from source since sha-3b6502b)
+# — no hostPath, no PYTHONPATH override, so it can run on any law-bench node.
+#
+#   1. MCP_TOOL_DENYLIST drops the destructive tools (clause/rubric/criterion/
+#      prompt delete) so they are never advertised to the chat loop;
+#   2. its own shared token (secret law-bench-mcp-assistant) so rotation is
+#      independent from the gateway instance;
+#   3. ClusterIP only — the only client is the copilot-runtime pod in this
+#      namespace. No NodePort, no Ingress; the public path to assistant
+#      functionality is exclusively law-bench's /copilotkit proxy.
+#
+# dnsPolicy None + kube-dns: the nodes' resolv.conf carries a wildcard search
+# domain (see deploy/deployment.yaml); same fix as the gateway MCP instance.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: law-bench-mcp-assistant
+  namespace: law-bench
+  labels:
+    app: law-bench-mcp-assistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: law-bench-mcp-assistant
+  template:
+    metadata:
+      labels:
+        app: law-bench-mcp-assistant
+    spec:
+      # cheap-7 since 2026-09-27: the healthy node carrying the current image
+      # (sha-b4c90f4, includes the bundled MCP package since sha-3b6502b).
+      # cheap-4's kubelet flapped phantom disk-pressure that night; the web
+      # pod moved to cheap-7 too.
+      nodeSelector:
+        kubernetes.io/hostname: cheap-7
+      # TCR personal edition pull creds (switch-image-pipeline-github-actions-tcr).
+      imagePullSecrets:
+        - name: tcr-pull
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - law-bench.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      containers:
+        - name: law-bench-mcp-assistant
+          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-720ae6f
+          # 2026-11-16 跟滚 sha-720ae6f（快照 720ae6f＝源 945b80b：提交口三类拒绝；
+          # 与 law-bench / law-bench-mcp 同一 tag 同进同退；回滚=sha-e11cfe6）。
+          # 2026-11-15 跟滚 sha-e11cfe6（公开载荷清理片，同片无 MCP 行为变化；
+          # 与 law-bench-mcp 同一镜像、同一清单真源）。
+          # 2026-11-12 由 sha-2180036 上滚：同片修 contract_type_catalog 缓存假零
+          # （单槽缓存被 include_clause_counts=false 污染 → copilot 读到"条款 0 条"）。
+          # 能力面不变：本面 50 个工具＝54 减 denylist 里那 4 个 delete，
+          # 滚后实测仍 50（新增的 4 个正被 MCP_TOOL_DENYLIST 挡住）。回滚=sha-57b1465。
+          imagePullPolicy: IfNotPresent
+          command: ["/app/.venv/bin/python", "-m", "fd_coding_law_bench_mcp"]
+          env:
+            - name: MCP_HTTP_TRANSPORT
+              value: "http"
+            - name: MCP_HTTP_HOST
+              value: "0.0.0.0"
+            - name: MCP_HTTP_PORT
+              value: "8080"
+            - name: MCP_HTTP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: law-bench-mcp-assistant
+                  key: MCP_HTTP_TOKEN
+            # The safety denylist for the assistant surface: destructive tools
+            # are structurally absent from what this instance advertises. A
+            # denylist naming a nonexistent tool refuses to start (stale-guard).
+            - name: MCP_TOOL_DENYLIST
+              value: "clause_delete,rubric_delete,criterion_delete,prompt_delete"
+            # DOCX->PDF via the shared render service (extract-render-service);
+            # the image no longer carries LibreOffice.
+            - name: DOCS_PDF_BACKEND
+              value: "http"
+            - name: RENDER_SERVICE_URL
+              value: "http://render-service.law-bench.svc.cluster.local:8090"
+          envFrom:
+            - secretRef:
+                name: law-bench-db
+            - secretRef:
+                name: law-bench-minio
+            - secretRef:
+                name: law-bench-judge
+          ports:
+            - containerPort: 8080
+          # tcpSocket probes: every HTTP path requires the token, so an httpGet
+          # probe would always see 401.
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: law-bench-mcp-assistant
+  namespace: law-bench
+  labels:
+    app: law-bench-mcp-assistant
+spec:
+  # ClusterIP only: reachable solely from inside the cluster. The copilot
+  # runtime is the intended client via
+  # http://law-bench-mcp-assistant.law-bench.svc.cluster.local/mcp
+  type: ClusterIP
+  selector:
+    app: law-bench-mcp-assistant
+  ports:
+    - port: 80
+      targetPort: 8080

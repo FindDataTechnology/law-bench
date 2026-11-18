@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.overview.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'overview' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 域总览：四个真实计数 + 我的任务 + 词表 + 最近变更。
+
+    计数条不是 KPI 卡：四格只由 1px 规则线分隔，label 0.8rem muted 在上、
+    1rem 数字在下，无图标无强调色（brief FIRST VIEWPORT）。数字全来自真实
+    查询；无发布时显示「尚无发布」而不是 0。
+
+    我的任务保留既有 claim/complete/cancel 动作（expert-authoring 任务指派与
+    工作台要求），表单打到内核任务接口 `/d/{key}/tasks/{id}/status`。 -#}
+<div class="toolbar between">
+  <h1>{{ domain.name }} <code>{{ domain.key }}</code></h1>
+  <span class="badge">{% if cap.role == 'admin' %}{{ t.console.role.admin }}{% elif cap.role %}{{ t.console.role[cap.role] }}{% endif %}</span>
+</div>
+<p class="hint">{{ domain.template_name }} v{{ domain.template_version }}</p>
+
+<div class="stat-strip">
+  <div class="stat">
+    <div class="stat-label">{{ t.console.overview.stat_units }}</div>
+    <div class="stat-value">{{ curation.total }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">{{ t.console.overview.stat_published }}</div>
+    <div class="stat-value">{% if publication.has_publication %}v{{ publication.latest.version }}{% else %}<span class="muted">{{ t.console.overview.no_publication }}</span>{% endif %}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">{{ t.console.overview.stat_pending }}</div>
+    <div class="stat-value">{% if cap.can_read %}{{ pending_count }}{% else %}{{ t.console.overview.no_value }}{% endif %}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-label">{{ t.console.overview.stat_tasks }}</div>
+    <div class="stat-value">{{ my_tasks | length }}</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.overview.my_tasks_h2 }}</h2>
+    {% if cap.can_assign %}
+    <a class="btn btn-sm" href="{{ url_for('workbench_task_new', domain_key=domain.key) }}">{{ t.console.overview.assign_new }}</a>
+    {% endif %}
+  </div>
+  {% if my_tasks %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.workbench.overview.col_title }}</th>
+        <th>{{ t.workbench.overview.col_status }}</th>
+        <th>{{ t.workbench.overview.col_target }}</th>
+        <th>{{ t.workbench.overview.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in my_tasks %}
+      <tr>
+        <td>{{ task.title }}{% if task.detail %} <span class="muted">{{ task.detail }}</span>{% endif %}</td>
+        <td><span class="badge">{{ t.workbench.overview['status_' ~ task.status] }}</span></td>
+        <td class="muted">{% if task.target_kind %}<code>{{ task.target_kind }}</code>{% if task.target_key %} / <code>{{ task.target_key }}</code>{% endif %}{% else %}—{% endif %}</td>
+        <td class="dl-cell">
+          {% if cap.can_write and task.assignee == user.sub and task.status == 'pending' %}
+          <form method="POST" action="{{ url_for('workbench_task_status', domain_key=domain.key, task_id=task.id) }}" class="inline-form">
+            <input type="hidden" name="to_status" value="in_progress">
+            <button type="submit" class="btn btn-sm">{{ t.workbench.overview.claim_btn }}</button>
+          </form>
+          {% endif %}
+          {% if cap.can_write and task.assignee == user.sub and task.status == 'in_progress' %}
+          <form method="POST" action="{{ url_for('workbench_task_status', domain_key=domain.key, task_id=task.id) }}" class="inline-form">
+            <input type="hidden" name="to_status" value="done">
+            <button type="submit" class="btn btn-sm">{{ t.workbench.overview.complete_btn }}</button>
+          </form>
+          {% endif %}
+          {% if cap.can_assign and task.status in ('pending', 'in_progress') %}
+          <form method="POST" action="{{ url_for('workbench_task_status', domain_key=domain.key, task_id=task.id) }}" class="inline-form">
+            <input type="hidden" name="to_status" value="cancelled">
+            <button type="submit" class="btn btn-sm">{{ t.workbench.overview.cancel_btn }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% with message=t.console.overview.no_tasks, hint=t.console.overview.no_tasks_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.overview.who_runs_h2 }}</h2>
+    <a class="btn btn-sm" href="{{ url_for('console_team', domain_key=domain.key) }}">{{ t.console.overview.goto_runs }}</a>
+  </div>
+  <p class="hint">{{ t.console.overview.who_runs_hint }}</p>
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.team.col_origin }}</th>
+      <th>{{ t.console.team.col_role }}</th>
+      <th>{{ t.console.team.col_runner }}</th>
+      <th>{{ t.console.overview.who_runs_at }}</th>
+      <th>{{ t.console.overview.who_runs_outcome }}</th>
+    </tr></thead>
+    <tbody>
+      {% for origin, label in [('kernel', t.console.overview.who_runs_kernel),
+                                ('fleet', t.console.overview.who_runs_fleet)] %}
+      {% set run = who_runs.get(origin) %}
+      <tr>
+        <td class="nowrap">
+          {% if origin == 'fleet' %}<span class="badge">{{ label }}</span>
+          {% else %}<span class="badge badge-quiet">{{ label }}</span>{% endif %}
+        </td>
+        {% if run %}
+        <td><code>{{ run.role }}</code></td>
+        <td class="muted">{% if run.runner_ref %}<code>{{ run.runner_ref }}</code>{% else %}—{% endif %}</td>
+        <td class="muted nowrap">{{ (run.started_at | string)[:16] | replace('T', ' ') }}</td>
+        <td>{% if run.outcome == 'ok' %}<code>ok</code>
+            {% elif run.outcome == 'thin' %}<span class="badge badge-warn">thin</span>
+            {% else %}<span class="badge badge-bad">{{ run.outcome }}</span>{% endif %}</td>
+        {% else %}
+        {#- 空态如实说这一**类**没跑过，不说「没有活动」：另一类可能刚跑完。 -#}
+        <td colspan="4" class="muted">{{ t.console.overview.who_runs_none }}
+          <span class="hint">{{ t.console.overview.who_runs_none_hint }}</span></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.overview.vocab_h2 }}</h2>
+  {% if entity_types or relationship_kinds %}
+  <p>
+    {% for kind in entity_types %}<code>{{ kind }}</code> {% endfor %}
+    {% for kind in relationship_kinds %}<code>{{ kind }}</code> {% endfor %}
+  </p>
+  <p class="hint"><a href="{{ url_for('console_ontology', domain_key=domain.key) }}">{{ t.console.overview.goto_ontology }}</a></p>
+  {% else %}
+  {% with message=t.console.overview.no_vocab %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.overview.recent_h2 }}</h2>
+  {% if recent_events %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.console.overview.col_when }}</th>
+        <th>{{ t.console.overview.col_op }}</th>
+        <th>{{ t.console.overview.col_kind }}</th>
+        <th>{{ t.console.overview.col_unit }}</th>
+        <th>{{ t.console.overview.col_operator }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in recent_events %}
+      <tr>
+        {#- authoring_events returns ISO TEXT as `created_at`; slice rather than
+            strftime (the kernel's decoder normalizes timestamps to strings). -#}
+        <td class="muted nowrap">{{ e.created_at[:16] | replace('T', ' ') }}</td>
+        <td>{{ e.op }}</td>
+        <td><code>{{ e.unit_kind }}</code></td>
+        <td class="muted"><code>{{ e.unit_key }}</code></td>
+        <td class="muted">{{ e.operator }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  {% with message=t.console.overview.no_recent %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+{% endblock %}

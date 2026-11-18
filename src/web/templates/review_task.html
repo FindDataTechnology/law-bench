@@ -80,8 +80,8 @@
 {% else %}
 <form method="post" action="{{ url_for('page_review_decide', task_id=task.id) }}">
   <div class="panel">
-    <h3 style="margin-top:0">{{ t.review.your_verdict_h2 }}</h3>
-    <div class="inline">
+    <h3 style="margin-top:0" id="verdict-group-h3">{{ t.review.your_verdict_h2 }}</h3>
+    <div class="inline" role="radiogroup" aria-labelledby="verdict-group-h3">
       {% for value in task.allowed_verdicts %}
         <label class="inline" style="margin-right:1.2em">
           <input type="radio" name="verdict" value="{{ value }}" required>
@@ -89,7 +89,10 @@
         </label>
       {% endfor %}
     </div>
-    <p><textarea name="note" rows="3" placeholder="{{ t.review.note_ph }}"></textarea></p>
+    <p>
+      <label for="review-note">{{ t.review.note_label }}</label>
+      <textarea id="review-note" name="note" rows="3" placeholder="{{ t.review.note_ph }}"></textarea>
+    </p>
     <button type="submit" class="btn btn-primary">{{ t.review.submit }}</button>
     <span class="muted small">{{ t.review.irreversible }}</span>
   </div>

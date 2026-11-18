@@ -10,10 +10,16 @@
   {{ t.catalog.snapshot_note }}
 </p>
 
+{% if result.total == 0 %}
+{# 全量空 = 没有任何引法记录可审：诚实空态 + 下一步（先建快照/引法数据），不摆零计数表 #}
+{% with message=t.catalog.audit_empty, hint=t.catalog.audit_empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% else %}
 <div class="panel">
   <h3 style="margin-top:0">{{ tr('catalog.overview_h2', n=result.total) }}</h3>
   <ul>
-    <li><strong style="color:var(--danger)">{{ tr('catalog.count_repealed', n=result.summary.repealed) }}</strong></li>
+    <li><strong style="color:var(--danger-hover)">{{ tr('catalog.count_repealed', n=result.summary.repealed) }}</strong></li>
     <li><strong>{{ tr('catalog.count_amended', n=result.summary.amended) }}</strong></li>
     <li><strong>{{ tr('catalog.count_fallback', n=result.summary.fallback) }}</strong></li>
     <li>{{ tr('catalog.count_ok', n=result.summary.ok) }}</li>
@@ -50,4 +56,5 @@
   {% endif %}
 </div>
 {% endfor %}
+{% endif %}
 {% endblock %}

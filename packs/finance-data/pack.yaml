@@ -1,0 +1,13 @@
+name: finance-data
+version: 0.1.0
+description: 金融数据域包（数据重、文本轻）：fd-sentiment gold-v9 公告情绪金标语料（kind=fact，运行时只读适配兄弟仓、不复制数据文件）与确定性数据 QA 校验/首批金集。
+kinds:
+  - fact
+components:
+  - type: module
+    path: packs/finance-data/adapters.py
+  - type: module
+    path: packs/finance-data/checks.py
+eval_suites:
+  - sentiment-gold-v9
+  - data-qa-goldset

@@ -14,6 +14,7 @@
 
 <h2>{{ t.review.batches_h2 }}</h2>
 {% if batches %}
+<div class="panel">
 <table>
   <thead>
     <tr><th>{{ t.review.col_batch }}</th><th>{{ t.review.col_type }}</th><th>{{ t.review.col_total }}</th><th>{{ t.review.col_decided }}</th><th>{{ t.review.col_pending }}</th><th>{{ t.review.col_annotators }}</th><th></th></tr>
@@ -32,13 +33,15 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
-<p class="muted">{{ t.review.empty_batches|safe }}</p>
+<p class="muted" role="status">{{ t.review.empty_batches|safe }}</p>
 {% endif %}
 
 {% if selected %}
 <h2>{{ tr('review.my_queue_h2', batch=selected)|safe }}</h2>
 {% if tasks %}
+<div class="panel">
 <table>
   <thead>
     <tr><th>#</th><th>{{ t.review.col_ct }}</th><th>{{ t.review.col_crit }}</th><th>{{ t.review.col_slot }}</th><th>{{ t.review.col_scored }}</th><th></th></tr>
@@ -56,8 +59,9 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
-<p class="muted">{{ t.review.empty_mine }}</p>
+<p class="muted" role="status">{{ t.review.empty_mine }}</p>
 {% endif %}
 {% endif %}
 {% endblock %}

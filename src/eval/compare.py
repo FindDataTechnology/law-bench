@@ -124,6 +124,7 @@ def run_compare(
     from .rubric import load_criteria
     from .scoring import evaluate_contract
     from .store import store_compare, store_result
+    from src.bench.verdicts import ledger_kwargs
 
     if len(prompts) < 2:
         raise ValidationError("A compare needs at least 2 prompts.")
@@ -188,6 +189,7 @@ def run_compare(
                 prompt_type=ptype,
                 variant_label=variant_label,
                 draft_text=draft_text,
+                **ledger_kwargs(result, gate="all-pass", db_path=db_path),
             )
 
     grouped = get_compare(compare_id, db_path=db_path)

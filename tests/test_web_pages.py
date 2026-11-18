@@ -20,10 +20,13 @@ def _flash(response) -> tuple[str, bool]:
 # --- reads ------------------------------------------------------------------ #
 
 
-def test_index_redirects_to_rubrics(app_client: TestClient):
+def test_index_redirects_to_the_domain_door(app_client: TestClient):
+    """C5: ``/`` lands on 「我的域」 (/d), not on the legal rubric list — the domain
+    is the platform's first layer of organization, so the entry point cannot be
+    one vertical's asset list."""
     r = app_client.get("/", follow_redirects=False)
-    assert r.status_code in (302, 307)
-    assert r.headers["location"] == "/rubrics"
+    assert r.status_code == 302
+    assert r.headers["location"] == "/d"
 
 
 def test_list_rubrics_page(app_client: TestClient):

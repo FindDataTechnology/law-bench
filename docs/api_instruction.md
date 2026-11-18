@@ -125,7 +125,7 @@ curl -X DELETE -b 'lawbench_session=<你的会话cookie>' \
 
 ### 3.1 合同类型（contract_type）
 
-一共 **43 种**，如 `sale`（买卖合同）、`lease`（租赁）、`employment`（劳动）、`loan`（借款）等。
+一共 **66 种**（母版模板；其中 41 类带种子条款），如 `sale`（买卖合同）、`lease`（租赁）、`employment`（劳动）、`loan`（借款）等。
 调用 `GET /api/contracts` 拿全量。所有接口里的 `{contract_type}` 路径参数都用 key（英文），
 不是中文名。
 

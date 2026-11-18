@@ -6,6 +6,7 @@
 </div>
 <p class="muted">{{ t.law_info.references_hint }}</p>
 
+{% if types %}
 <div class="panel">
   <table>
     <thead>
@@ -28,10 +29,15 @@
         <td>{% if 'deepseek' in ct.sources %}<span class="badge local">✓</span>{% else %}<span class="muted">-</span>{% endif %}</td>
       </tr>
       {% endfor %}
-      {% if not types %}
-      <tr><td colspan="4" class="muted">{{ t.law_info.empty }}</td></tr>
-      {% endif %}
     </tbody>
   </table>
 </div>
+{% else %}
+<div class="panel">
+  {# 真空态：law_info 尚未导入，如实呈现 + 下一步（先跑种子脚本） #}
+  {% with message=t.law_info.empty, hint=t.law_info.empty_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+</div>
+{% endif %}
 {% endblock %}

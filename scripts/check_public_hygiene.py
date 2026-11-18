@@ -51,8 +51,16 @@ CONTENT_RULES = [
         ),
     ),
     (
+        # 前缀用**负向后视**而不是字符类：2026-11-14 实测漏了一个真实泄漏——
+        # `docs/fleet-loop-program.md` 里写着 `` `law-bench-internal/src/...` ``，
+        # 而原来的 `(^|[\s'\"(])` 不含反引号，于是 markdown 最常用来写路径的那种
+        # 形态（行内代码）整个绕过判据，闸报 OK。文档恰恰是最容易写进内部路径的
+        # 地方，所以这里改成「前面不是单词字符或连字符」即可，反引号、括号、引号、
+        # 行首都覆盖，且不会把 `my-law-bench-internal/` 误判成命中。
         "internal repo import/path reference",
-        re.compile(r"(^|[\s'\"(])(from\s+law_bench_internal|import\s+law_bench_internal|law-bench-internal/)"),
+        re.compile(
+            r"(?<![\w-])(from\s+law_bench_internal|import\s+law_bench_internal|law-bench-internal/)"
+        ),
     ),
 ]
 
@@ -136,6 +144,44 @@ def tracked_files() -> list[str]:
     return [line for line in out.stdout.splitlines() if line.strip()]
 
 
+#: 哪些规则的「最后一个捕获组」是**候选秘密**，因此要过 `_looks_real_secret` 的
+#: 占位值过滤。只登记凭据类规则。
+#:
+#: 2026-11-14 实历：这个过滤原来对**所有**带捕获组的规则生效，于是
+#: `internal repo import/path reference` 这条**从来没生效过**——它捕获到的
+#: `law-bench-internal/`（或 `from law_bench_internal`）永远不像秘密
+#: （`looks_real=False`），每一个命中都在报告之前被扔掉。闸因此一直是绿的，
+#: 而它头注宣称的能力（抓内部路径引用）其实不存在。判据要按规则声明它是否
+#: 携带秘密，而不是用「有没有捕获组」去猜。
+SECRET_GROUP_RULES = frozenset({"url-embedded credential", "assigned secret literal"})
+
+
+def scan_text(path: str, text: str) -> list[str]:
+    """Apply the content rules to one file's bytes (``path`` drives allowlist + messages).
+
+    Split out from :func:`scan` so the scanner itself is testable: a test that only
+    asserts ``pattern.search(line)`` is truthy cannot tell whether a violation is
+    ever *reported*, which is how the internal-path rule stayed dead.
+    """
+    out: list[str] = []
+    for rule_name, pattern in CONTENT_RULES:
+        if any(path.endswith(skip) and rule_name == rule for skip, rule in ALLOWLIST):
+            continue
+        for m in pattern.finditer(text):
+            # Only credential-shaped rules carry a placeholder filter. Applying it
+            # to every rule with a group silently disables the non-secret ones.
+            if (
+                rule_name in SECRET_GROUP_RULES
+                and pattern.groups >= 1
+                and not _looks_real_secret(m.group(pattern.groups))
+            ):
+                continue
+            line_no = text.count("\n", 0, m.start()) + 1
+            snippet = text[max(0, m.start() - 20) : m.end() + 20].replace("\n", " ")
+            out.append(f"{path}:{line_no}: {rule_name}: ...{snippet}...")
+    return out
+
+
 def scan() -> list[str]:
     violations: list[str] = []
     for path in tracked_files():
@@ -147,23 +193,7 @@ def scan() -> list[str]:
             text = fpath.read_text(encoding="utf-8")
         except (UnicodeDecodeError, IsADirectoryError):
             continue  # binary or special: filename rules above still applied
-        for rule_name, pattern in CONTENT_RULES:
-            if any(path.endswith(skip) and rule_name == rule for skip, rule in ALLOWLIST):
-                continue
-            for m in pattern.finditer(text):
-                # Rules with capture groups expose the candidate secret in the
-                # LAST group (the assigned-secret rule's first group is the key
-                # name); placeholder-shaped values are skipped (fail-closed:
-                # anything not matching the placeholder markers still trips).
-                if pattern.groups >= 1 and not _looks_real_secret(
-                    m.group(pattern.groups)
-                ):
-                    continue
-                line_no = text.count("\n", 0, m.start()) + 1
-                snippet = text[max(0, m.start() - 20) : m.end() + 20].replace("\n", " ")
-                violations.append(
-                    f"{path}:{line_no}: {rule_name}: ...{snippet}..."
-                )
+        violations.extend(scan_text(path, text))
     return violations
 
 

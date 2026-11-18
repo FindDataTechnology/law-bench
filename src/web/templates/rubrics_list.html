@@ -6,6 +6,7 @@
   {% if has_scope('content:write') %}<a class="btn btn-primary" href="{{ url_for('page_new_rubric') }}">{{ t.nav.new_local_rubric }}</a>{% endif %}
 </div>
 
+{%- if rubrics -%}
 <div class="panel">
   <table>
     <thead>
@@ -17,7 +18,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for r in rubrics %}
+      {%- for r in rubrics -%}
       <tr>
         <td><a href="{{ url_for('page_rubric_detail', name=r.name) }}"><strong>{{ title_for_rubric(r.name) }}</strong></a>
           {% if r.description %}<div class="muted">{{ r.description[:80] }}{% if r.description|length > 80 %}…{% endif %}</div>{% endif %}
@@ -29,13 +30,21 @@
         </td>
         <td>{{ r.criterion_count }}</td>
       </tr>
-      {% endfor %}
-      {% if not rubrics %}
-      <tr><td colspan="4" class="muted">{{ t.empty.rubrics }}</td></tr>
-      {% endif %}
+      {%- endfor -%}
     </tbody>
   </table>
 </div>
+{%- else -%}
+{#- Honest empty ledger page: real emptiness + the next step. The action link
+    renders only for writers (content:write); readers get the plain honest
+    empty. Copy stays on existing bilingual keys (t.empty.rubrics carries the
+    next-step guidance). -#}
+{% with message=t.empty.rubrics,
+        action_href=url_for('page_new_rubric') if has_scope('content:write') else none,
+        action_label=t.nav.new_local_rubric if has_scope('content:write') else none %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{%- endif -%}
 
 <p class="hint">{{ t.hint.rubrics_list|safe }}</p>
 {% endblock %}

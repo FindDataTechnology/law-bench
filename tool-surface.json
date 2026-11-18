@@ -6,7 +6,7 @@
   "hosting": [
     "shared-instance"
   ],
-  "description": "LawBench 合同智能 MCP（52 工具）：条款语料与装配、合同生成、法条引用、验证审查（commercial 面）；评测/rubric/对比/自愈流水线/语料治理（internal 面）。分级依据 design D8（adapt-legal-skills-to-facet-presets）。",
+  "description": "LawBench 合同智能 MCP：条款语料与装配、合同生成、法条引用、验证审查（commercial 面）；评测/rubric/对比/自愈流水线/语料治理（internal 面）。工具数口径（2026-11-10 live 实采 `tools/list` 订正）：**仓内注册测试 EXPECTED_TOOLS=54**，**现网部署镜像 sha-e411d22 实枚举 52**——差 `task_failed_items` / `task_status`（metrics 组，仓内有、未部署）；故现网 commercial 19 / internal 33。此前描述写作 52（旧口径）与随后写成 54（只看仓内）均不完整，以本条为准。分级依据 design D8（adapt-legal-skills-to-facet-presets）。",
   "skills_eligible_for_packs": [
     "contract-review-cn",
     "civil-nine-step-workflow",
@@ -23,35 +23,48 @@
     "labor-compensation-calculator"
   ],
   "output_structure": {
-    "declared": [],
+    "envelope": "structuredContent",
+    "envelope_note": "law-bench 的 tools/call 返回主载荷走 structuredContent；content 里是同一份 JSON 的 text 镜像（2026-11-10 十件复采实测，此前「content 为空数组」的记录只对部分工具成立）。客户端解析必须读 structuredContent；按 content 解析会把 text 镜像当正文，且镜像无 schema 保证。",
+    "declared": [
+      "clause_get",
+      "clause_list",
+      "clause_review",
+      "contract_content",
+      "contract_download",
+      "contract_generate",
+      "contract_generate_batch",
+      "contract_type_catalog",
+      "contract_generate_stored",
+      "law_info",
+      "law_references",
+      "law_types",
+      "search_clauses",
+      "tag_combinations_list",
+      "tag_validate",
+      "tag_vocab_list",
+      "task_failed_items",
+      "task_status",
+      "type_metadata",
+      "validation_check",
+      "validation_list"
+    ],
+    "declared_count": 21,
     "undeclared": [
       "agent_run_get",
       "agent_run_list",
       "agent_run_store",
       "auto_reject_pipeline_run",
       "clause_delete",
-      "clause_get",
-      "clause_list",
-      "clause_review",
       "clause_update",
       "compare_get",
       "compare_list",
       "compare_matrix",
       "compare_run",
-      "contract_content",
-      "contract_download",
       "contract_evaluate",
-      "contract_generate",
-      "contract_generate_batch",
-      "contract_generate_stored",
-      "contract_type_catalog",
       "criterion_add",
       "criterion_delete",
       "criterion_reorder",
       "criterion_update",
-      "law_info",
-      "law_references",
-      "law_types",
       "pipeline_get",
       "pipeline_list",
       "prompt_create",
@@ -67,20 +80,539 @@
       "run_draft",
       "run_get",
       "run_list",
-      "search_clauses",
       "self_heal_pipeline_run",
-      "tag_combinations_list",
       "tag_iteration_apply",
-      "tag_iteration_suggest",
-      "tag_validate",
-      "tag_vocab_list",
-      "task_failed_items",
-      "task_status",
-      "type_metadata",
-      "validation_check",
-      "validation_list"
+      "tag_iteration_suggest"
     ],
-    "note": "未声明输出结构（已知缺口）。原因：本服务的返回形状随输入变化较大（过滤参数、可选字段、上游缺省），逐工具声明需先固化契约，排在 mcp-protocol-hardening 组 2 之后的迭代。清单显式登记此状态，使客户端不会把「未声明」误读为「无结构」。"
+    "note": "按 spec lex-mcp-surface「声明与实返回一致」：只登记实采可观察的形状；未采到的一律并入 undeclared（检查器只认 declared/undeclared 两栏），链路相关未采到的原因留在 blocked_detail 作旁注、不参与校验。MUST NOT 凭读代码或单侧预期填字段。采集方式：kubectl exec 进 law-bench-mcp pod，直连 127.0.0.1:8080/mcp 走 initialize → tools/call（绕开网关与计费闸）；每件给足入参，空集不算证据。一致性由 scripts/collect_live_surface.py（pod 内采集）+ scripts/check_declared_vs_live.py（逐键比对）守。 5.4 的两处新增字段（validation_check.provenance / law_references.stable_id）已落地并有单测，但现网元素数组恒空、形状不可观测，故不写入 declared_detail——遵守本清单自身纪律（不得凭代码或单侧预期填字段），在 blocked_detail 记录待采原因。",
+    "declared_detail": {
+      "contract_type_catalog": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": [
+            {
+              "key": "string",
+              "zh_name": "string",
+              "slot_count": "int",
+              "total_base_clauses": "int",
+              "total_tagged_clauses": "int",
+              "total_custom_clauses": "int",
+              "has_scenarios": "bool"
+            }
+          ]
+        },
+        "observed": "live tools/call 2026-11-12（pod law-bench-mcp sha-5c485d0）：66 类型、41 个非零、合计 186＝clause_list 186 条",
+        "field_notes": {
+          "total_base_clauses": "仅当 include_clause_counts=true 时为真实条数；false 时恒 0，且两种形状各自缓存（2026-11-12 修，此前 false 会污染 true 成假零）"
+        }
+      },
+      "tag_vocab_list": {
+        "envelope": "structuredContent",
+        "returns": {},
+        "field_notes": {
+          "returns": "「维度名 → 允许取值数组」的映射，**键集随 contract_type 变化**，故声明为空对象（比对器按动态键映射处理，不逐键比）。实测：无参 5 键（source/stance/strength/risk/mandatory）；contract_type=bailment 9 键（+delivery_evidence_type/item_risk_level/paid_or_gratuitous/scenario）。2026-11-11 更正：原声明只写 source/stance 两键，实返回多出 7 键被判红——那是声明漏项，不是服务漂移"
+        },
+        "values": {
+          "source": [
+            "base",
+            "tagged",
+            "custom"
+          ],
+          "stance": [
+            "pro_a",
+            "pro_b",
+            "balanced"
+          ]
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp 镜像 sha-2f85e53；无参与 contract_type=bailment 两样本）"
+      },
+      "validation_check": {
+        "envelope": "structuredContent",
+        "returns": {
+          "errors": [],
+          "warnings": [],
+          "passed": "bool",
+          "checked_constraints": "int",
+          "degraded": "bool",
+          "degraded_reason": "string"
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp 镜像 sha-2f85e53）",
+        "field_notes": {
+          "errors": "空集（当前语料/库内无数据）",
+          "warnings": "空集（当前语料/库内无数据）",
+          "checked_constraints": "本次实际评估的约束条数；实测 sale = 0（validation_list('sale') 同为 []）",
+          "degraded": "== (checked_constraints == 0)。**passed 只在 checked_constraints > 0 时有意义**：空集下 passed=true 表示『没有可违反的约束』而非『查过且合规』，消费方 MUST NOT 据此声称合规",
+          "degraded_reason": "实测原文：contract_type='sale' 未配置任何验证约束；passed=true 只表示没有可违反的约束，不代表已合规。仅 degraded=true 时出现，故别把它当必填字段读"
+        }
+      },
+      "validation_list": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": []
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp 新镜像 sha-aef1c58）",
+        "field_notes": {
+          "result": "unobserved: 库内 type_validations=0 行"
+        }
+      },
+      "law_types": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": [
+            {
+              "key": "string",
+              "zh_name": "string",
+              "sources": [
+                "string"
+              ]
+            }
+          ]
+        },
+        "observed": "live tools/call 2026-11-11（pod 镜像 sha-2f85e53，law_info 种子入 86 行后；此前为 [] 属库内 0 行）",
+        "field_notes": {
+          "result": "unobserved: 空集"
+        }
+      },
+      "law_references": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": [
+            {
+              "name": "string",
+              "stable_id": "string",
+              "category": "string",
+              "category_zh": "string",
+              "contract_types": [
+                "string"
+              ],
+              "sources": [
+                "string"
+              ],
+              "occurrences": "int"
+            }
+          ]
+        },
+        "observed": "live tools/call 2026-11-11（pod 镜像 sha-2f85e53；105KB 真实条目，含 stable_id 溯源）",
+        "field_notes": {
+          "result": "unobserved: 无参时为空集"
+        }
+      },
+      "clause_list": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": [
+            {
+              "id": "int",
+              "contract_type": "string",
+              "category": "string",
+              "level": "null",
+              "section": "string",
+              "body": "string",
+              "body_hash": "string",
+              "manual": "bool",
+              "source_doc_title": "string",
+              "source_path": "null",
+              "slot_instructions": [
+                {
+                  "name": "string",
+                  "label": "string",
+                  "description": "string",
+                  "example": "string",
+                  "required": "bool"
+                }
+              ],
+              "law_refs": [
+                {
+                  "name": "string",
+                  "category": "string",
+                  "category_zh": "string"
+                }
+              ],
+              "tags": {
+                "source": "string",
+                "stance": "string",
+                "strength": "string"
+              },
+              "tag_review": {}
+            }
+          ]
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp，镜像 sha-700f2c5；clauses 表已装 41 类 186 条种子条款）",
+        "field_notes": {
+          "result": "2026-11-11 之前 clauses 表 0 行，只声明了空数组（元素形状未观测）；现按实采锁元素模板",
+          "tag_review": "动态映射，同上：未评审 {}，评审后出现维度键"
+        }
+      },
+      "search_clauses": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": [
+            {
+              "text": "string",
+              "source_path": "string",
+              "score": "float|null"
+            }
+          ]
+        },
+        "field_notes": {
+          "result": "命中元素形状（2026-11-11 起）：{text, source_path, score}。另有两种**错误信封**变体（不是命中）：{error:'no_corpus', retryable:false, message} 与 {error:'upstream_unavailable', retryable:true, message}。比对器（scripts/check_declared_vs_live.py）不支持元素级联合，故错误样本会读成「缺 text/source_path」——这是已知的声明侧限制，见到此类红先看返回里是否 error 信封，别急着改声明",
+          "min_score（2026-11-11 新增，可选）": "相似度下限。**不传 = 完全不过滤**（与引入前逐字节相同）；传入 = 只留 score ≥ 该值的命中，全部低于则返回**成功空集 []**（这是「有效无匹配」态唯一可由调用方触发的路径）。刻意不设默认阈值：分数由各库自己的后端自报，只在**同一后端内可比**。0.0 是真下限（滤掉负分），不是「不过滤」；后端未回分数的条目按不达标丢弃。错误信封不受该参数影响",
+          "score": "后端自报相似度：qdrant 库为余弦（约 -1..1），pgvector/owned array-cosine 同量纲但不可与 qdrant 数直比。现场样本：查询「违约金」top1 = 0.604（绍兴市大气污染防治条例等三件地方性法规的决定#4）",
+          "历史降级记录（2026-11-10 前）": "此前本工具走 ES 自摄取路径（elastic_search_host 未配、集群 ES 零索引）→ 每次都返回 upstream_unavailable。2026-11-11 改走 library_index/Qdrant（law_chunks_v2，36.5 万块/1024 维）后已能取真语料；上面「降级根因/两条通道别混」等旧注描述的部署状态已过期，仅作历史",
+          "运行期遥测（2026-11-12 起）": "每次调用向 stderr 写一行 JSON：{ts,event:'search_clauses',outcome,n,elapsed_ms,domain,top_k,min_score}，outcome ∈ hit|empty|no_corpus|upstream_unavailable（与四态一一对应）。**不含 query 文本与命中正文**。采集：kubectl -n law-bench logs deploy/law-bench-mcp | grep '\"event\": \"search_clauses\"'。注意：本进程 root logger 无 handler、默认 WARNING，故遥测不用 logging，直接写当前 sys.stderr——用 logging 会被静默丢弃。"
+        },
+        "observed": "live tools/call 2026-11-11（镜像 sha-f817384，经网关 /law-bench/mcp，M2M 单凭据）：query=违约金&top_k=3 → 3 条命中，首条 source_path=绍兴市人民代表大会常务委员会关于修改《绍兴市大气污染防治条例》等三件地方性法规的决定#4、score=0.604；校验下限（min_score=0.9）→ []；domain=nope → error=no_corpus/retryable=false"
+      },
+      "type_metadata": {
+        "envelope": "structuredContent",
+        "returns": {
+          "key": "string",
+          "zh_name": "string",
+          "slot_count": "int",
+          "universal_dims": {},
+          "type_specific_dims": {},
+          "scenarios": [],
+          "assembly_ready": "bool"
+        },
+        "values": {
+          "universal_dims.stance": [
+            "pro_a",
+            "pro_b",
+            "balanced"
+          ]
+        },
+        "field_notes": {
+          "universal_dims": "「维度名 → 允许取值数组」，**键集随 contract_type 变化**，故声明为空对象（动态键映射）。2026-11-11 更正：原 note 写「实测三类型均只含 stance」已被推翻——contract_type=bailment 实测 4 键（mandatory/risk/stance/strength），原结论来自单类型样本",
+          "type_specific_dims": "同形状对象，键集同样随类型变。contract_type=bailment 实测 4 键（delivery_evidence_type/item_risk_level/paid_or_gratuitous/scenario）；sale 实测空对象",
+          "scenarios": "实测（装载 186 条后）返回 2 条、元素形状 {name, clause_count, example_clause_ids, has_tagged_clauses}。原注「当前语料下为空数组（clauses=0）」已过时。clause_count 仍为 0 是因为种子条款只带 stance/strength、不带 scenario 标签（scenario 由 tagged 语料或人工打标产生）——**场景计数与 clauses 总数是两回事**"
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp 镜像 sha-2f85e53；contract_type=bailment 与 sale 两样本）"
+      },
+      "contract_generate": {
+        "envelope": "structuredContent",
+        "returns": {
+          "body_text": "string",
+          "docx_path": "string|null",
+          "pdf_path": "string|null",
+          "slots": [
+            "string"
+          ],
+          "instructions": [
+            {
+              "name": "string",
+              "label": "string",
+              "latin": "string",
+              "description": "string",
+              "example": "string",
+              "required": "bool",
+              "source": "string"
+            }
+          ],
+          "laws": [
+            {
+              "name": "string",
+              "category": "string",
+              "category_zh": "string",
+              "sources": [
+                "string"
+              ]
+            }
+          ],
+          "sha256": "string|null",
+          "sha256_source": "string|null",
+          "sha256_body": "string|null",
+          "sha256_by_format": {}
+        },
+        "field_notes": {
+          "body_text": "正文，含 {{槽位名}} 占位",
+          "docx_path": "本镜像不产 docx，实测为 null",
+          "slots": "槽位显示名数组（如「甲方名称」）；只有名字，必填/示例信息在 instructions",
+          "instructions": "与 slots 一一对应的填槽指引；字段名曾与 slots 记反，2026-11-10 复采校正",
+          "sha256": "交付文件字节的 sha256；多格式并存时取 pdf。实测：与 pod 内本地重算逐字符相等",
+          "sha256_source": "指明 sha256 取自哪种文件；无文件时回退 body_text 并显式标注，避免误以为验的是文件",
+          "sha256_body": "正文（Markdown，含 {{slot}} 占位）UTF-8 字节的 sha256，与 body_hash(md5) 互补",
+          "sha256_by_format": "已产出格式 → 其文件字节 sha256 的映射；当前镜像不产 docx 时只有 pdf 键"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp 新镜像 sha-aef1c58）；2026-11-10 十件复采校正：slots 为字符串数组、instructions 才是七字段对象；2026-11-10 二次实采：新增四件指纹字段，sha256 与本地重算一致（5.3）",
+        "values": {
+          "sha256_source": [
+            "pdf",
+            "docx",
+            "body_text"
+          ]
+        }
+      },
+      "tag_validate": {
+        "envelope": "structuredContent",
+        "returns": {},
+        "field_notes": {
+          "(root)": "「维度名 → 该维度取值」的映射；输入 tags 原样回显，只保留合法维度。空对象=没有合法维度被识别"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp，镜像 sha-0d2f54d）"
+      },
+      "tag_combinations_list": {
+        "envelope": "structuredContent",
+        "returns": {
+          "contract_type": "string",
+          "dimensions": [
+            "string"
+          ],
+          "combinations": [
+            {
+              "tags": {},
+              "has_tagged_clauses": "bool",
+              "tagged_clause_count": "int",
+              "tagged_clause_ids": [],
+              "has_custom_clauses": "bool"
+            }
+          ],
+          "estimated_combinations": "int",
+          "combinatorial_warning": "bool"
+        },
+        "field_notes": {
+          "combinations[].tags": "动态键映射：维度名→取值，维数随合同类型变化",
+          "tagged_clause_ids": "仍为空数组，但原因不是「clauses=0」：库里 186 条全部是 tags.source=custom 的种子条款，tagged 来源（tags.source=tagged）为 0。要有 tagged_clause_ids 需灌入带 scenario 标注的 corpus"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp，镜像 sha-0d2f54d）"
+      },
+      "contract_content": {
+        "envelope": "structuredContent",
+        "returns": {
+          "trace_id": "string",
+          "contract_type": "string",
+          "format": "string",
+          "body_text": "string",
+          "slots": [],
+          "instructions": [
+            {
+              "name": "string",
+              "label": "string",
+              "description": "string",
+              "example": "string",
+              "required": "bool"
+            }
+          ],
+          "law_refs": [],
+          "tags_used": {}
+        },
+        "field_notes": {
+          "body_text": "**空串只在「不传 stance / tags」时出现**（2026-11-11 实测订正）：`_select_clauses` 的 custom 分支要求 stance，所以无立场调用选不到任何条款。带立场即真正文：`contract_content('bailment', stance='pro_a')` → 219 字符、`('sale', stance='balanced')` → 75 字符。原注「装配只收 approved 条款」已被批准动作解除（186 条已批准），但**base 变体仍空**，因为库里没有 category=base 的条款。",
+          "slots": "随 body_text 为空；槽位定义在 instructions 里（两者不是同一件事）",
+          "instructions": "槽位填报指引，本工具**不带** latin/source（contract_generate 的才带）",
+          "tags_used": "动态键映射：本次实际生效的维度→取值（入参没给 tags 时为空对象）"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp，镜像 sha-0d2f54d）；二采补漏：漏了 tags_used，被 check_declared_vs_live.py 抓出"
+      },
+      "task_status": {
+        "envelope": "structuredContent",
+        "returns": {
+          "handle": "string",
+          "kind": "string|null",
+          "found": "bool",
+          "status": "string",
+          "error": "string|null"
+        },
+        "values": {
+          "status": [
+            "not_found"
+          ]
+        },
+        "field_notes": {
+          "status": "实测未知句柄时为 not_found；其余取值未观测",
+          "error": "找不到原因的人话说明（认不出句柄家族时给出前缀约定）"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp，镜像 sha-0d2f54d）"
+      },
+      "task_failed_items": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": []
+        },
+        "field_notes": {
+          "result": "当前无失败项，元素形状未观测"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp，镜像 sha-0d2f54d）"
+      },
+      "clause_get": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": {
+            "id": "int",
+            "contract_type": "string",
+            "category": "string",
+            "level": "null",
+            "section": "string",
+            "body": "string",
+            "body_hash": "string",
+            "manual": "bool",
+            "source_doc_title": "string",
+            "source_path": "null",
+            "slot_instructions": [
+              {
+                "name": "string",
+                "label": "string",
+                "description": "string",
+                "example": "string",
+                "required": "bool"
+              }
+            ],
+            "law_refs": [
+              {
+                "name": "string",
+                "category": "string",
+                "category_zh": "string"
+              }
+            ],
+            "tags": {
+              "source": "string",
+              "stance": "string",
+              "strength": "string"
+            },
+            "tag_review": {}
+          }
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp，镜像 sha-700f2c5，clause_id 由 clause_list 首条派生；另以含 slot_instructions 的行 id=6 单独取元素形状）",
+        "field_notes": {
+          "result": "成功时是对象；id 不存在时为 null（2026-11-11 之前 clauses 表 0 行，此处曾只声明 null）。**不要写死 clause_id**：重跑 seed 装载会 DELETE+INSERT 换号（实测 1→6）",
+          "tag_review": "动态映射：未评审时为 {}，评审过才有 {source,stance,strength} 键，故按动态键声明、不锁死三键",
+          "tags": "当前三键（source/stance/strength）；类型专属维度按 tag_dims 注册，可能增键，故这里只声明已观测到的三键"
+        }
+      },
+      "contract_download": {
+        "envelope": "structuredContent",
+        "returns": {
+          "result": {
+            "$unobservable": "本机无可下载产物：artifact_id=1 已不存在（实测 result=null），contract_generate 不返回 id，contract_generate_stored 因集群无 MinIO（minio.minio.svc.cluster.local 解析失败）不可用。待 MinIO 就位、能产出真实产物后复采；在此之前不得把 null 当成功形状声明"
+          }
+        },
+        "expected_shape_when_present": {
+          "artifact_id": "int",
+          "contract_type": "string",
+          "scenario": "string|null",
+          "stance": "string|null",
+          "body_text": "string",
+          "slots": [],
+          "docx_key": "string|null",
+          "pdf_key": "string|null",
+          "docx_key_slotted": "string|null",
+          "pdf_key_slotted": "string|null",
+          "created_at": "string",
+          "download_urls": {},
+          "sha256_by_format": {}
+        },
+        "field_notes": {
+          "result": "**本环境不可观测**（见 returns.result.$unobservable）。历史观测形状（2026-11-10，镜像 sha-0d2f54d，对真实产物调用）保留在 expected_shape_when_present，仅作待复采参考、不参与比对",
+          "result.download_urls": "动态键映射：已存格式→下载路径",
+          "result.sha256_by_format": "动态键映射：已存格式→文件字节 sha256（5.3 新增，实测已带）",
+          "result.slots": "该产物登记的槽位；body_text 为空时为空数组"
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp 镜像 sha-2f85e53）：artifact_id=1 不存在 → result=null，对象形状本轮未复现；历史形状见 expected_shape_when_present（2026-11-10, sha-0d2f54d）"
+      },
+      "contract_generate_batch": {
+        "envelope": "structuredContent",
+        "returns": {
+          "trace_id": "string",
+          "contract_type": "string",
+          "total_requested": "int",
+          "success_count": "int",
+          "failure_count": "int",
+          "combinatorial_warning": "bool",
+          "results": [
+            {
+              "success": "bool",
+              "tags": {},
+              "trace_id": "string",
+              "contract_type": "string",
+              "format": "string",
+              "body_text": "string",
+              "slots": [],
+              "instructions": [
+                {
+                  "name": "string",
+                  "label": "string",
+                  "description": "string",
+                  "example": "string",
+                  "required": "bool"
+                }
+              ],
+              "law_refs": [],
+              "tags_used": {}
+            }
+          ]
+        },
+        "field_notes": {
+          "results[]": "成功项内嵌一份 contract_content 的返回（同一形状），失败项则是 {success:false,tags,error}；两态共用一个数组，故元素键随成败变化",
+          "results[].tags": "请求时给的那组标签，原样回显（动态键映射）",
+          "results[].body_text": "与 contract_content 同因：**带 stance 的组合出真正文**（实测 bailment stance=pro_a → 219 字符、success=true），不传 stance 的组合为空串。原注「clauses=0」「装配只收 approved」均已过时——186 条已批准，缺的是 base 类条款。",
+          "error": "仅整体失败时出现：{type,message,details}；成功路径没有该键"
+        },
+        "observed": "live tools/call 2026-11-10（pod law-bench-mcp，镜像 sha-017136f）。两条分支都实测：tag_combinations 路径 total_requested=1/success=1，enumerate_all 路径 total_requested=3/success=3、combinatorial_warning=false；此前的 tag_vocab_list ImportError 已消失"
+      },
+      "law_info": {
+        "envelope": "structuredContent",
+        "returns": {
+          "type": "string",
+          "zh_name": "string",
+          "doubao": "string|null",
+          "deepseek": "string|null"
+        },
+        "field_notes": {
+          "type": "契约类型键（调用入参 contract_type 回显）",
+          "doubao/deepseek": "两来源的法规调研 markdown 正文；该来源缺失时为 null",
+          "「查不到即报错」是本工具既有契约": "未种子的 contract_type（66 类里的 23 个）返回 isError=true，不是返回空对象——调用方要按错误处理，别当\"无内容\""
+        },
+        "observed": "live tools/call 2026-11-11（pod 镜像 sha-2f85e53，law_info 表 86 行 / 43 类型；sale 实测 3779 字符）"
+      },
+      "contract_generate_stored": {
+        "envelope": "structuredContent",
+        "returns": {
+          "contract_type": "string",
+          "format": "string",
+          "artifacts": [
+            {
+              "artifact_id": "int",
+              "scenario": "string|null",
+              "stance": "string|null",
+              "docx_url": "string|null",
+              "pdf_url": "string|null",
+              "docx_url_slotted": "string|null",
+              "pdf_url_slotted": "string|null",
+              "sha256": "string|null",
+              "sha256_source": "string|null",
+              "reused": "bool"
+            }
+          ],
+          "count": "int",
+          "new": "int",
+          "reused": "int",
+          "failed": "int",
+          "failures": []
+        },
+        "field_notes": {
+          "format": "markdown 只存正文、**不需要对象存储**——此前把它整件归为「依赖 MinIO」是错判；只有 docx/pdf 两种格式才走存储",
+          "sha256/sha256_source": "markdown 路径下为 null（无文件可指纹）；docx/pdf 路径才写 {docx,pdf}_sha256",
+          "幂等性": "同 contract_type+scenario+stance 复调返回 new=0 / reused=1 / 同一 artifact_id（实测两次），故可进采集器而不累积行",
+          "空正文行的真因（2026-11-11 实测订正）": "无 tags/stance 调用会按「每个 scenario × stance × base 组合」各落一行；其中 **base 变体（stance=None）必然是空正文**（body_hash=md5(空串)=d41d8cd9…，body 长度 0），因为 `_select_clauses` 的 base 只取 `category='base'` 的条款，而当前 186 条种子**全部是 category=custom**（base 得靠 `extract_clauses.py` 从真实合同抽取，属外部语料缺口）。实测：guarded DELETE 掉空行后重调一次，**同一空行立刻重新生成**（sale/None/None 又出现），同时产出三条真正文（sale balanced=75 / pro_a=195 / pro_b=83 字符）。**结论：不要再去删这条空行**（删→重生成是空转），它是「base 语料缺失」的显式产物；等 base 条款入库后自然消失。",
+          "stance 变体现在非空": "2026-11-11 批准种子条款后，带 stance 的变体产出真正文：bailment balanced/pro_a/pro_b = 128/219/254 字符，sale = 75/195/83。**无立场（base）仍空**，与上一条同因。"
+        },
+        "observed": "live tools/call 2026-11-11（pod 镜像 sha-2f85e53；sale + format=markdown，两次调用验复用）"
+      },
+      "clause_review": {
+        "envelope": "structuredContent",
+        "returns": {
+          "reviewed": "bool",
+          "clause_id": "int",
+          "status": "string"
+        },
+        "observed": "live tools/call 2026-11-11（pod law-bench-mcp，镜像 sha-700f2c5，clause_id 由 clause_list 首条派生）",
+        "field_notes": {
+          "status": "pending / approved / rejected 三值。采集器用 pending：种子条款本来就是待审，反复采集不改评审状态、也不伪造「人工已批准」",
+          "clause_id": "必须是库里真实存在的 id。**不要写死**：重跑 seed 装载是 DELETE+INSERT，id 会整体换号（实测 1→6）；采集器按 clause_list.result[0].id 派生",
+          "前置条件": "`clauses` 表必须有行。2026-11-11 之前该表 0 行，本工具一律返回 isError=true + `clause not found: <id>`——那是「表里没行」，不是「连不上库」"
+        }
+      }
+    },
+    "blocked_detail": []
   },
   "naming_convention": {
     "order": "verb_noun",
@@ -558,6 +1090,11 @@
   "registry": {
     "entry_path": "/law-bench",
     "upstream": "http://cheap6.mesh.finddata.cn:30840/mcp",
-    "expected_tool_count": 54
+    "expected_tool_count": 54,
+    "observed_tool_count": 54,
+    "observed_note": "2026-11-10 现网 pod（镜像 sha-0d2f54d）内 tools/list 实枚举 54，与仓内 EXPECTED_TOOLS 一致；此前记录的 52 系 metrics 组未上线所致，现不缺件",
+    "commercial_tool_count": 21,
+    "listed_at": "2026-11-10T10:58:00Z",
+    "listed_note": "注册表条目已刷新为 num_tools=54 / tool_list 54 / surface 商业集 21，三方（清单=注册表=现网）逐名一致，由 scripts/check_surface_listed.py 断言（exit=0）"
   }
 }

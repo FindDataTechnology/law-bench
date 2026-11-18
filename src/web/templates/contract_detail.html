@@ -15,7 +15,10 @@
 </div>
 
 {% if not_found %}
-  <div class="flash error">{{ t.contract.not_found }}：<code>{{ contract_type }}</code></div>
+  {# Error with cause (checklist ③): names the unknown type code, not a bare 404 line. #}
+  {% with message=t.contract.not_found, detail=contract_type %}
+    {% include '_error_card.html' %}
+  {% endwith %}
 {% else %}
 <div class="law-info-grid">
   <section class="panel">
@@ -28,6 +31,7 @@
 
   <section class="panel">
     <h2>{{ t.contract.slots_h2 }}</h2>
+    {% if instructions %}
     <table>
       <thead>
         <tr><th>{{ t.contract.col_field }}</th><th>{{ t.contract.col_desc }}</th><th>{{ t.contract.col_example }}</th><th>{{ t.contract.col_required }}</th></tr>
@@ -43,6 +47,12 @@
         {% endfor %}
       </tbody>
     </table>
+    {% else %}
+    {# Honest empty (checklist ②): zero slot instructions is real data, not a rendering miss. #}
+    {% with message=t.contract.slots_empty %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+    {% endif %}
   </section>
 
   <section class="panel">
@@ -79,8 +89,8 @@
 
     <div class="gen-grid">
       <div class="row">
-        <label>{{ t.contract.stance }}</label>
-        <select name="stance">
+        <label for="gen-stance">{{ t.contract.stance }}</label>
+        <select name="stance" id="gen-stance">
           <option value="">{{ t.contract.stance_default }}</option>
           <option value="balanced">balanced</option>
           <option value="pro_a">pro_a</option>
@@ -88,15 +98,15 @@
         </select>
       </div>
       <div class="row">
-        <label>{{ t.contract.scenario }}</label>
-        <input type="text" name="scenario" placeholder="{{ t.contract.scenario_ph }}">
+        <label for="gen-scenario">{{ t.contract.scenario }}</label>
+        <input type="text" name="scenario" id="gen-scenario" placeholder="{{ t.contract.scenario_ph }}">
       </div>
     </div>
 
     <div class="gen-grid">
       <div class="row">
-        <label>{{ t.contract.format }}</label>
-        <select name="format">
+        <label for="gen-format">{{ t.contract.format }}</label>
+        <select name="format" id="gen-format">
           <option value="docx">docx</option>
           <option value="pdf">pdf</option>
           <option value="both">both</option>
@@ -104,15 +114,15 @@
         </select>
       </div>
       <div class="row">
-        <label>{{ t.contract.custom_ids }}</label>
-        <input type="text" name="custom_clause_ids" placeholder="{{ t.contract.custom_ids_ph }}">
+        <label for="gen-custom-ids">{{ t.contract.custom_ids }}</label>
+        <input type="text" name="custom_clause_ids" id="gen-custom-ids" placeholder="{{ t.contract.custom_ids_ph }}">
       </div>
     </div>
 
     <div class="gen-extra" data-mode="D">
       <div class="row">
-        <label>{{ t.contract.batch_label }}</label>
-        <textarea name="tag_combinations" placeholder='[{"stance":"balanced"},{"scenario":"农产品买卖"}]'></textarea>
+        <label for="gen-tag-comb">{{ t.contract.batch_label }}</label>
+        <textarea name="tag_combinations" id="gen-tag-comb" placeholder='[{"stance":"balanced"},{"scenario":"农产品买卖"}]'></textarea>
       </div>
       <label class="check"><input type="checkbox" name="enumerate_all"> {{ t.contract.enumerate }}</label>
     </div>
@@ -120,31 +130,34 @@
     <div class="gen-extra" data-mode="EF">
       <div class="gen-grid">
         <div class="row">
-          <label>{{ t.contract.rubric_label }}</label>
-          <input type="text" name="rubric" placeholder="contract_sale_v1">
+          <label for="gen-rubric">{{ t.contract.rubric_label }}</label>
+          <input type="text" name="rubric" id="gen-rubric" placeholder="contract_sale_v1">
         </div>
         <div class="row">
-          <label>{{ t.contract.max_iter }}</label>
-          <input type="number" name="max_iterations" value="3" min="1" max="10">
+          <label for="gen-max-iter">{{ t.contract.max_iter }}</label>
+          <input type="number" name="max_iterations" id="gen-max-iter" value="3" min="1" max="10">
         </div>
       </div>
       <div class="row">
-        <label>{{ t.contract.task_desc }}</label>
-        <textarea name="task_desc" placeholder="{{ t.contract.task_desc_ph }}"></textarea>
+        <label for="gen-task-desc">{{ t.contract.task_desc }}</label>
+        <textarea name="task_desc" id="gen-task-desc" placeholder="{{ t.contract.task_desc_ph }}"></textarea>
       </div>
       <div class="row">
-        <label>{{ t.contract.temperature }}</label>
-        <input type="number" name="temperature" value="0" step="0.1" min="0" max="2">
+        <label for="gen-temp">{{ t.contract.temperature }}</label>
+        <input type="number" name="temperature" id="gen-temp" value="0" step="0.1" min="0" max="2">
       </div>
     </div>
 
     <div class="toolbar">
       <button type="submit" class="btn btn-primary" id="gen-submit">{{ t.contract.generate }}</button>
-      <span id="gen-status" class="muted"></span>
+      {# In-progress / failed states live here (checklist ①③): generation-panel.js
+         writes submitting/running/failure text into this region and disables the
+         button while a run is in flight; aria-live makes the transitions announced. #}
+      <span id="gen-status" class="muted" role="status" aria-live="polite"></span>
     </div>
   </form>
 
-  <div id="gen-result" class="gen-result"></div>
+  <div id="gen-result" class="gen-result" aria-live="polite"></div>
 </section>
 
 <section class="panel">

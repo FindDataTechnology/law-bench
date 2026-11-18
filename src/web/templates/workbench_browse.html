@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}{{ t.workbench.browse.h1 }} {{ kind }} · {{ domain.name }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<p><a href="{{ url_for('console_overview', domain_key=domain.key) }}">{{ domain.name }}</a></p>
+<div class="toolbar between">
+  <h1>{{ t.workbench.browse.h1 }} <code>{{ kind }}</code> <span class="badge">{{ t.workbench.browse['lane_' ~ lane] }}</span></h1>
+  {% if cap.can_write %}
+  <a class="btn btn-primary" href="{{ url_for('workbench_unit_new', domain_key=domain.key, kind=kind) }}">{{ t.workbench.browse.new_btn }}</a>
+  {% endif %}
+</div>
+
+{# Real empty for a kind with no units: honest card + next step (New, for
+   writers), not a bare headerless table row. The list table only renders
+   when there is something to list. #}
+{% if rows %}
+<div class="panel">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.workbench.browse.col_key }}</th>
+        <th>{{ t.workbench.browse.col_preview }}</th>
+        <th>{{ t.workbench.browse.col_tier }}</th>
+        <th>{{ t.workbench.browse.col_updated }}</th>
+        <th>{{ t.workbench.browse.col_actions }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for unit in rows %}
+      <tr>
+        <td><code>{{ unit.external_key }}</code></td>
+        <td class="muted">{{ unit.body | truncate(120) }}</td>
+        <td><span class="badge">{{ unit.tier }}</span></td>
+        <td class="muted">{{ unit.updated_at }}</td>
+        <td><a href="{{ url_for('workbench_unit_detail', domain_key=domain.key, kind=kind, unit_key=unit.external_key) }}">{{ t.workbench.browse.view }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Pager (no total — the kernel list API is windowed): prev/next only. #}
+<div class="pager">
+  {% if has_prev %}
+  <a href="{{ request.url.path }}?limit={{ limit }}&amp;offset={{ offset - limit }}" class="btn btn-sm">{{ t.samples.prev_page }}</a>
+  {% else %}
+  <span class="btn btn-sm disabled">{{ t.samples.prev_page }}</span>
+  {% endif %}
+  {% if has_next %}
+  <a href="{{ request.url.path }}?limit={{ limit }}&amp;offset={{ offset + limit }}" class="btn btn-sm">{{ t.samples.next_page }}</a>
+  {% else %}
+  <span class="btn btn-sm disabled">{{ t.samples.next_page }}</span>
+  {% endif %}
+</div>
+{% else %}
+{% with message=t.workbench.browse.empty,
+        hint=t.workbench.browse.empty_hint,
+        action_href=url_for('workbench_unit_new', domain_key=domain.key, kind=kind) if cap.can_write else none,
+        action_label=t.workbench.browse.new_btn %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% endif %}
+{% endblock %}

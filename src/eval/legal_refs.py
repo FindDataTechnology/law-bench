@@ -126,11 +126,15 @@ def extract_references(items: Iterable[dict]) -> list[dict]:
             entry["occurrences"] += 1
 
     out: list[dict] = []
-    for entry in agg.values():
+    for key, entry in agg.items():
         cat = categorize(entry["name"])
         out.append(
             {
                 "name": entry["name"],
+                # stable_id：跨运行稳定的引用标识（由去重键派生，不含序号/时间）。
+                # 案卷侧要用它做「同一条依据」的对账——名字写法会变（简称/全称），
+                # 去重键不会。格式 `law:<去重键>`，与其它域的 stable_id 同构。
+                "stable_id": f"law:{key}",
                 "category": cat,
                 "category_zh": CATEGORY_ZH[cat],
                 "contract_types": sorted(entry["contract_types"]),

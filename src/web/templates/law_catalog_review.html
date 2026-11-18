@@ -32,7 +32,8 @@
   <div class="inline">
     <form method="post" action="{{ url_for('law_catalog_confirm_alias') }}" class="inline">
       <input type="hidden" name="alias" value="{{ r.cited_name }}">
-      <input type="text" name="law_id" placeholder="law_id" style="width:8em">
+      <label class="inline" for="law_id_{{ loop.index }}">{{ t.catalog.law_id_label }}</label>
+      <input id="law_id_{{ loop.index }}" type="text" name="law_id" placeholder="{{ t.catalog.law_id_label }}" style="width:8em">
       <button type="submit" class="btn btn-sm">{{ t.catalog.confirm_mapping }}</button>
     </form>
     <form method="post" action="{{ url_for('law_catalog_non_match') }}" class="inline">
@@ -42,7 +43,9 @@
   </div>
 </div>
 {% else %}
-<p class="muted">{{ t.catalog.review_empty }}</p>
+{% with message=t.catalog.review_empty, hint=t.catalog.review_empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
 {% endfor %}
 
 {% if suppressed %}

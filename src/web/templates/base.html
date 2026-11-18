@@ -7,27 +7,51 @@
   <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
 </head>
 <body>
+  {#- 顶栏 = 账本封面（change add-domain-first-workbench）。
+      brand 永远回「我的域」(/d)：域是平台的第一层组织，不是任何一条业务清单。
+      域页面用 console_context 块在 brand 与 nav 之间插入当前域 + 切换器；
+      nav_items 块让域页面收起全局法律链接（它们移到域评测区与全局资产池）。 -#}
   <header class="topbar">
-    <a class="brand" href="{{ url_for('page_list_rubrics') }}">{{ t.nav.brand }}</a>
+    <a class="brand" href="/d">{{ t.nav.brand }}</a>
+    {% block console_context %}{% endblock %}
     <nav>
-      {% if has_scope('content:read') %}
-      {% set nav_items = [
-        (url_for('page_list_rubrics'), '/rubrics', t.nav.rubrics),
-        (url_for('page_list_prompts'), '/prompts', t.nav.prompts),
-        (url_for('page_list_compares'), '/compare', t.nav.compare),
-        (url_for('page_law_info'), '/law-info', t.nav.law_info),
-        (url_for('page_law_references'), '/law-references', t.nav.law_references),
-        (url_for('page_contracts'), '/contracts', t.nav.contracts),
-        (url_for('page_samples'), '/samples', t.nav.samples),
-        (url_for('page_clauses'), '/clauses', t.nav.clauses),
-        ('/dashboard', '/dashboard', t.nav.dashboard),
-        (url_for('page_review'), '/review', t.nav.review),
-        (url_for('page_search'), '/search', t.nav.search),
-      ] %}
-      {% set current_path = request.url.path %}
-      {% for href, prefix, label in nav_items %}
-      <a href="{{ href }}"{% if current_path.startswith(prefix) %} aria-current="page"{% endif %}>{{ label }}</a>
-      {% endfor %}
+      {% block nav_items %}{% if has_scope('content:read') %}
+      {#- 三层导航（add-domain-tree-and-shared-libraries §5）：全域 → 我的域 → 域内区。
+
+          The eleven-item flat menu that used to live here mixed two information
+          architectures: a legal-tool list (rubrics / prompts / compare / law-info
+          / contracts / samples / clauses / review / search) beside the domain
+          workbench. Those tools are now reached *through* the domain area that
+          owns them (knowledge / eval-standards / eval-runs); the legacy URLs keep
+          working, they are simply no longer offered as top-level navigation.
+          Keeping the old list here would keep teaching users the old model. -#}
+      <a href="/d"{% if request.url.path == '/d' %} aria-current="page"{% endif %}>{{ t.nav.estate }}</a>
+      {% endif %}
+      {# 我的域 (web-rbac delta, C5 域优先): ONE entry point, not two links per
+         domain. The domain list is the primary navigation surface for choosing
+         a domain, and the per-domain switcher lives beside the brand on domain
+         pages. Rendered only for an identity with at least one active
+         membership — anonymous and domain-less users see zero domain entries.
+         The resolver stays fail-safe (no DB -> no entries, never a 500); every
+         console route re-enforces membership server-side, so this is usability,
+         never the gate. #}
+      {% if user and user.sub %}
+      {% set my_domain_entries = my_domains() %}
+      {% if my_domain_entries %}
+      <a href="/d"{% if request.url.path == '/d' %} aria-current="page"{% endif %}>{{ t.admin.nav_my_domains }}</a>
+      {% endif %}
+      {% endif %}
+      {% endblock %}{# /nav_items #}
+      {# 管理门: platform-admin exclusive (templates + all-domain management are
+         admin-scope pages); hidden for every other identity. Moved OUT of the
+         nav_items block by C5 so it survives on domain pages, which suppress
+         the global asset links: the platform gate is not a domain area. #}
+      {% if has_scope('admin') %}
+      <span class="muted">{{ t.admin.nav_gate }}</span>
+      <a href="{{ url_for('admin_templates') }}"{% if request.url.path.startswith('/admin/templates') %} aria-current="page"{% endif %}>{{ t.admin.templates.title }}</a>
+      <a href="{{ url_for('admin_domains') }}"{% if request.url.path.startswith('/admin/domains') %} aria-current="page"{% endif %}>{{ t.admin.domains.title }}</a>
+
+      <a href="{{ url_for('admin_libraries') }}"{% if request.url.path.startswith('/admin/libraries') %} aria-current="page"{% endif %}>{{ t.admin.libraries.title }}</a>
       {% endif %}
       <span class="lang-switch">
         <a href="{{ request.url.path }}?lang=en"{% if lang == 'en' %} aria-current="true"{% endif %}>{{ t.switch.en }}</a>
@@ -38,6 +62,9 @@
       <span class="identity">
         <span class="muted">{{ t.auth.signed_in_as }}</span>
         <span class="identity-name">{{ user.name or user.email or user.sub }}</span>
+        {# 互认回链 (C5 P0-D): the workbench is one of five product lines, so the
+           chrome always offers the way back to what it is. External page. #}
+        <a href="{{ official_bench_url }}" target="_blank" rel="noopener noreferrer">{{ t.auth.about_bench }} ↗</a>
         <a href="/auth/logout">{{ t.auth.logout }}</a>
       </span>
       {% else %}
@@ -47,6 +74,9 @@
       {% endif %}
     </nav>
   </header>
+  {#- L2/L3 navigation lives in the SAME 980px column as the page body:
+      full-bleed breadcrumbs read as page chrome from another product. -#}
+  <div class="zone-shell">{% block zone_nav %}{% endblock %}</div>
   <main class="container">
     {% if request.query_params.get('msg') %}
       <div class="flash {{ 'error' if request.query_params.get('err') else 'ok' }}" role="{{ 'alert' if request.query_params.get('err') else 'status' }}">
@@ -61,10 +91,39 @@
   {# Admin assistant (change add-admin-copilot-assistant): floating CopilotKit
      chat island. The script self-mounts on #lawbench-assistant-root and talks
      to the same-origin /copilotkit proxy (admin-scope enforced server-side —
-     this include is UX only, never the enforcement). #}
+     this include is UX only, never the enforcement).
+     Mount presentation (polish-bench-workbench): an in-flow status chip lives
+     INSIDE the mount node — the island's createRoot().render() replaces the
+     node's children on mount, so the chip can never overlap page content; if
+     the bundle fails to load (assets unbuilt or blocked), the script's
+     onerror watchdog flips the chip to the honest failed state instead of a
+     stuck "loading". Mobile collapse stays the island's own CopilotPopup
+     (defaultOpen=false); the vendored island styling remains the sole No-Gloss
+     exception and is untouched here. The chip renders only once the i18n keys
+     (assistant.loading / assistant.failed) exist — no hardcoded copy. #}
+  <style>
+    .assistant-mount-status {
+      max-width: 980px;
+      margin: 0.6rem auto 0;
+      padding: 0.4rem 0.9rem;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+    .assistant-mount-status .assistant-mount-failed { display: none; }
+    .assistant-mount-status.is-failed {
+      background: var(--fail-tint);
+      border-color: var(--fail-border);
+      color: var(--fail-text);
+    }
+    .assistant-mount-status.is-failed .assistant-mount-loading { display: none; }
+    .assistant-mount-status.is-failed .assistant-mount-failed { display: inline; }
+  </style>
   <link rel="stylesheet" href="{{ url_for('static', path='assistant/style.css') }}">
-  <div id="lawbench-assistant-root"></div>
-  <script type="module" src="{{ url_for('static', path='assistant/assistant.js') }}"></script>
+  <div id="lawbench-assistant-root">{% if t.assistant and t.assistant.loading is defined %}<div class="assistant-mount-status" id="lawbench-assistant-status" role="status"><span class="assistant-mount-loading">{{ t.assistant.loading }}</span><span class="assistant-mount-failed">{{ t.assistant.failed }}</span></div>{% endif %}</div>
+  <script type="module" src="{{ url_for('static', path='assistant/assistant.js') }}" onerror="var s=document.getElementById('lawbench-assistant-status');if(s){s.classList.add('is-failed');}"></script>
   {% endif %}
   {% block scripts %}{% endblock %}
 <!-- impeccable-live-start -->

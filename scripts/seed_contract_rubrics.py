@@ -682,11 +682,24 @@ RUBRICS: list[dict] = [
 ]
 
 
+def _assign_domain(conn, rubric_id: int, domain_id: int) -> None:
+    """Own the rubric: a row with NULL domain_id is invisible to the domain matrix.
+
+    ``domain_rubrics.effective_rubrics`` resolves standards by walking the
+    domain's ancestor chain, so a rubric nobody owns never shows up as a
+    standard at all — seeding without owning would look like success while the
+    estate matrix still reports zero contract standards.
+    """
+    conn.execute("UPDATE rubrics SET domain_id = %s WHERE id = %s", (domain_id, rubric_id))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("--db", type=Path, default=project_root() / DEFAULT_DB)
+    ap.add_argument("--domain", default=None,
+                    help="按域名 key 把落库的尺子挂到该域下（如 legal）；不传则保持无属主")
     args = ap.parse_args()
 
     from src.eval.db import connect
@@ -695,9 +708,20 @@ def main() -> None:
     conn = connect()
     try:
         create_schema(conn)
+        domain_id = None
+        if args.domain:
+            row = conn.execute(
+                "SELECT id FROM domains WHERE key = %s AND archived_at IS NULL",
+                (args.domain,),
+            ).fetchone()
+            if not row:
+                raise SystemExit(f"域名 {args.domain!r} 不存在或已归档")
+            domain_id = row["id"]
         now_iso = datetime.now(timezone.utc).isoformat()
         for rubric in RUBRICS:
             rid = upsert_local_rubric(conn, rubric, now_iso)
+            if domain_id:
+                _assign_domain(conn, rid, domain_id)
             print(f"  upserted {rubric['name']:34} -> {len(rubric['criteria'])} criteria (rubric_id={rid})")
         # Law-refined v2 variants: v1 criteria + a legal_basis_citation
         # criterion citing the governing statutes from the law_info survey.
@@ -710,10 +734,13 @@ def main() -> None:
                 continue
             v2 = _v2_rubric(rubric, citation)
             rid = upsert_local_rubric(conn, v2, now_iso)
+            if domain_id:
+                _assign_domain(conn, rid, domain_id)
             print(f"  upserted {v2['name']:34} -> {len(v2['criteria'])} criteria (rubric_id={rid})")
             n_v2 += 1
         conn.commit()
-        print(f"\nSeeded {len(RUBRICS)} baseline (v1) + {n_v2} law-refined (v2) contract rubrics into {args.db}")
+        tail = f"，归属域 {args.domain}" if args.domain else "，无属主（域矩阵里不可见）"
+        print(f"\nSeeded {len(RUBRICS)} baseline (v1) + {n_v2} law-refined (v2) contract rubrics{tail}")
         print_summary(conn)
     finally:
         conn.close()

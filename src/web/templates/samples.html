@@ -11,8 +11,8 @@
 <div class="panel">
   <form method="GET" action="{{ url_for('page_samples') }}" class="filter-form">
     <div class="filter-group">
-      <label>{{ t.samples.filter_type }}</label>
-      <select name="contract_type" onchange="this.form.submit()">
+      <label for="filter-contract-type">{{ t.samples.filter_type }}</label>
+      <select id="filter-contract-type" name="contract_type" onchange="this.form.submit()">
         <option value="">{{ t.samples.all_types }}</option>
         {% for ct in all_types %}
         <option value="{{ ct.key }}"{% if selected_ct == ct.key %} selected{% endif %}>{{ ct.zh }}</option>
@@ -21,8 +21,8 @@
     </div>
 
     <div class="filter-group">
-      <label>{{ t.samples.filter_scenario }}</label>
-      <select name="scenario" onchange="this.form.submit()">
+      <label for="filter-scenario">{{ t.samples.filter_scenario }}</label>
+      <select id="filter-scenario" name="scenario" onchange="this.form.submit()">
         <option value="">{{ t.samples.all_scenarios }}</option>
         {% for s in scen_opts %}
         <option value="{{ s }}"{% if selected_scenario == s %} selected{% endif %}>{{ s }}</option>
@@ -31,8 +31,8 @@
     </div>
 
     <div class="filter-group">
-      <label>{{ t.samples.filter_stance }}</label>
-      <select name="stance" onchange="this.form.submit()">
+      <label for="filter-stance">{{ t.samples.filter_stance }}</label>
+      <select id="filter-stance" name="stance" onchange="this.form.submit()">
         <option value="">{{ t.samples.all_stances }}</option>
         {% for s in stance_opts %}
         <option value="{{ s }}"{% if selected_stance == s %} selected{% endif %}>{{ s }}</option>

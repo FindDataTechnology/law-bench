@@ -17,6 +17,10 @@ Mounted routes:
 - `law_info`: Law references (`GET /law-info`, `/{type}`, `/law-references`).
 - `clauses`: READ paths only (`GET /clauses`, `/{type}`, `/generate`, `/new`,
   `/clauses/{id}`, `/review`; **EXCLUDES** POST routes for CRUD).
+- `public_overview`: anonymous platform overview (`GET /api/public/overview`,
+  the ONE app-level exempt path — published ontology versions/counts/tiers +
+  data-anchored `as_of`, no corpus content) + an authenticated `/api/public/`
+  catch-all so anonymous sibling paths 401 instead of 404.
 
 Deliberately excluded (not mounted):
 - `api`: CRUD for rubrics/prompts/compare/evaluate/harbor.
@@ -77,6 +81,7 @@ from .routes import (
     contract_context,
     contracts,
     law_info,
+    public_overview,
     samples,
     search,
 )
@@ -112,6 +117,13 @@ def create_public_app() -> FastAPI:
         # AUTH_SESSION_SECRET, so we check it at startup).
         dependencies=[Depends(get_current_user)],
     )
+
+    # App-level precise-path auth exemption (change add-bench-public-overview-tier):
+    # exactly ONE anonymous read-only route, the platform overview. Registered on
+    # THIS app's state only — the origin workbench never sets the attribute, so
+    # get_current_user fail-closes there (401/404, never anonymous). Membership
+    # is exact-path (no prefixes/wildcards); an unusable value fail-closes.
+    app.state.extra_exempt_paths = frozenset({public_overview.OVERVIEW_PATH})
 
     @app.middleware("http")
     async def _locale_middleware(request: Request, call_next):
@@ -198,6 +210,12 @@ def create_public_app() -> FastAPI:
 
     # clauses: read paths only (POST routes for CRUD must be split out first).
     app.include_router(clauses.read_only_router)
+
+    # public_overview: the anonymous read-only platform overview
+    # (GET /api/public/overview) plus an authenticated catch-all that turns
+    # anonymous sibling-path requests into 401 instead of a route-less 404.
+    # Exemption registration is the app.state block above.
+    app.include_router(public_overview.router)
 
     # In-process rate-limit middleware (the abuse half of "防止恶意调用").
     # Env-gated inside add_rate_limit_middleware: when RATE_LIMIT_ENABLED=1 (the

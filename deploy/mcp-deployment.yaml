@@ -1,0 +1,166 @@
+# law-bench MCP server (fd-coding-law-bench-mcp) — streamable-HTTP deployment.
+#
+# Change: expose-lawbench-mcp-via-gateway. Serves the MCP tool set over HTTP so
+# the AI Gateway & Registry (mcp.finddatatech.cloud) can proxy it. Same image as
+# the origin web app; the container command is overridden — the shared
+# docker-entrypoint.sh is untouched (origin/public pod behavior unchanged).
+#
+# The gateway reaches this NodePort over tailscale at http://100.64.0.8:30840/mcp,
+# which its SSRF guard blocks by default (CGNAT 100.64.0.0/10); see
+# deploy/cheap-box/README.md for the allowlist entry that path requires.
+#
+# Auth: the gateway forwards its registered backend credential (api_key scheme)
+# and direct clients use a bearer header; both are checked against
+# MCP_HTTP_TOKEN (secret law-bench-mcp). The server refuses to bind without it.
+#
+# Probes use tcpSocket: every HTTP path requires the token, so an httpGet probe
+# would always see 401 and never pass.
+#
+# Verify 30840 is unused before applying: kubectl get svc -A -o jsonpath
+# (2026-08: unused; origin web = 30820, review-agent = 30830/30831).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: law-bench-mcp
+  namespace: law-bench
+  labels:
+    app: law-bench-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: law-bench-mcp
+  template:
+    metadata:
+      labels:
+        app: law-bench-mcp
+    spec:
+      # See deploy/deployment.yaml: node-pinned because the site-packages overlay
+      # below lives on that node's disk.
+      # 2026-11-09：清单原先钉 cheap-4，线上实际跑在 liuliangdmh1xr0w9ryu（cheap-2）。
+      # 已实测**两个节点都挂着 /opt/lawbench-mcp-pkgs**（cheap-4 上 202 个条目，cheap-2 同样存在），
+      # 所以这不是可运行性问题，只是放置选择。此处对齐线上现实，纳入 Argo 时零移动；
+      # 若确要搬回 cheap-4，改这一行并由该线自己滚——不要由收编动作代为搬迁。
+      nodeSelector:
+        kubernetes.io/hostname: liuliangdmh1xr0w9ryu
+      # Same node resolv.conf pollution as the origin pod (see
+      # deploy/deployment.yaml): pin kube-dns + the clean search list so
+      # cluster-internal names (postgres, minio) resolve. No hostAliases here —
+      # the MCP server has no Logto/lawbench-domain dependency.
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - law-bench.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      containers:
+        - name: law-bench-mcp
+          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-720ae6f
+          # 2026-11-16 上产 sha-720ae6f（快照 720ae6f＝源 945b80b：提交口三类拒绝）。
+          # 与 law-bench / law-bench-mcp-assistant 同一 tag 同进同退；回滚=sha-e11cfe6。
+          # 2026-11-15 上产 sha-e11cfe6（源 cb9f2c1：公开载荷清理，line-manifest.json
+          # 2515B→798B，5 段 note 移 docs/line-auth-evidence.md；同片无 MCP 行为变化，
+          # /app/line-manifest.json 即 MCP 面端点真源）。公网 /law-bench/.well-known
+          # 的真后端就是本 Deployment（Caddy → law-bench-mcp），滚它公网正文才变。
+          # 出片=共享池 testaction002/build-pool（快照 e11cfe6，BUILD-INFO.json 对账）。
+          # 2026-11-12 上产 sha-1e90e56（源 60bb1ec：contract_type_catalog 缓存按
+          # include_clause_counts 分键，止住"先 false 后 true 读到假零计数"；
+          # 同片含 vendored wheel 的 CI/Dockerfile 挂载修复）。
+          # 出片：快照仓 law-bench-images 1e90e56（源真 sha 60bb1ec，BUILD-INFO.json 可对账）。
+          # 本片除目录计数缓存外，还含 11-12 的 vendored wheel 挂载修复（CI/Dockerfile）——
+          # 没有那一修，本仓任何 change 都出不了片（test 作业 42 秒红在依赖解析）。
+          # 遥测：`kubectl logs | grep '"event": "search_clauses"'` 仍按调用一行（四态可数）。
+          imagePullPolicy: IfNotPresent  # 现役 sha-e11cfe6（公开载荷清理片）。回滚=sha-57b1465。
+          # 更早：sha-f817384 无 min_score、sha-700f2c5 无真语料检索、sha-2f85e53 连 mcp-auth 都没有。
+          command: ["/app/.venv/bin/python", "-m", "fd_coding_law_bench_mcp"]
+          env:
+            # sha-2c502d7 was built without the fd-coding-law-bench-mcp context, so
+            # /app/.venv has no MCP package. Rather than rebuild, the deps were
+            # installed to the node path mounted below and prepended here.
+            - name: PYTHONPATH
+              value: "/opt/mcp/lib/pkgs:/app"
+            - name: MCP_HTTP_TRANSPORT
+              value: "http"
+            - name: MCP_HTTP_HOST
+              value: "0.0.0.0"
+            - name: MCP_HTTP_PORT
+              value: "8080"
+            - name: MCP_HTTP_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: law-bench-mcp
+                  key: MCP_HTTP_TOKEN
+            # DOCX→PDF 经共享 render 服务（extract-render-service）：镜像已不带
+            # LibreOffice。与 deployment.yaml（web 面）同口径——此前本清单缺这两行，
+            # 转换器回落 libreoffice 后端去找本机 soffice，导致经 MCP 的
+            # contract_generate 一律报 "LibreOffice binary 'soffice' not found"
+            # （2026-11-10 现网实采实证）。回滚=同时改回 backend libreoffice 并换回
+            # 带 LibreOffice 的旧镜像 tag。
+            - name: DOCS_PDF_BACKEND
+              value: "http"
+            - name: RENDER_SERVICE_URL
+              value: "http://render-service.law-bench.svc.cluster.local:8090"
+            # 法规语料检索后端（mcp-clause-search-reads-real-corpus）。
+            # search_clauses 原走旧的 ES 自摄取库：本部署从没配 elastic_search_host，
+            # 集群里那台 ES 也是零索引 → 每次都返回 upstream_unavailable，而真实
+            # 36.5 万块法规语料在 Qdrant（law-rag/law_chunks_v2，1024 维）。
+            # 现工具改走 library_index（与 web 面同源），因此这里必须给出 Qdrant 与
+            # 嵌入服务的地址；库表只存**环境变量名**，缺变量会在查询时明确报错。
+            # 值照抄 deployment.yaml（同集群同名 Service，避免两处漂移）。
+            # 回滚=镜像回退到 sha-700f2c5（旧 ES 路径），这两行可一并删除。
+            - name: QDRANT_URL
+              value: "http://qdrant.law-rag.svc.cluster.local:6333"
+            - name: LIBRARY_EMBED_LOCAL_URL
+              value: "http://embedding-svc.law-rag.svc.cluster.local:6100"
+          envFrom:
+            - secretRef:
+                name: law-bench-db
+            - secretRef:
+                name: law-bench-minio
+            - secretRef:
+                name: law-bench-judge
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /opt/mcp/lib/pkgs
+              name: mcp-pkgs
+              readOnly: true
+      volumes:
+        # Populated on the node with:
+        #   uv pip install --target /opt/lawbench-mcp-pkgs \
+        #       /root/fd-coding-law-bench-mcp
+        - name: mcp-pkgs
+          hostPath:
+            path: /opt/lawbench-mcp-pkgs
+            type: Directory
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: law-bench-mcp
+  namespace: law-bench
+  labels:
+    app: law-bench-mcp
+spec:
+  type: NodePort
+  selector:
+    app: law-bench-mcp
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30840

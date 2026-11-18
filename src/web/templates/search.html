@@ -1,17 +1,44 @@
 {% extends "base.html" %}
-{% block title %}{{ t.search.h1 }} · {{ t.nav.brand }}{% endblock %}
+{% block title %}{{ t.search.h1 }}{% if domain %} · {{ domain }}{% endif %} · {{ t.nav.brand }}{% endblock %}
 {% block content %}
 <h1>{{ t.search.h1 }}</h1>
 <p class="muted">{{ t.search.intro }}</p>
+{# polish-bench-workbench 0.2 (checklist item 4): proper visible labels bound
+   via for/id. Label copy rides the new i18n keys search.q_label /
+   search.domain_label, falling back to the existing placeholder keys so the
+   page renders bilingual-complete before and after the keys land — no
+   hardcoded single-language strings. #}
+{% set search_q_label = t.search.q_label if t.search.q_label is defined else t.search.ph %}
+{% set search_domain_label = t.search.domain_label if t.search.domain_label is defined else t.search.domain_ph %}
 <form method="get" action="{{ url_for('page_search') }}" class="search-form">
-  <input type="text" name="q" value="{{ q }}" placeholder="{{ t.search.ph }}" autofocus
-         style="min-width:60%">
+  <div class="search-field">
+    <label for="search-q">{{ search_q_label }}</label>
+    <input id="search-q" type="text" name="q" value="{{ q }}" placeholder="{{ t.search.ph }}" autofocus>
+  </div>
+  <div class="search-field">
+    <label for="search-domain">{{ search_domain_label }}</label>
+    <input id="search-domain" type="text" name="domain" value="{{ domain }}" placeholder="{{ t.search.domain_ph }}">
+  </div>
   <button type="submit" class="btn">{{ t.search.submit }}</button>
 </form>
 
-{% if error %}
-  <div class="flash error">{{ t.search.backend_down }}: {{ error }}</div>
+{# Domain-scoped search (change add-domain-rag-corpus-service): the domain is
+   echoed in the results header; an unregistered domain shows the honest
+   「未登记」 error instead of the generic backend-down flash. #}
+{% if domain %}
+<p class="muted">{{ tr('search.domain_header', domain=domain) }}</p>
+{% endif %}
+
+{# polish-bench-workbench 0.2 (checklist items 1+3): both failure branches
+   report their cause via the shared _error_card.html partial (message +
+   detail), and a query with zero hits renders the honest empty state (real
+   count 0 + next-step hint) instead of an empty <ol>. #}
+{% if unregistered %}
+  {% with message=t.search.domain_unregistered, detail=error %}{% include '_error_card.html' %}{% endwith %}
+{% elif error %}
+  {% with message=t.search.backend_down, detail=error %}{% include '_error_card.html' %}{% endwith %}
 {% elif q %}
+  {% if results %}
   <p class="muted">{{ tr('search.results', n=results|length) }}</p>
   <ol class="search-results">
   {% for r in results %}
@@ -24,5 +51,38 @@
     </li>
   {% endfor %}
   </ol>
+  {% else %}
+  {% with message=tr('search.results', n=0), hint=t.search.no_results_hint %}{% include '_empty_state.html' %}{% endwith %}
+  {% endif %}
 {% endif %}
+
+<style>
+/* search.html local styles (polish-bench-workbench 0.2): the form layout
+   replaces the old inline min-widths so each label sits above its input and
+   the fields shrink cleanly (checklist item 6); result pre/code bodies wrap
+   instead of overflowing the 980px column on narrow screens. */
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  align-items: flex-end;
+  margin-bottom: 1rem;
+}
+.search-form .search-field {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.search-form .search-field input { width: 100%; }
+@media (max-width: 560px) {
+  .search-form { flex-direction: column; align-items: stretch; }
+}
+.search-results .src { overflow-wrap: anywhere; }
+.search-results pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+</style>
 {% endblock %}

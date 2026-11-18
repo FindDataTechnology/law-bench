@@ -25,8 +25,10 @@ from typing import Optional, Union
 
 from deepeval.models import DeepEvalBaseLLM
 
-# A queued per-criterion outcome: True=pass, False=fail, "error"=raise.
-Verdict = Union[bool, str]
+# A queued per-criterion outcome: True=pass, False=fail, "error"=raise, or a
+# dict {"success": bool, "reason": str} for fully crafted metric outcomes
+# (e.g. a pass with an empty/unsigned reason — see test_judge_soundness.py).
+Verdict = Union[bool, str, dict]
 
 
 class FakeJudge(DeepEvalBaseLLM):
@@ -35,15 +37,23 @@ class FakeJudge(DeepEvalBaseLLM):
     Args:
         verdicts: ordered per-criterion outcomes, consumed in criteria order
             (requires ``evaluate_contract(..., max_workers=1)``). Each entry is
-            ``True`` (pass), ``False`` (fail), or ``"error"`` (simulate a
-            judge-call exception for that criterion).
+            ``True`` (pass), ``False`` (fail), ``"error"`` (simulate a
+            judge-call exception for that criterion), or a dict
+            ``{"success": bool, "reason": str}`` crafted verbatim.
         model_name: value returned by ``get_model_name``; set to ``None`` to
             exercise the ``EVAL_MODEL`` env fallback in scoring.
+        confidence: trailing self-report appended to bool-entry reasons,
+            mirroring the v2-structure judge output contract (rule 4 requires
+            ``CONFIDENCE: <0.xx>`` at the end of the reasoning). ``None`` emits
+            a reason with NO tail, so scoring's fail-loud confidence screen
+            can be exercised end to end.
     """
 
-    def __init__(self, verdicts: list[Verdict], model_name: Optional[str] = "fake-judge"):
+    def __init__(self, verdicts: list[Verdict], model_name: Optional[str] = "fake-judge",
+                 confidence: Optional[str] = "0.90"):
         self._verdicts = list(verdicts)
         self._model_name = model_name
+        self._confidence = confidence
         self._score_index = 0
 
     # -- DeepEvalBaseLLM abstract methods ---------------------------------- #
@@ -68,7 +78,15 @@ class FakeJudge(DeepEvalBaseLLM):
             self._score_index += 1
             if verdict == "error":
                 raise RuntimeError("fake judge error for criterion")
-            return json.dumps({"score": 1 if verdict else 0, "reason": "fake verdict"})
+            if isinstance(verdict, dict):
+                return json.dumps({
+                    "score": 1 if verdict.get("success") else 0,
+                    "reason": verdict.get("reason", ""),
+                })
+            tail = "" if self._confidence is None else f"\nCONFIDENCE: {self._confidence}"
+            return json.dumps(
+                {"score": 1 if verdict else 0, "reason": f"fake verdict{tail}"}
+            )
         # Unknown schema: permissive fallback (not expected in the scoring path).
         return json.dumps({"steps": [], "score": 0, "reason": "fake"})
 

@@ -1,0 +1,117 @@
+# law-bench quarterly judge-drift meta-eval job (change add-knowledge-bench-platform, task 6.3).
+#
+# Runs scripts/drift_check.py once a quarter: it compares the two newest stored
+# meta/judge calibration runs for one judge+prompt version and records the
+# comparison as a meta/drift eval_runs row (exit 1 -> the Job shows Failed when
+# drift is detected; the alarm also lives in the DB, queryable). The script
+# itself makes ZERO LLM calls — pure arithmetic over data already in
+# PostgreSQL — so this CronJob needs no OpenAI/judge API keys, only:
+#   * law-bench-db    -> database_url (same envFrom secret as the origin pod)
+#   * law-bench-judge -> the EVAL_MODEL name only (via secretKeyRef, never
+#                        inlined as plaintext).
+#
+# MANIFEST ARTIFACT ONLY: nothing here is applied. Rolling this onto the cheap
+# cluster is a deliberate operator decision (see deploy/cheap-box/README.md for
+# cluster access: do kubectl work from cheap4/cheap6).
+#
+# Style sources (no yamls exist under deploy/cheap-box/, so this mirrors the
+# repo's live law-bench manifests for the cheap cluster):
+#   * image ref / imagePullSecrets / envFrom secrets / dnsPolicy+dnsConfig pin /
+#     nodeSelector cheap-7  -> deploy/deployment.yaml (law-bench origin pod)
+#   * command override on the shared image with /app/.venv/bin/python
+#     -> deploy/mcp-deployment.yaml (law-bench-mcp pod)
+# The image ships the repo at /app including scripts/ (Dockerfile: WORKDIR /app,
+# COPY scripts ./scripts). Tag pinned after image-content verification
+# (skopeo copy + layer scan 2026-11-05): sha-6916bd9 CONTAINS
+# /app/scripts/drift_check.py byte-identical to the repo copy
+# (sha256 dee3138df65c3578). On later deploy bumps, re-verify then update here.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: law-bench-drift-check
+  namespace: law-bench
+  labels:
+    app: law-bench-drift-check
+spec:
+  # quarterly: 03:00 UTC on day 1 of Jan/Apr/Jul/Oct; after the calibration
+  # quarter boundary so calibrate_judge_live.py has landed the new meta run.
+  schedule: "0 3 1 */3 *"
+  # one drift check at a time; skip (never queue) if a previous quarter's job
+  # is somehow still running.
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      # the drift verdict is bookkeeping, not a flaky network call: retrying a
+      # Failed (exit 1 == drift) job would just re-record the same comparison.
+      backoffLimit: 0
+      template:
+        metadata:
+          labels:
+            app: law-bench-drift-check
+        spec:
+          restartPolicy: Never
+          # Same node pin as the origin pod (deploy/deployment.yaml). This job
+          # mounts no volumes, so the pin is continuity-of-style, not a hard
+          # requirement: the image pulls from TCR on any node via tcr-pull.
+          # NO node pin: the original cheap-7 pin was continuity-of-style only
+          # (comment below said so), and cheap-7 carries a standing
+          # disk-pressure condition that EVICTS new pods regardless of
+          # tolerations (manual-verify run 2026-11-05: scheduled via taint
+          # toleration, then Evicted by kubelet DiskPressure — change
+          # rollout-drift-cronjob task 3.2). The image pulls from TCR on any
+          # node via tcr-pull, the job mounts no volumes and talks to a remote
+          # PG, so unpinned scheduling lands it on any untainted node.
+          imagePullSecrets:
+            - name: tcr-pull
+          # Same cluster-DNS pollution workaround as deploy/deployment.yaml and
+          # deploy/mcp-deployment.yaml: the node resolv.conf carries a wildcard
+          # search domain; pin kube-dns so postgres.<ns>.svc resolves honestly.
+          dnsPolicy: None
+          dnsConfig:
+            nameservers:
+              - 10.43.0.10
+            searches:
+              - law-bench.svc.cluster.local
+              - svc.cluster.local
+              - cluster.local
+            options:
+              - name: ndots
+                value: "5"
+          containers:
+            - name: drift-check
+              image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-6916bd9
+              imagePullPolicy: IfNotPresent
+              command:
+                - /app/.venv/bin/python
+                - scripts/drift_check.py
+                - --judge-model
+                - $(DRIFT_JUDGE_MODEL)
+                - --prompt-version
+                - $(DRIFT_PROMPT_VERSION)
+                - --threshold
+                - $(DRIFT_THRESHOLD)
+              env:
+                # judge whose calibrations are compared: the model name, read
+                # from the existing judge secret (no plaintext credentials, and
+                # no API key is actually needed by this script).
+                - name: DRIFT_JUDGE_MODEL
+                  valueFrom:
+                    secretKeyRef:
+                      name: law-bench-judge
+                      key: EVAL_MODEL
+                # must match src/eval/scoring.EVAL_PROMPT_VERSION (the version
+                # calibrate_judge_live.py stamps runs with); bump in lockstep.
+                - name: DRIFT_PROMPT_VERSION
+                  value: "v2-structure"
+                # agree-rate drop counted as drift (default 0.05); scripts
+                # reads DRIFT_THRESHOLD itself, this pins the intent.
+                - name: DRIFT_THRESHOLD
+                  value: "0.05"
+              envFrom:
+                # database_url for reading eval_runs and writing the drift
+                # record — the same secret the origin web pod uses.
+                - secretRef:
+                    name: law-bench-db

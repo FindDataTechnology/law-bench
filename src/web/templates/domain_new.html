@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ t.console.new_domain.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+
+{% block content %}
+{#- 建域向导：四步合成一页。
+
+    ① 选父域 → ② 看继承（模板词表 + 可取材的源）→ ③ 命名 → ④ 提交。
+    每一步都在提交前可见：向导存在的意义是「知道会继承什么」，而不是猜。
+    权限与 /admin 一致（平台 admin）；向导不让更多人能建域。 -#}
+<div class="toolbar between">
+  <h1>{{ t.console.new_domain.h1 }}</h1>
+  <a class="btn btn-sm" href="{{ url_for('console_domain_list') }}">{{ t.console.new_domain.back }}</a>
+</div>
+<p class="hint">{{ t.console.new_domain.intro }}</p>
+
+<div class="panel">
+  <h2>{{ t.console.new_domain.step_parent }}</h2>
+  <form method="GET" action="{{ url_for('console_new_domain') }}" class="toolbar gap">
+    <label for="parent">{{ t.console.new_domain.parent_label }}</label>
+    <select name="parent" id="parent">
+      <option value="">{{ t.console.new_domain.no_parent }}</option>
+      {% for d in parents %}
+      <option value="{{ d.key }}" {% if parent_key == d.key %}selected{% endif %}>
+        {{ d.name }} — {{ d.path or d.key }}
+      </option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-sm">{{ t.console.new_domain.preview }}</button>
+  </form>
+</div>
+
+{% if preview %}
+<div class="panel">
+  <h2>{{ t.console.new_domain.step_inherit }}</h2>
+  <p class="hint">
+    {{ t.console.new_domain.template_from }}
+    <strong>{{ preview.parent.path or preview.parent.key }}</strong>
+    {% if preview.template %}
+      · {{ preview.template.name }} v{{ preview.template.version }}
+    {% endif %}
+  </p>
+  {% if preview.template %}
+  <table class="data-table">
+    <thead><tr>
+      <th>{{ t.console.new_domain.col_vocab }}</th>
+      <th>{{ t.console.new_domain.col_items }}</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>{{ t.console.new_domain.vocab_entity }}</td>
+        <td>{% for x in preview.template.schema.entity_types %}<code>{{ x }}</code> {% endfor %}</td>
+      </tr>
+      <tr>
+        <td>{{ t.console.new_domain.vocab_relation }}</td>
+        <td>{% for x in preview.template.schema.relationship_kinds %}<code>{{ x }}</code> {% endfor %}</td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="hint">{{ t.console.new_domain.inherit_rule }}</p>
+  {% endif %}
+
+  {% if preview.scope.error %}
+  <p class="hint">{{ preview.scope.error }}</p>
+  {% elif preview.scope.libraries %}
+  <form method="POST" action="{{ url_for('console_new_domain_create') }}">
+    <h3>{{ t.console.new_domain.step_sources }}</h3>
+    <p class="hint">{{ t.console.new_domain.sources_hint }}</p>
+    {% for lib in preview.scope.libraries %}
+    <fieldset>
+      <legend>{{ lib.library_key }}</legend>
+      {% for s in lib.sources %}
+      <label>
+        <input type="checkbox" name="source" value="{{ lib.library_key }}:{{ s }}" checked>
+        <code>{{ s }}</code>
+      </label>
+      {% endfor %}
+    </fieldset>
+    {% endfor %}
+  {% else %}
+  <form method="POST" action="{{ url_for('console_new_domain_create') }}">
+    <p class="hint">{{ t.console.new_domain.no_sources }}</p>
+  {% endif %}
+
+    <h3>{{ t.console.new_domain.step_name }}</h3>
+    <input type="hidden" name="parent_key" value="{{ parent_key }}">
+    <input type="hidden" name="template_name" value="{{ preview.template.name if preview.template else '' }}">
+    <input type="hidden" name="template_version" value="{{ preview.template.version if preview.template else '' }}">
+    <label for="key">{{ t.console.new_domain.key_label }}</label>
+    <input type="text" name="key" id="key" required pattern="[a-z0-9-]+"
+           placeholder="contract-review">
+    <p class="hint">{{ t.console.new_domain.key_hint }} <code>{{ preview.parent.path or preview.parent.key }}/</code></p>
+    <label for="name">{{ t.console.new_domain.name_label }}</label>
+    <input type="text" name="name" id="name" required placeholder="合同审查">
+    <button type="submit" class="btn">{{ t.console.new_domain.create }}</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

@@ -5,6 +5,8 @@ kinds:
   - clause
 components:
   - type: module
+    path: packs/legal/asset_catalog.py
+  - type: module
     path: packs/legal/law_catalog
   - type: module
     path: src/law_api
@@ -21,3 +23,34 @@ eval_suites:
   - law-article-citation
   - law-citation-audit
   - law-citation-remediation
+
+# 岗位参数（change add-domain-agent-team）：一条线能跑哪些岗位、各多久一次、
+# 以及该线自己的取材与判定参数。编排层只读这里，不认任何行业。
+roles:
+  warden:
+    cadence_minutes: 15
+    review_threshold_hours: 24
+  verifier:
+    cadence_minutes: 60
+    checks: [key_already_live, quote_not_verbatim, endpoint_open, near_duplicate]
+  scout:
+    cadence_minutes: 1440
+    doc_types: [法律, 行政法规, 司法解释]
+    sources: [statutes, administrative, judicial]
+    limit: 40
+  builder:
+    cadence_minutes: 1440
+    doc_types: [法律]
+    sources: [statutes]
+  concept:
+    cadence_minutes: 1440
+    batch_chunks: 10
+    min_usable_rate: 0.5
+    max_total: 100
+    # 概念长在裁判说理里，不长在法条正文里（实测：抽 statutes 得 0 条候选）。
+    # 指定语料面，免得岗位每次都要试错。
+    sources: [judicial, guide_cases]
+  eval:
+    enabled: false
+  release:
+    enabled: false

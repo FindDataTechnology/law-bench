@@ -8,6 +8,15 @@
 <!-- Overall Stats -->
 <section class="stats-overview">
   <h2>{{ t.dashboard.overview }}</h2>
+  {# polish-bench-workbench 0.2 (checklist items 1+3): when the stats source
+     yields no row, report that honestly via the shared _error_card.html
+     partial instead of rendering placeholder zeros. Falls back to the legacy
+     zeros grid while the new i18n keys (dashboard.stats_unavailable /
+     stats_unavailable_detail) are pending — no hardcoded single-language
+     copy. #}
+  {% if (not overall) and t.dashboard.stats_unavailable is defined %}
+  {% with message=t.dashboard.stats_unavailable, detail=t.dashboard.stats_unavailable_detail %}{% include '_error_card.html' %}{% endwith %}
+  {% else %}
   <div class="stats-grid">
     <div class="stat-card">
       <span class="stat-value">{{ overall.total_runs if overall else 0 }}</span>
@@ -26,6 +35,7 @@
       <span class="stat-label">{{ t.dashboard.stat_all_pass }}</span>
     </div>
   </div>
+  {% endif %}
 </section>
 
 <!-- Version Comparison -->
@@ -194,5 +204,12 @@
 .empty-row { text-align: center; color: var(--muted); padding: 1rem 0.6rem; }
 section { margin-bottom: 2rem; }
 h2 { border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+/* Narrow screens (checklist item 6, polish-bench-workbench 0.2): dashboard
+   tables sit outside .panel, so the site-wide `.panel table` scroll rule
+   never catches them — give the page-local .data-table the same block-scroll
+   behavior instead of letting the 7-column tables overflow the viewport. */
+@media (max-width: 720px) {
+  .data-table { display: block; overflow-x: auto; }
+}
 </style>
 {% endblock %}

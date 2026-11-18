@@ -36,6 +36,59 @@ def test_internal_repo_path_reference_detected():
     assert any(p.search(line2) for _, p in hyg.CONTENT_RULES)
 
 
+def test_a_backticked_internal_path_is_detected():
+    """markdown 行内代码里的内部路径必须被抓到。
+
+    2026-11-14 实测漏过一次：判据的前缀集不含反引号，而
+    `` `law-bench-internal/src/web/auth/scopes.py` `` 正好是文档里写路径的常见形态
+    ⇒ 一条真实泄漏从闸底下走过去，闸报 OK。文档是最容易写进内部路径的地方。
+    """
+
+    def hits(line: str) -> list[str]:
+        return [n for n, p in hyg.CONTENT_RULES if p.search(line)]
+
+    for line in (
+        "| 共享身份 | Logto | `law-bench-internal/src/web/auth/scopes.py` |",
+        "*`law-bench-internal/x.py`*",
+        "见( law-bench-internal/y.py )",
+        "law-bench-internal/z.py 开头即命中",
+    ):
+        assert "internal repo import/path reference" in hits(line), line
+
+    # 反例：散文里提仓名、或粘在别的标识符后面，都不该红。
+    for line in (
+        "真源在 law-bench-internal 仓里（散文提仓名允许）",
+        "my-law-bench-internal/x.py 不是本仓",
+    ):
+        assert "internal repo import/path reference" not in hits(line), line
+
+
+def test_scan_reports_internal_path_reference_not_just_matches_it():
+    """判据必须在 **scan_text() 层**成立，而不只是 `pattern.search()` 命中。
+
+    2026-11-14 实历：`internal repo import/path reference` 这条规则**从来没有生效过**。
+    正则是对的、上面两条测试也一直是绿的，但 `scan()` 里那段占位值过滤
+    （`pattern.groups >= 1 and not _looks_real_secret(...)`，本意是给凭据类规则用的）
+    对所有带捕获组的规则都生效，而 `law-bench-internal/` 永远「不像秘密」
+    ⇒ 每一个命中都在报告之前被扔掉，闸对着一个真实泄漏报 OK。
+
+    所以这条测试断言的是**报告**（scan_text 的返回值），不是匹配。
+    """
+
+    for name, text in (
+        ("docs/x.md", "| 共享身份 | Logto | `law-bench-internal/src/web/auth/scopes.py` |"),
+        ("docs/x.md", "python 侧见 law-bench-internal/wire-connector/selfcheck.py"),
+        ("src/x.py", "from law_bench_internal import wire_connector"),
+    ):
+        violations = hyg.scan_text(name, text)
+        assert any("internal repo import/path reference" in v for v in violations), (
+            f"scan_text 没报出内部路径引用（判据死了而正则没错）：{name}: {text}"
+        )
+
+    # 散文提仓名仍然不报——这条豁免在报告层也必须成立，不是只在匹配层。
+    assert hyg.scan_text("docs/x.md", "真源在 law-bench-internal 仓里") == []
+
+
 def test_sk_key_and_pem_detected():
     assert any(p.search("key = 'sk-abcdefghijklmnop123456'") for _, p in hyg.CONTENT_RULES)
     assert any(p.search("-----BEGIN RSA PRIVATE KEY-----") for _, p in hyg.CONTENT_RULES)

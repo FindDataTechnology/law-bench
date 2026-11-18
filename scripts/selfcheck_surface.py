@@ -38,6 +38,8 @@ PKG = PKG_SRC / "fd_coding_law_bench_mcp"
 
 TOOL_PATTERN = re.compile(rf"mcp__{SERVER_NAME}__([A-Za-z0-9_.\-]+)")
 HINTS = ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint")
+# 运行时导入失败的真因（见 runtime_annotations）：缺依赖 ≠ 契约无法核对
+IMPORT_ERROR: str | None = None
 
 
 def fail(problems: list[str]) -> "None":
@@ -74,14 +76,24 @@ async def runtime_tools() -> set[str]:
 
 
 async def runtime_annotations() -> dict[str, dict] | None:
-    """Each registered tool's protocol-level hints; ``None`` if not importable."""
+    """Each registered tool's protocol-level hints; ``None`` if not importable.
+
+    The failure reason is kept in ``IMPORT_ERROR`` on purpose: a missing runtime
+    dep (``fastmcp``) and a genuine "cannot introspect" are different problems
+    with different fixes, and swallowing both into ``None`` makes them look the
+    same. 2026-11-11: running this with the system ``python3`` instead of the
+    project venv produced the same opaque ``[无法核对]`` as a real contract gap.
+    """
+    global IMPORT_ERROR
     sys.path.insert(0, str(PKG_SRC))
     try:
         from fd_coding_law_bench_mcp.server import mcp  # type: ignore
 
         tools = await mcp.list_tools()
-    except Exception:
+    except Exception as exc:  # noqa: BLE001 - 真因要随消息带出，不能吞
+        IMPORT_ERROR = f"{type(exc).__name__}: {exc}"
         return None
+    IMPORT_ERROR = None
     out: dict[str, dict] = {}
     for t in tools:
         name = getattr(t, "name", None) or t.get("name")
@@ -118,7 +130,11 @@ async def check_annotations(m: dict, declared: dict[str, str]) -> list[str]:
         return ["[属性缺失] manifest 缺 tool_annotations（行为属性须随工具一并上牌）"]
     runtime = await runtime_annotations()
     if runtime is None:
-        return ["[无法核对] server 不可导入，行为属性无法与运行时比对"]
+        return [
+            f"[无法核对] server 不可导入（{IMPORT_ERROR or '原因未知'}），行为属性无法与运行时比对"
+            " —— 若报 ModuleNotFoundError，用项目 venv 跑："
+            "`.venv/bin/python scripts/selfcheck_surface.py`"
+        ]
 
     problems: list[str] = []
     for name in sorted(set(declared) - set(ann)):
@@ -182,6 +198,14 @@ def check_output_structure(m: dict, declared: dict[str, str]) -> list[str]:
     stray = sorted((dec | und) - set(declared))
     if stray:
         problems.append(f"output_structure 登记了未上牌的工具：{stray}")
+    # 派生计数不得手维：`declared_count` 曾写着 10，而 declared 实列 18 件
+    # （补声明时漏改），读清单的人会据此以为只上牌 10 件。计数一律由列表派生。
+    count = block.get("declared_count")
+    if count is not None and count != len(dec):
+        problems.append(
+            f"[计数漂移] declared_count={count}，但 declared 实列 {len(dec)} 件"
+            f"（派生值应等于 len(declared)，不要手改）"
+        )
     return problems
 
 

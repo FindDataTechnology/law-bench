@@ -9,22 +9,37 @@
 </div>
 
 {% if not_found %}
-  <div class="flash error">{{ t.law_info.not_found }}: <code>{{ contract_type }}</code></div>
+{# 坏类型 404：错误卡报因（哪个类型键没找到），非裸错误文案 #}
+{% with message=t.law_info.not_found, detail=contract_type %}
+  {% include '_error_card.html' %}
+{% endwith %}
 {% else %}
 <div class="law-info-grid">
   <section class="panel">
     <h2>{{ t.law_info.source_doubao }}</h2>
     <div class="muted"><code>{{ info.type }}</code></div>
+    {% if doubao_html %}
     <article class="markdown-body">
       {{ doubao_html|safe }}
     </article>
+    {% else %}
+    {% with message=t.law_info.no_content %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+    {% endif %}
   </section>
   <section class="panel">
     <h2>{{ t.law_info.source_deepseek }}</h2>
     <div class="muted"><code>{{ info.type }}</code></div>
+    {% if deepseek_html %}
     <article class="markdown-body">
       {{ deepseek_html|safe }}
     </article>
+    {% else %}
+    {% with message=t.law_info.no_content %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+    {% endif %}
   </section>
 </div>
 {% endif %}

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import sys
+from typing import Optional
 
 # botocore (used by MinioReader) honors the macOS system proxy, which 502s
 # against MinIO; bypass proxies entirely for the S3 client.
@@ -33,12 +34,12 @@ except Exception:
     pass
 
 
-def _reader(prefix: str) -> MinioReader:
+def _reader(prefix: str, bucket: Optional[str] = None) -> MinioReader:
     return MinioReader(
         minio_endpoint=MINIO_ENDPOINT,
         minio_access_key=MINIO_ACCESS_KEY,
         minio_secret_key=MINIO_SECRET_KEY,
-        bucket=MINIO_BUCKET,
+        bucket=bucket if bucket is not None else MINIO_BUCKET,
         prefix=prefix,
         required_exts=[".md", ".pdf", ".docx"],
         file_extractor=_FILE_EXTRACTORS or None,
@@ -47,33 +48,40 @@ def _reader(prefix: str) -> MinioReader:
     )
 
 
-def load_documents(prefix: str | None = None) -> list[Document]:
+def load_documents(
+    prefix: Optional[str] = None, bucket: Optional[str] = None
+) -> list[Document]:
     """Load markdown documents from MinIO.
 
     If ``prefix`` is None, load from both the templates and drafts prefixes; a
     missing/empty prefix is skipped (not fatal) so a bucket with only templates
     still ingests. Each document carries ``source_prefix`` and ``source_path``
-    metadata for retrieval attribution.
+    metadata for retrieval attribution. ``bucket=None`` (the default) reads the
+    global ``MINIO_BUCKET``; domain-aware ingestion passes the bucket its
+    corpus source declares.
     """
     if prefix is not None:
-        return _annotate(_reader(prefix).load_data(), prefix)
+        return _annotate(_reader(prefix, bucket).load_data(), prefix, bucket)
 
     docs: list[Document] = []
     for p in (MINIO_TEMPLATES_PREFIX, MINIO_DRAFTS_PREFIX):
         try:
-            loaded = _reader(p).load_data()
+            loaded = _reader(p, bucket).load_data()
         except Exception as e:  # one prefix missing must not abort the batch
             print(f"WARNING: could not load MinIO prefix {p!r}: {e}", file=sys.stderr)
             continue
-        docs.extend(_annotate(loaded, p))
+        docs.extend(_annotate(loaded, p, bucket))
     return docs
 
 
-def _annotate(docs: list[Document], prefix: str) -> list[Document]:
+def _annotate(
+    docs: list[Document], prefix: str, bucket: Optional[str] = None
+) -> list[Document]:
+    resolved_bucket = bucket if bucket is not None else MINIO_BUCKET
     for d in docs:
         d.metadata.setdefault("source_prefix", prefix)
         d.metadata.setdefault(
             "source_path",
-            f"{MINIO_BUCKET}/{prefix}{d.metadata.get('file_name') or d.metadata.get('file_path') or ''}",
+            f"{resolved_bucket}/{prefix}{d.metadata.get('file_name') or d.metadata.get('file_path') or ''}",
         )
     return docs

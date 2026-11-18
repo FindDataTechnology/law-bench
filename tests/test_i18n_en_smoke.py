@@ -61,9 +61,20 @@ def test_previously_zh_only_pages_render_english(client, path, heading, chrome):
 
 
 def test_nav_is_english_after_switch(client):
-    page = client.get("/dashboard?lang=en")
-    for label in (">Templates<", ">Samples<", ">Clauses<", ">Dashboard<", ">Review<", ">Search<"):
-        assert label in page.text, f"nav label {label} missing"
+    """The chrome is three layers now (add-domain-tree-and-shared-libraries §5).
+
+    The eleven legal-tool links left the top bar: they are reached through the
+    domain area that owns them. What must still be English is the estate entry
+    and the domain door.
+    """
+    # /d is a console page: it deliberately suppresses the global nav (the zone
+    # nav takes over), so the chrome is asserted on a legacy tool page instead.
+    page = client.get("/rubrics?lang=en")
+    assert ">Estate<" in page.text
+    assert "全域" not in page.text
+    # The legacy flat menu must not come back.
+    for legacy in (">Templates<", ">Samples<", ">Clauses<", ">Dashboard<", ">Search<"):
+        assert legacy not in page.text, f"legacy nav label {legacy} is back in the chrome"
 
 
 def test_review_task_page_verdict_labels_follow_locale(seeded_db, client):

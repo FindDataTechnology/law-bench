@@ -129,7 +129,8 @@ class _FakeMetric:
         if outcome == "boom":
             raise RuntimeError("connection reset by peer")
         self.success = True
-        self.reason = "fake pass"
+        # trailing CONFIDENCE mirrors the v2-structure judge output contract
+        self.reason = "fake pass\nCONFIDENCE: 0.90"
 
 
 def _with_fake_metrics(monkeypatch, metrics):
@@ -168,9 +169,12 @@ def test_exhausted_retries_mark_only_their_own_criterion(seeded_db, monkeypatch)
     assert m1.measure_calls == 3  # 3 attempts, no 4th
     assert sleeps == [8, 16]  # no sleep after the final failed attempt
     assert res["n_passed"] == 1
-    failed = [cr for cr in res["criteria_results"] if cr["verdict"] == "fail"]
-    assert len(failed) == 1
-    assert "error" in failed[0]["reasoning"]  # error surfaced on that criterion
+    # 契约变更（2026-11-09，审计 03 §4）：重试耗尽的 criterion 记为 **invalid**，
+    # 不再记 fail——「没测成」不等于「不合格」。详见 tests/test_judge_error_is_invalid.py。
+    invalid = [cr for cr in res["criteria_results"] if cr["verdict"] == "invalid"]
+    assert len(invalid) == 1
+    assert invalid[0].get("invalid_reason") == "judge_call_error"
+    assert "error" in invalid[0]["reasoning"]  # error surfaced on that criterion
     assert res["criteria_results"][1]["verdict"] == "pass"  # sibling unaffected
 
 

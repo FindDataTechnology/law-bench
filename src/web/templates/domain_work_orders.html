@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.workorders.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'team' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 本域工单：谁被派了什么、现在在哪一步。
+
+    为什么单独一页：总览的「我的任务」只匹配 `assignee == user.sub`，那只是三档里
+    的一档。派给内核岗位或舰队的工单在那里根本看不见——它存在、挡住重复派单、而
+    没有任何人能看见或关闭它。所以档位不是装饰，是这一页要回答的问题：**它在等谁**。
+
+    这一页只读。认领与完成走既有的状态路由，权限由那条路由判定：看得见按钮不代表
+    点得动。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.workorders.h1 }}</h1>
+    <p class="hint">{{ domain.path }} · {{ t.console.workorders.intro }}</p>
+  </div>
+  <a class="btn btn-sm" href="{{ url_for('console_team', domain_key=domain.key) }}">{{ t.console.areas.team }}</a>
+</div>
+
+<div class="toolbar gap">
+  <span class="muted">{{ t.console.workorders.filter_status }}</span>
+  {% for value, label in [
+      (none, t.console.workorders.all),
+      ('pending', t.console.workorders.status_pending),
+      ('in_progress', t.console.workorders.status_in_progress),
+      ('done', t.console.workorders.status_done),
+      ('cancelled', t.console.workorders.status_cancelled)] %}
+  <a class="btn btn-sm{% if status_filter == value %} btn-primary{% endif %}"
+     href="{{ url_for('console_work_orders', domain_key=domain.key) }}{% if value or kind_filter %}?{% endif %}{% if value %}status={{ value }}{% endif %}{% if value and kind_filter %}&{% endif %}{% if kind_filter %}kind={{ kind_filter }}{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="toolbar gap">
+  <span class="muted">{{ t.console.workorders.filter_kind }}</span>
+  <a class="btn btn-sm{% if kind_filter is none %} btn-primary{% endif %}"
+     href="{{ url_for('console_work_orders', domain_key=domain.key) }}{% if status_filter %}?status={{ status_filter }}{% endif %}">{{ t.console.workorders.all }}</a>
+  {% for k in kinds %}
+  <a class="btn btn-sm{% if kind_filter == k %} btn-primary{% endif %}"
+     href="{{ url_for('console_work_orders', domain_key=domain.key) }}?kind={{ k }}{% if status_filter %}&status={{ status_filter }}{% endif %}">{{ t.console.workorders['kind_' ~ (k | replace('-', '_'))] }}</a>
+  {% endfor %}
+</div>
+
+<div class="panel">
+{% if tasks %}
+<table class="data-table">
+  <thead>
+    <tr>
+      <th>{{ t.console.workorders.col_id }}</th>
+      <th>{{ t.console.workorders.col_title }}</th>
+      <th>{{ t.console.workorders.col_assignee }}</th>
+      <th>{{ t.console.workorders.col_status }}</th>
+      <th>{{ t.console.workorders.col_target }}</th>
+      <th>{{ t.console.workorders.col_trail }}</th>
+      <th>{{ t.console.workorders.col_created }}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in tasks %}
+    <tr>
+      <td class="muted nowrap">#{{ task.id }}</td>
+      <td>{{ task.title }}{% if task.detail %}<div class="hint">{{ task.detail }}</div>{% endif %}</td>
+      <td>
+        <span class="badge">{{ t.console.workorders['kind_' ~ (task.assignee_kind or 'human') | replace('-', '_')] }}</span>
+        {% if task.assignee_ref %}<code>{{ task.assignee_ref }}</code>{% endif %}
+        <div class="muted">{{ task.assignee }}</div>
+        {#- 三档的后果必须分开写：共用一句「已派出」会把「等待舰队认领」说成
+            「下一轮就跑」，值班的人据此判断要不要催。 -#}
+        <div class="hint">{{ t.console.workorders[task.consequence] }}</div>
+      </td>
+      <td class="nowrap"><span class="badge">{{ t.console.workorders['status_' ~ task.status] }}</span></td>
+      <td class="muted">{% if task.target_kind %}<code>{{ task.target_kind }}</code>{% if task.target_key %} / <code>{{ task.target_key }}</code>{% endif %}{% else %}—{% endif %}</td>
+      <td class="muted">
+        {% if task.trail %}
+        <ul class="plain">
+          {% for e in task.trail %}
+          <li>
+            <span class="muted nowrap">{{ (e.at | string)[:16] | replace('T', ' ') }}</span>
+            {{ e.from }} → {{ e.to }} · <code>{{ e.by }}</code>
+            {% if e.note %}<span class="hint">{{ e.note }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}<span class="hint">{{ t.console.workorders.no_trail }}</span>{% endif %}
+      </td>
+      <td class="muted nowrap">{{ (task.created_at | string)[:16] | replace('T', ' ') }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p class="hint">{{ t.console.workorders.assignee_display_hint }}</p>
+{% else %}
+{% with message=t.console.workorders.empty, hint=t.console.workorders.empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% endif %}
+</div>
+{% endblock %}

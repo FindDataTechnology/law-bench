@@ -96,7 +96,12 @@ def _gateway_request(
     headers = {"Authorization": f"Bearer {token}"}
     body = None
     if data is not None:
-        body = urllib.parse.urlencode(data).encode()
+        # **必须 doseq=True**：`_registration_fields()` 里的
+        # `supported_transports` 是 list，而裸 `urlencode` 会 `str(list)`，
+        # 把 `['streamable-http']` 这串 repr（带单引号）当成**标量值**发出去——
+        # 数组从没离开过进程，网关存下来的正是一个字符串，也就是 2026-11-07
+        # 那次「整排 unhealthy/degraded」事故的形状。审计 03 §6。
+        body = urllib.parse.urlencode(data, doseq=True).encode()
         headers["Content-Type"] = "application/x-www-form-urlencoded"
     request = urllib.request.Request(url, data=body, headers=headers)
     try:
@@ -121,7 +126,12 @@ def _registration_fields(args: argparse.Namespace) -> dict[str, str]:
         "auth_scheme": "api_key",
         "auth_credential": args.credential,
         "auth_header_name": "X-API-Key",
-        "supported_transports": "streamable-http",
+        # Transports must be a LIST, not a bare string: the registry stores the
+        # field verbatim and its probe (registry/core/transport_guard.py) reads
+        # it as an array — a string form once poisoned every row to
+        # unhealthy/degraded gateway-wide (2026-11-07 incident, see
+        # MCP-REGISTRY.md §3.ai and openspec clear-line-integration-drift 4.3).
+        "supported_transports": ["streamable-http"],
         "provider_organization": "fd-coding",
         "provider_url": args.provider_url,
         "deployment": "remote",

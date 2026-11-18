@@ -1,20 +1,36 @@
 {% extends "base.html" %}
 {% block title %}{{ t.clauses.h1 }} · {{ t.nav.brand }}{% endblock %}
 {% block content %}
+{# The POST /clauses/extract re-render passes a reduced context (no tag_vocab /
+   active_tags) — fall back to empty collections so the flash page renders
+   instead of 500-ing on the toolbar filter (pre-existing defect, template-side
+   graceful degrade; routes untouched). #}
+{% set tag_vocab = tag_vocab if tag_vocab is defined else {} %}
+{% set active_tags = active_tags if active_tags is defined else {} %}
+{# Local narrow-screen guard (checklist ⑥; template-scoped, recorded in the sweep
+   report): toolbar filter controls keep their compact widths on desktop but
+   never exceed the available width once the toolbar stacks. #}
+<style>
+@media (max-width: 720px) {
+  .clauses-inline-forms input, .clauses-inline-forms select { max-width: 100%; }
+}
+</style>
 <div class="toolbar between">
   <h1>{{ t.clauses.h1 }}</h1>
-  <div class="inline">
+  <div class="inline clauses-inline-forms">
     <form method="get" action="{{ url_for('page_clauses') }}" class="inline">
-      <input type="text" name="q" value="{{ q }}" placeholder="{{ t.clauses.search_ph }}" style="width:16em">
-      <select name="stance" style="width:9em">
+      {# Compact toolbar filters: visible labels would double the row height, so
+         each control carries an accessible name from an existing t.* key. #}
+      <input type="text" name="q" value="{{ q }}" placeholder="{{ t.clauses.search_ph }}" style="width:16em" aria-label="{{ t.clauses.search_ph }}">
+      <select name="stance" style="width:9em" aria-label="{{ t.clauses.all_stances }}">
         <option value="">{{ t.clauses.all_stances }}</option>
         {% for v in tag_vocab.stance %}<option value="{{ v }}" {% if active_tags.get('stance') == v %}selected{% endif %}>{{ v }}</option>{% endfor %}
       </select>
       <button type="submit" class="btn btn-sm btn-ghost">{{ t.clauses.search }}</button>
     </form>
     <form method="post" action="{{ url_for('page_clauses_extract') }}" class="inline">
-      <label class="muted">{{ t.clauses.extract_limit }}</label>
-      <input type="number" name="limit" value="5" min="0" max="50" style="width:5em">
+      <label class="muted" for="clauses-extract-limit">{{ t.clauses.extract_limit }}</label>
+      <input type="number" name="limit" id="clauses-extract-limit" value="5" min="0" max="50" style="width:5em">
       <button type="submit" class="btn btn-sm">{{ t.clauses.extract }}</button>
     </form>
   </div>
@@ -32,16 +48,21 @@
   <details>
     <summary>{{ c.section }} · {{ c.category }}{% if c.tags.scenario %} · {{ c.tags.scenario }}{% endif %} · {{ zh.get(c.contract_type, c.contract_type) }}</summary>
     <div class="muted small">#{{ c.id }} · <code>{{ c.contract_type }}</code>{% if c.source_path %} · {{ c.source_path }}{% endif %}</div>
-    <div>{{ c.body[:200] }}…</div>
+    <div>{{ c.body[:200] }}{% if c.body|length > 200 %}…{% endif %}</div>
     <a href="{{ url_for('page_clauses_edit', contract_type=c.contract_type, clause_id=c.id) }}">{{ t.clauses.edit }}</a>
   </details>
   {% else %}
-  <p class="muted">{{ t.clauses.no_match }}</p>
+  {# Honest empty (checklist ②): the query legitimately matched nothing —
+     next step is clearing the filter, not an implied library error. #}
+  {% with message=t.clauses.no_match, action_href=url_for('page_clauses'), action_label=t.clauses.reset %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
   {% endfor %}
 </div>
 {% else %}
 <div class="panel">
   <p>{{ tr('clauses.counts_line', total=counts.total, base=counts.base, tagged=counts.tagged, custom=counts.custom)|safe }}</p>
+  {% if rows %}
   <table>
     <thead>
       <tr>
@@ -72,11 +93,18 @@
           <a href="{{ url_for('page_clauses_generate', contract_type=r.contract_type) }}?format=docx">{{ t.clauses.generate }}</a>
         </td>
       </tr>
-      {% else %}
-      <tr><td colspan="7" class="muted">{{ t.clauses.empty|safe }}</td></tr>
       {% endfor %}
     </tbody>
   </table>
+  {% else %}
+  {# Honest empty (checklist ②): real empty clause table, next step in copy
+     (extract button top-right / CLI). Rendered with the shared .empty-state
+     grammar; inline markup because this t.* key carries <code> HTML that the
+     partial would escape (partial is reserved for plain-text keys). #}
+  <div class="empty-state" role="status">
+    <p class="empty-state-text">{{ t.clauses.empty|safe }}</p>
+  </div>
+  {% endif %}
 </div>
 {% endif %}
 {% endblock %}

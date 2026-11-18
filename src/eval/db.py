@@ -135,6 +135,11 @@ def connect(db: Any = None) -> Any:
 # error; restart the MCP server (or call `close_shared_conn()` to force a
 # reopen). Escalate to a pool only if contention shows up in practice.
 _SHARED_CONN: Any = None
+#: DSN the cached connection was opened with. ``database_url`` can change at
+#: runtime (test fixtures, scripts), and a cached connection keeps pointing at
+#: whichever database it first connected to — silently misrouting every later
+#: write. Comparing this on each call is what keeps the cache honest.
+_SHARED_CONN_DSN: Optional[str] = None
 
 
 def _is_conn_alive(conn: Any) -> bool:
@@ -154,8 +159,23 @@ def get_shared_conn() -> Any:
 
     If the cached connection has been terminated by the server (e.g., AdminShutdown),
     automatically reopen it.
+
+    The cache is **per DSN**: ``database_url`` is read at every call, and a
+    cached connection pointing at a different database is discarded. Without
+    that check, a process that switches ``database_url`` at runtime (the test
+    fixtures, backfill scripts) keeps writing to the FIRST database it touched —
+    measured on 2026-11-18: two `ensure_schema()` calls against two different
+    databases both ran their DDL inside the first one, leaving the second with no
+    tables at all.
     """
-    global _SHARED_CONN
+    global _SHARED_CONN, _SHARED_CONN_DSN
+    current_dsn = _dsn()
+    if _SHARED_CONN is not None and _SHARED_CONN_DSN != current_dsn:
+        try:
+            _SHARED_CONN.close()
+        except Exception:
+            pass
+        _SHARED_CONN = None
     if _SHARED_CONN is None or not _is_conn_alive(_SHARED_CONN):
         if _SHARED_CONN is not None:
             # Try to close the stale connection
@@ -166,18 +186,20 @@ def get_shared_conn() -> Any:
         import psycopg
         from psycopg.rows import dict_row
         # Add TCP keepalive parameters to prevent connection timeout during long LLM calls
-        dsn = _dsn()
+        dsn = current_dsn
         # Parse and augment DSN with keepalive parameters if not already present
         if 'keepalives=' not in dsn:
             separator = '&' if '?' in dsn else '?'
             dsn = f"{dsn}{separator}keepalives=1&keepalives_idle=60&keepalives_interval=10&keepalives_count=5"
         _SHARED_CONN = psycopg.connect(dsn, row_factory=dict_row, autocommit=True)
+        _SHARED_CONN_DSN = current_dsn
     return _SHARED_CONN
 
 
 def close_shared_conn() -> None:
     """Close the cached connection (if any); next `get_shared_conn()` reopens."""
-    global _SHARED_CONN
+    global _SHARED_CONN, _SHARED_CONN_DSN
+    _SHARED_CONN_DSN = None
     if _SHARED_CONN is not None:
         try:
             _SHARED_CONN.close()

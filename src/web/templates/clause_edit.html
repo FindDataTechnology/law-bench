@@ -14,39 +14,42 @@
 
 <form method="post" action="{{ url_for('page_clauses_edit', contract_type=contract_type, clause_id=clause.id) }}" class="panel">
   <p>
-    <label>{{ t.clauses.section }}</label>
-    <input type="text" name="section" value="{{ clause.section }}" required style="width:12em">
+    <label for="ce-section">{{ t.clauses.section }}</label>
+    <input type="text" name="section" id="ce-section" value="{{ clause.section }}" required style="width:12em">
   </p>
   <p>
-    <label>{{ t.clauses.category }}</label>
-    <select name="category">
+    <label for="ce-category">{{ t.clauses.category }}</label>
+    <select name="category" id="ce-category">
       {% for c in categories %}
       <option value="{{ c }}" {% if c == clause.category %}selected{% endif %}>{{ category_zh[c] }}（{{ c }}）</option>
       {% endfor %}
     </select>
   </p>
   <p>
-    <label>{{ t.clauses.body }}</label>
-    <textarea name="body" rows="14" style="width:100%" required>{{ clause.body }}</textarea>
+    <label for="ce-body">{{ t.clauses.body }}</label>
+    <textarea name="body" id="ce-body" rows="14" style="width:100%" required>{{ clause.body }}</textarea>
   </p>
   <p>
     <label>{{ t.clauses.tags }}</label>
     <span class="inline">
       {% for dim in tag_dims %}
-      <select name="{{ dim }}" style="width:9em">
+      {# One select per tag dimension; the dimension key is the control's
+         accessible name (it is the visible identity in the first option too). #}
+      <select name="{{ dim }}" style="width:9em" aria-label="{{ dim }}">
         <option value="">{{ dim }}{{ t.clauses.untagged }}</option>
         {% for v in tag_vocab[dim] %}<option value="{{ v }}" {% if clause.tags.get(dim) == v %}selected{% endif %}>{{ v }}</option>{% endfor %}
       </select>
       {% endfor %}
     </span>
-    <span class="muted small">{{ t.clauses.tags_edit_hint }}</span>
+    <span class="hint">{{ t.clauses.tags_edit_hint }}</span>
   </p>
-  <div class="inline">
-    <button type="submit" class="btn">{{ t.clauses.save }}</button>
-    <form method="post" action="{{ url_for('page_clauses_delete', contract_type=contract_type, clause_id=clause.id) }}" class="inline" data-confirm="{{ t.clauses.delete_confirm }}">
-      <button type="submit" class="btn btn-sm btn-ghost">{{ t.clauses.delete }}</button>
-    </form>
-  </div>
+  <button type="submit" class="btn">{{ t.clauses.save }}</button>
+</form>
+{# Delete is its own form OUTSIDE the edit form (checklist ④/HTML validity):
+   nested <form> is invalid HTML — browsers drop the inner form tag, which
+   would make this button submit the edit form instead of the delete endpoint. #}
+<form method="post" action="{{ url_for('page_clauses_delete', contract_type=contract_type, clause_id=clause.id) }}" class="inline" data-confirm="{{ t.clauses.delete_confirm }}">
+  <button type="submit" class="btn btn-sm btn-ghost">{{ t.clauses.delete }}</button>
 </form>
 
 <div class="panel">

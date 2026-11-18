@@ -26,6 +26,7 @@
 
 <p class="muted">{{ total }} · {{ t.law_info.appears_in }}</p>
 
+{% if grouped %}
 {% for group in grouped %}
 <div class="panel">
   <h2>{{ group.refs[0].category_zh }} · {{ group.category }} <span class="muted">({{ group.refs|length }})</span></h2>
@@ -53,4 +54,19 @@
   </table>
 </div>
 {% endfor %}
+{% else %}
+<div class="panel">
+  {% if source_filter or type_filter %}
+  {# 筛选空：如实说没有匹配，下一步 = 调整筛选 #}
+  {% with message=t.law_info.refs_empty_filtered %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% else %}
+  {# 真空态：law_info 数据未导入 #}
+  {% with message=t.law_info.refs_empty, hint=t.law_info.refs_empty_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+{% endif %}
 {% endblock %}

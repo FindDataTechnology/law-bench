@@ -18,8 +18,15 @@ from ..annotations import annotations_for
 from ..server import mcp
 
 
-# ponytail: TTL cache for catalog queries
-_catalog_cache: tuple[list[dict], datetime] | None = None
+# ponytail: TTL cache for catalog queries, keyed by *shape*.
+#
+# 键必须是 ``include_clause_counts``：两个形状的字段相同但**值不同**（不计数时三个
+# 计数恒为 0）。共用一个槽会出现两种错答，且都长得像真数据：
+#   - 先 false 后 true → 计数读拿到 5 分钟的假 0（"条款表是空的"）；
+#   - 先 true 后 false → 便宜的读拿到计数值（它本来可以不打库）。
+# 前者已经误导过一次现网审计（2026-11-10 记「66 个类型计数全 0」＝读路径错位），
+# 实际数据是好的；回归锚点见 ``tests/test_catalog_cache_key.py``。
+_catalog_cache: dict[bool, tuple[list[dict], datetime]] = {}
 _CACHE_TTL = timedelta(minutes=5)
 
 
@@ -51,11 +58,14 @@ async def contract_type_catalog(
         global _catalog_cache
         now = datetime.utcnow()
 
-        # Check cache first
-        if not refresh and _catalog_cache is not None:
-            cached_value, cached_time = _catalog_cache
-            if now - cached_time < _CACHE_TTL:
-                return cached_value
+        # 按形状查缓存：不计数的那份**不能**拿来回答"要计数"的提问。
+        shape = bool(include_clause_counts)
+        if not refresh:
+            cached = _catalog_cache.get(shape)
+            if cached is not None:
+                cached_value, cached_time = cached
+                if now - cached_time < _CACHE_TTL:
+                    return cached_value
 
         types = list_contract_types()
         result = []
@@ -99,7 +109,7 @@ async def contract_type_catalog(
             })
 
         sorted_result = sorted(result, key=lambda x: x["key"])
-        _catalog_cache = (sorted_result, now)
+        _catalog_cache[shape] = (sorted_result, now)
         return sorted_result
 
     return await anyio.to_thread.run_sync(_go)
@@ -126,7 +136,9 @@ async def type_metadata(
     ```
     """
     from src.contracts.templates import get_template, list_contract_types
-    from src.clauses.tags import tag_vocab_list
+    # 函数真名是 tag_vocab_for_type（tag_vocab_list 是 MCP 侧工具名，不是这里的符号）——
+    # 2026-11-10 实测：这行曾写成 tag_vocab_list，导致 type_metadata 一调就 ImportError。
+    from src.clauses.tags import tag_vocab_for_type
     from src.eval.errors import NotFoundError
 
     def _go() -> dict:
@@ -148,7 +160,7 @@ async def type_metadata(
         slot_count = len(template["slots"])
 
         # Get tag vocabulary
-        vocab = tag_vocab_list(contract_type)
+        vocab = tag_vocab_for_type(contract_type)
         universal_dims = {k: v for k, v in vocab.items() if k in ("stance", "strength", "risk", "mandatory")}
         type_specific_dims = {k: v for k, v in vocab.items() if k not in ("stance", "strength", "risk", "mandatory", "source")}
 

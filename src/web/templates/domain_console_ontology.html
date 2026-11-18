@@ -1,0 +1,405 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.ontology.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'ontology' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 本体台账 = 四层账页（本 change 唯一的新签名件，见 brief）。
+
+    四行并列科目，不是四张卡：行间只有 1px Rule Gray 横线，无边框无填充
+    无阴影。每行左侧 11rem 是层名 + 数据来源（0.8rem 大写 muted label，
+    mono 表名），右侧是该层内容。缺数据的一行不隐藏、不塌陷，显示它自己
+    的空态与下一步。 -#}
+<div class="toolbar between">
+  <h1>{{ t.console.ontology.h1 }}</h1>
+  <span class="badge">{% if cap.role == 'admin' %}{{ t.console.role.admin }}{% elif cap.role %}{{ t.console.role[cap.role] }}{% endif %}</span>
+</div>
+<p class="hint">{{ t.console.ontology.intro }}</p>
+
+<div class="ledger-sheet">
+
+  {# ---------- 声明层 ---------- #}
+  <section class="layer-row">
+    <div class="layer-head">
+      <h2>{{ t.console.ontology.layer_declaration }}</h2>
+      <div class="layer-source">{{ t.console.ontology.src_declaration }}</div>
+    </div>
+    <div class="layer-body">
+      {% if declaration.has_template %}
+      <p>
+        <strong>{{ declaration.template.name }}</strong>
+        <span class="muted">v{{ declaration.template.version }}</span>
+        {% if declaration.template.is_latest %}
+        <span class="badge">{{ t.console.ontology.template_current }}</span>
+        {% else %}
+        <span class="badge bad">{{ t.console.ontology.template_outdated }} · {{ tr('console.ontology.template_latest', version=declaration.template.latest_version) }}</span>
+        {% endif %}
+      </p>
+      <dl class="vocab-grid">
+        <dt>{{ t.console.ontology.entity_types }}</dt>
+        <dd>{% for kind in declaration.entity_types %}<code>{{ kind }}</code> {% else %}<span class="muted">{{ t.console.ontology.reconcile_none }}</span>{% endfor %}</dd>
+        <dt>{{ t.console.ontology.relationship_kinds }}</dt>
+        <dd>{% for kind in declaration.relationship_kinds %}<code>{{ kind }}</code> {% else %}<span class="muted">{{ t.console.ontology.reconcile_none }}</span>{% endfor %}</dd>
+        <dt>{{ t.console.ontology.tier_vocabulary }}</dt>
+        <dd>{% for v in declaration.tier_vocabulary %}<code>{{ v }}</code> {% else %}<span class="muted">{{ t.console.ontology.reconcile_none }}</span>{% endfor %}</dd>
+        <dt>{{ t.console.ontology.sensitivity_vocabulary }}</dt>
+        <dd>{% for v in declaration.sensitivity_vocabulary %}<code>{{ v }}</code> {% else %}<span class="muted">{{ t.console.ontology.reconcile_none }}</span>{% endfor %}</dd>
+      </dl>
+      {% else %}
+      {% with message=t.console.ontology.no_template, hint=t.console.ontology.no_template_hint %}
+        {% include '_empty_state.html' %}
+      {% endwith %}
+      {% endif %}
+    </div>
+  </section>
+
+  {# ---------- 策展层 ---------- #}
+  <section class="layer-row">
+    <div class="layer-head">
+      <h2>{{ t.console.ontology.layer_curation }}</h2>
+      <div class="layer-source">{{ t.console.ontology.src_curation }}</div>
+    </div>
+    <div class="layer-body">
+      {% if curation.rows %}
+      <p class="muted">{{ tr('console.ontology.total', n=curation.total, deleted=curation.deleted) }}</p>
+      {# One row per kind in the anchored vocabulary (count 0 included), then
+         the out-of-vocabulary kinds. This is the layer's ACTION surface: the
+         declared kinds are what experts can write next, so browse/create live
+         here rather than on a separate workbench home. Create is offered only
+         for in-vocabulary kinds — the form 404s for an out-of-vocabulary kind
+         because the kernel would refuse the write anyway. #}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ t.console.ontology.col_kind }}</th>
+            <th>{{ t.console.ontology.col_lane }}</th>
+            <th>{{ t.console.ontology.col_count }}</th>
+            <th>{{ t.console.ontology.col_actions }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in curation.rows %}
+          <tr>
+            <td><code>{{ row.kind }}</code></td>
+            <td>
+              {% if row.lane == 'entity' %}<span class="badge">{{ t.console.ontology.lane_entity }}</span>
+              {% elif row.lane == 'relationship' %}<span class="badge">{{ t.console.ontology.lane_relationship }}</span>
+              {% else %}<span class="badge bad">{{ t.console.ontology.lane_out }}</span>{% endif %}
+            </td>
+            <td>{{ row.count }}</td>
+            <td class="dl-cell">
+              <a href="{{ url_for('workbench_browse', domain_key=domain.key, kind=row.kind) }}">{{ t.console.ontology.browse }}</a>
+              {% if cap.can_write and row.lane != 'out' %}
+              <a href="{{ url_for('workbench_unit_new', domain_key=domain.key, kind=row.kind) }}">{{ t.console.ontology.new_unit }}</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% if curation.total %}
+      <p class="hint">
+        {{ t.console.ontology.by_tier }}：
+        {% for tier, n in curation.by_tier.items() | list | reverse %}<code>{{ tier }} {{ n }}</code> {% endfor %}
+      </p>
+      {% endif %}
+      {% else %}
+      {% with message=t.console.ontology.no_units, hint=t.console.ontology.no_units_hint %}
+        {% include '_empty_state.html' %}
+      {% endwith %}
+      {% endif %}
+    </div>
+  </section>
+
+  {# ---------- 发布层 ---------- #}
+  <section class="layer-row">
+    <div class="layer-head">
+      <h2>{{ t.console.ontology.layer_publication }}</h2>
+      <div class="layer-source">{{ t.console.ontology.src_publication }}</div>
+    </div>
+    <div class="layer-body">
+      {% if publication.has_publication %}
+      <p>
+        <span class="badge">v{{ publication.latest.version }}</span>
+        <code class="digest">{{ publication.latest.digest }}</code>
+      </p>
+      <p class="muted">{{ publication.latest.published_at[:16] | replace('T', ' ') }} · {{ publication.latest.published_by }}</p>
+      {% if publication.history | length > 1 %}
+      <h3>{{ t.console.ontology.history_h2 }}</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ t.console.ontology.col_version }}</th>
+            <th>{{ t.console.ontology.col_digest }}</th>
+            <th>{{ t.console.ontology.col_published_at }}</th>
+            <th>{{ t.console.ontology.col_changelog }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in publication.history %}
+          <tr>
+            <td>v{{ p.version }}</td>
+            <td><code class="digest">{{ p.digest }}</code></td>
+            <td class="muted">{{ p.published_at[:16] | replace('T', ' ') }}</td>
+            <td class="muted">{{ p.changelog if p.changelog is string else (p.changelog | tojson) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+      {% else %}
+      {% with message=t.console.ontology.no_publication, hint=t.console.ontology.no_publication_hint %}
+        {% include '_empty_state.html' %}
+      {% endwith %}
+      {% endif %}
+    </div>
+  </section>
+
+  {# ---------- 消费层 ---------- #}
+  <section class="layer-row">
+    <div class="layer-head">
+      <h2>{{ t.console.ontology.layer_consumption }}</h2>
+      <div class="layer-source">{{ t.console.ontology.src_consumption }}</div>
+    </div>
+    <div class="layer-body">
+      {% if consumption.consumers %}
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ t.console.ontology.col_consumer }}</th>
+            <th>{{ t.console.ontology.col_domains }}</th>
+            <th class="nowrap">{{ t.console.ontology.col_status }}</th>
+            <th class="nowrap">{{ t.console.ontology.col_last_pull }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in consumption.consumers %}
+          <tr>
+            <td>{{ c.name }}</td>
+            <td class="muted">{% for k in c.domains %}<code>{{ k }}</code> {% endfor %}</td>
+            <td class="nowrap">
+              {% if c.revoked %}<span class="badge bad">{{ t.console.ontology.consumer_revoked }}</span>
+              {% else %}<span class="badge">{{ t.console.ontology.consumer_active }}</span>{% endif %}
+            </td>
+            <td class="muted nowrap">
+              {% if c.last_pull %}v{{ c.last_pull.version }} · {{ c.last_pull.happened_at }}
+              {% else %}{{ t.console.ontology.never_pulled }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      {% with message=t.console.ontology.no_consumers, hint=t.console.ontology.no_consumers_hint %}
+        {% include '_empty_state.html' %}
+      {% endwith %}
+      {% endif %}
+    </div>
+  </section>
+
+</div>
+
+{#- 一致性核对：事实，不自动修复。三件事各自列条目，一致时明说一致。 -#}
+<div class="panel">
+  <h2>{{ t.console.ontology.reconcile_h2 }}</h2>
+  <p>
+    {% if reconcile.consistent %}
+    <span class="badge">{{ tr(reconcile.summary_key) }}</span>
+    {% else %}
+    <span class="badge bad">{{ tr(reconcile.summary_key) }}</span>
+    {% endif %}
+  </p>
+  <dl class="vocab-grid">
+    <dt>{{ t.console.ontology.reconcile_unused }}</dt>
+    <dd>
+      {% if reconcile.unused_kinds %}
+      {% for kind in reconcile.unused_kinds %}<code>{{ kind }}</code> {% endfor %}
+      {% else %}<span class="muted">{{ t.console.ontology.reconcile_none }}</span>{% endif %}
+    </dd>
+    <dt>{{ t.console.ontology.reconcile_out_of_vocab }}</dt>
+    <dd>
+      {% if reconcile.out_of_vocab_kinds %}
+      {% for kind in reconcile.out_of_vocab_kinds %}<code>{{ kind }}</code> {% endfor %}
+      <div class="hint">{{ t.console.ontology.reconcile_out_of_vocab_fix }}</div>
+      {% else %}<span class="muted">{{ t.console.ontology.reconcile_none }}</span>{% endif %}
+    </dd>
+  </dl>
+</div>
+
+{% include '_ontology_graph.html' %}
+
+<div class="panel">
+  <h2>{{ t.console.ontology.units_h2 }}</h2>
+  <form method="GET" action="{{ url_for('console_ontology', domain_key=domain.key) }}" class="toolbar gap">
+    <label for="ont-kind">{{ t.console.ontology.col_kind }}</label>
+    <select name="kind" id="ont-kind">
+      <option value="">{{ t.console.ontology.all_kinds }}</option>
+      {% for k in entity_types %}<option value="{{ k }}"{% if filters.kind == k %} selected{% endif %}>{{ k }}</option>{% endfor %}
+      {% for k in relationship_kinds %}<option value="{{ k }}"{% if filters.kind == k %} selected{% endif %}>{{ k }}</option>{% endfor %}
+    </select>
+    <label for="ont-q">{{ t.console.ontology.search_label }}</label>
+    <input type="text" name="q" id="ont-q" value="{{ filters.q }}">
+    <label><input type="checkbox" name="deleted" value="1"{% if filters.deleted %} checked{% endif %}> {{ t.console.ontology.show_deleted }}</label>
+    <button type="submit" class="btn btn-sm">{{ t.console.ontology.filter_btn }}</button>
+  </form>
+  {% if units %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ t.console.ontology.col_kind }}</th>
+        <th>{{ t.console.ontology.col_key }}</th>
+        <th>{{ t.console.ontology.col_body }}</th>
+        <th>{{ t.console.ontology.col_grounding }}</th>
+        <th>{{ t.console.ontology.col_tier }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in units %}
+      <tr>
+        <td>{{ u.kind }}</td>
+        <td><code>{{ u.external_key }}</code></td>
+        <td>{{ u.body[:60] }}</td>
+        <td>
+          {% set gl = grounding.get(u.external_key) or [] %}
+          {% if gl %}
+            {% for g in gl %}
+            <span class="onto-grounding">
+              <span class="onto-grounding__kind">{{ g.kind }}</span>
+              {% if g.direction == 'out' %}→{% else %}←{% endif %}
+              <code>{{ g.other }}</code>
+            </span>
+            {% endfor %}
+          {% elif u.attrs and u.attrs.definition %}
+            <span class="hint">{{ u.attrs.definition[:40] }}</span>
+          {% else %}
+            <span class="badge bad">{{ t.console.ontology.grounding_none }}</span>
+          {% endif %}
+        </td>
+        <td>{{ u.tier }}</td>
+        <td>
+          {% if u.tags and u.tags.deleted %}<span class="badge badge-warn">{{ t.console.ontology.deleted_tag }}</span>{% endif %}
+          {% if cap.can_assign %}
+          <form method="POST" class="inline" action="{{ url_for('console_ontology_unit_delete', domain_key=domain.key) }}">
+            <input type="hidden" name="kind" value="{{ u.kind }}">
+            <input type="hidden" name="external_key" value="{{ u.external_key }}">
+            <button type="submit" class="btn btn-sm">{{ t.console.ontology.delete_btn }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="hint">{{ t.console.ontology.units_empty }}</p>
+  {% endif %}
+</div>
+
+{% if vocab_gaps or smoke_units %}
+<div class="panel">
+  {% if vocab_gaps %}
+  <h3>{{ t.console.ontology.vocab_gap_h2 }}</h3>
+  <p class="hint">{{ t.console.ontology.vocab_gap_hint }}</p>
+  <ul class="plain">{% for k in vocab_gaps %}<li><code>{{ k }}</code></li>{% endfor %}</ul>
+  {% endif %}
+  {% if smoke_units %}
+  <h3>{{ t.console.ontology.smoke_h2 }}</h3>
+  <p class="hint">{{ t.console.ontology.smoke_hint }}</p>
+  <ul class="plain">{% for s in smoke_units %}<li><code>{{ s.external_key }}</code></li>{% endfor %}</ul>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if cap.can_write %}
+<div class="panel">
+  <h2>{{ t.console.ontology.write_h2 }}</h2>
+  <form method="POST" action="{{ url_for('console_ontology_unit_write', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label for="unit-kind">{{ t.console.ontology.col_kind }}</label>
+      <select name="kind" id="unit-kind" required>
+        {% for k in entity_types %}<option value="{{ k }}">{{ k }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="unit-key">{{ t.console.ontology.col_key }}</label>
+      <input type="text" name="external_key" id="unit-key" required>
+    </div>
+    <div class="filter-group">
+      <label for="unit-body">{{ t.console.ontology.col_body }}</label>
+      <input type="text" name="body" id="unit-body" required>
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn btn-primary">{{ t.console.ontology.save_btn }}</button>
+    </div>
+  </form>
+
+  {% if live_entities and relationship_kinds %}
+  <h3>{{ t.console.ontology.relation_h2 }}</h3>
+  <form method="POST" action="{{ url_for('console_ontology_relation_create', domain_key=domain.key) }}" class="filter-form">
+    <div class="filter-group">
+      <label for="rel-kind">{{ t.console.ontology.col_kind }}</label>
+      <select name="kind" id="rel-kind" required>
+        {% for k in relationship_kinds %}<option value="{{ k }}">{{ k }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="rel-from">{{ t.console.ontology.from_label }}</label>
+      <select name="from_key" id="rel-from" required>
+        {% for e in live_entities %}<option value="{{ e.external_key }}">{{ e.external_key }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="rel-to">{{ t.console.ontology.to_label }}</label>
+      <select name="to_key" id="rel-to" required>
+        {% for e in live_entities %}<option value="{{ e.external_key }}">{{ e.external_key }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>&nbsp;</label>
+      <button type="submit" class="btn">{{ t.console.ontology.connect_btn }}</button>
+    </div>
+  </form>
+  {% endif %}
+
+  <h3>{{ t.console.ontology.import_h2 }}</h3>
+  <form method="POST" action="{{ url_for('console_ontology_import', domain_key=domain.key) }}">
+    <input type="hidden" name="dry" value="1">
+    <textarea name="payload" rows="6" class="wide"></textarea>
+    <button type="submit" class="btn">{{ t.console.ontology.import_preview_btn }}</button>
+  </form>
+  <p class="hint">{{ t.console.ontology.import_hint }}</p>
+</div>
+{% endif %}
+
+{% if events %}
+<div class="panel">
+  <details>
+    <summary>{{ t.console.ontology.events_h2 }} ({{ events|length }})</summary>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>{{ t.console.ontology.col_when }}</th>
+          <th>{{ t.console.ontology.col_who }}</th>
+          <th>{{ t.console.ontology.col_op }}</th>
+          <th>{{ t.console.ontology.col_key }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in events %}
+        <tr>
+          <td>{{ e.created_at }}</td>
+          <td>{{ e.operator }}</td>
+          <td>{{ e.op }}</td>
+          <td><code>{{ e.unit_key }}</code> <span class="muted">{{ e.unit_kind }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+</div>
+{% endif %}
+{% endblock %}

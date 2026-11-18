@@ -33,13 +33,17 @@ from src.eval.manage import (
 from .i18n import resolve_locale
 from .paths import STATIC_DIR, TEMPLATES_DIR
 from .routes import (
+    admin,
     api,
+    console,
     auth,
+    authoring,
     clauses,
     contract_context,
     contracts,
     copilot,
     dashboard,
+    distribution,
     generation,
     law_catalog,
     law_info,
@@ -102,6 +106,8 @@ def create_app() -> FastAPI:
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     app.include_router(api.router)
+    app.include_router(admin.router)
+    app.include_router(authoring.router)
     app.include_router(auth.router)
     app.include_router(copilot.router)
     app.include_router(contract_context.router)
@@ -116,6 +122,12 @@ def create_app() -> FastAPI:
     app.include_router(review.router)
     app.include_router(promotion.router)
     app.include_router(dashboard.router)
+    # Logto-free machine surface: /api/v1/distribution/* is exempted from the
+    # app-level get_current_user (see auth.deps._EXEMPT_PREFIXES) and does its
+    # own X-Consumer-Token auth; not mounted on public_app.
+    app.include_router(distribution.router)
+    app.include_router(console.read_only_router)
+    app.include_router(console.write_router)
 
     # Resolve the active locale once per request, stash it for the template
     # context processor, and persist the choice as a cookie so it sticks.
@@ -164,8 +176,21 @@ def create_app() -> FastAPI:
 
     @app.get("/healthz", include_in_schema=False)
     async def healthz() -> JSONResponse:
-        """Liveness/readiness probe target: always 200 when the process is up."""
-        return JSONResponse({"status": "ok"})
+        """Liveness/readiness probe target: always 200 when the process is up.
+
+        附带检索计数（审计 03 §11）。**刻意不改状态码**：探针非 200 会让 k8s
+        重启本来健康的 pod——一次 ES 抖动不该把「降级」放大成「停机」。
+        计数只是信息，让人能从 `kubectl exec ... /healthz` 看出「这个进程
+        一直在裸起草」，而不是去翻日志。
+        """
+        payload: dict = {"status": "ok"}
+        try:
+            from ..search.rag_tool import retrieval_stats
+
+            payload["retrieval"] = retrieval_stats()
+        except Exception:  # noqa: BLE001 - 探针不许因附加信息失败
+            pass
+        return JSONResponse(payload)
 
     @app.on_event("startup")
     def _verify_auth_startup() -> None:
@@ -187,6 +212,26 @@ def create_app() -> FastAPI:
             load_vocab_from_db()
         except Exception:  # noqa: BLE001
             pass
+
+    @app.on_event("startup")
+    def _reap_stale_generation_jobs() -> None:
+        """把上个进程遗留的 pending/running 生成任务收成 failed（审计 03 §10）。
+
+        `generation_jobs` 的终态只有后台任务自己在同一进程里写；滚动部署 / OOM /
+        驱逐 / SIGTERM 落在 202 与收尾之间，就会留下永远「还在跑」的行。启动时本
+        进程还没有任何任务，所以凡是非终态行必是上一进程遗留，可无条件收掉。
+        Best-effort：数据库打嗝不该拦住启动（下次重启还会再扫）。
+        """
+        try:
+            from ..eval.store import reap_stale_generation_jobs
+
+            n = reap_stale_generation_jobs()
+            if n:
+                logger.warning(
+                    "reaped %s stale generation job(s) from a previous process", n
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("stale generation-job sweep skipped: %s", exc)
 
     return app
 

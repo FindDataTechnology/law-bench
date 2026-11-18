@@ -52,14 +52,17 @@ async def contract_generate(
             shared ``clauses`` table. Ignored for the skeleton path. ``None``
             preserves the default selection (backward-compatible).
 
-    Returns ``{docx_path, pdf_path, body_text, slots, instructions, ...}`` where
-    ``body_text`` is the assembled Markdown body with ``{{slot}}`` placeholders;
-    the skeleton path also includes ``laws`` and the assembled path includes
-    ``law_refs``; plus ``current_tags`` when requested. An unknown
-    ``contract_type`` raises a tool error.
+    Returns ``{docx_path, pdf_path, body_text, slots, instructions, sha256, ...}``
+    where ``body_text`` is the assembled Markdown body with ``{{slot}}``
+    placeholders and ``sha256`` is the digest of the delivered **file bytes**
+    (``sha256_source`` says which file; falls back to ``body_text`` with an
+    explicit source when no file was produced). The skeleton path also includes
+    ``laws`` and the assembled path includes ``law_refs``; plus ``current_tags``
+    when requested. An unknown ``contract_type`` raises a tool error.
     """
     from src.clauses.assemble import generate_contract_assembled
     from src.contracts import generate_contract
+    from src.contracts.digest import content_digest
 
     # Derive the effective stance + scenario. The underlying assembler only
     # filters custom clauses by `stance` and tagged clauses by `scenario`, so we
@@ -95,6 +98,16 @@ async def contract_generate(
             load_vocab_from_db()
             result["current_tags"] = tag_vocab_for_type(contract_type)
 
+        # 内容指纹（lex-matter-spine 5.3）：对交付文件字节取 sha256，供案卷产物
+        # 登记与签署锚定对账。放在最后，覆盖所有分支（skeleton / assembled /
+        # 带 current_tags）——否则分支一多就会有"某条路没有指纹"的静默缺口。
+        result.update(
+            content_digest(
+                result.get("body_text"),
+                pdf_path=result.get("pdf_path"),
+                docx_path=result.get("docx_path"),
+            )
+        )
         return result
 
     return await anyio.to_thread.run_sync(_go)

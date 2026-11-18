@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.libraries.title }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+{#- 库登记：平台级，不是域级。
+
+    域只做「订阅」这个减法；库是物理层（一套源 + 一份向量），由平台建。
+    这个页面存在的理由：在此之前，登记一个外部库要进 pod 跑脚本——而
+    「后面会加很多细分领域」意味着这件事必须能在界面上做完。
+
+    外部库的地址只填**环境变量名**：这个页面会被渲染、被 dump、被 review，
+    填真地址/口令就三处同时泄漏。 -#}
+<div class="toolbar between">
+  <h1>{{ t.admin.libraries.title }}</h1>
+</div>
+<p class="muted">{{ t.admin.libraries.intro }}</p>
+
+<div class="panel">
+  <details {% if not libraries %}open{% endif %}>
+    <summary>{{ t.admin.libraries.create_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_library_create') }}" class="filter-form">
+      <div class="filter-group">
+        <label for="lib-key">{{ t.admin.libraries.key_label }}</label>
+        <input type="text" name="library_key" id="lib-key" required pattern="[a-z0-9-]+">
+      </div>
+      <div class="filter-group">
+        <label for="lib-name">{{ t.admin.libraries.name_label }}</label>
+        <input type="text" name="name" id="lib-name" required>
+      </div>
+      <div class="filter-group">
+        <label for="lib-backend">{{ t.admin.libraries.backend_label }}</label>
+        <select name="backend" id="lib-backend">
+          {% for b in backends %}<option value="{{ b }}">{{ b }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="lib-model">{{ t.admin.libraries.model_label }}</label>
+        <input type="text" name="embedding_model" id="lib-model" placeholder="Qwen/Qwen3-Embedding-0.6B">
+      </div>
+      <div class="filter-group">
+        <label for="lib-dims">{{ t.admin.libraries.dims_label }}</label>
+        <input type="number" name="dims" id="lib-dims" min="1" value="2048" required>
+      </div>
+      <div class="filter-group">
+        <label for="lib-url-env">{{ t.admin.libraries.url_env_label }}</label>
+        <input type="text" name="url_env" id="lib-url-env" placeholder="QDRANT_URL">
+      </div>
+      <div class="filter-group">
+        <label for="lib-collection">{{ t.admin.libraries.collection_label }}</label>
+        <input type="text" name="collection" id="lib-collection" placeholder="law_chunks_v2">
+      </div>
+      <div class="filter-group">
+        <label for="lib-dsn-env">{{ t.admin.libraries.dsn_env_label }}</label>
+        <input type="text" name="dsn_env" id="lib-dsn-env" placeholder="FDTEXT_DATABASE_URL">
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">{{ t.admin.libraries.create_btn }}</button>
+      </div>
+    </form>
+    <p class="muted">{{ t.admin.libraries.create_hint }}</p>
+  </details>
+</div>
+
+{% if libraries %}
+{% for lib in libraries %}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ lib.library_key }}</h2>
+    <span class="badge">{{ lib.backend }} · {{ lib.dims }} {{ t.admin.libraries.dims_short }}
+      {% if lib.embedding_model %}· <code>{{ lib.embedding_model }}</code>{% endif %}
+    </span>
+  </div>
+  <p class="muted">{{ lib.name }} · {{ t.admin.libraries.source_count }} {{ lib.source_count }}</p>
+
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.admin.libraries.col_source }}</th>
+      <th>{{ t.admin.libraries.col_uri }}</th>
+      <th>{{ t.admin.libraries.col_rule }}</th>
+    </tr></thead>
+    <tbody>
+      {% for s in sources[lib.library_key] %}
+      <tr>
+        <td><code>{{ s.source_key }}</code></td>
+        <td>{{ s.uri }}</td>
+        <td>
+          {% if s.ingest_rule and s.ingest_rule.match %}
+            {% for k, v in s.ingest_rule.match.items() %}
+              <code>{{ k }} = {{ v|join(' / ') if v is sequence and v is not string else v }}</code>
+            {% endfor %}
+          {% else %}—{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <details>
+    <summary>{{ t.admin.libraries.add_source_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_library_source_add', library_key=lib.library_key) }}" class="filter-form">
+      <div class="filter-group">
+        <label for="src-key-{{ lib.library_key }}">{{ t.admin.libraries.source_key_label }}</label>
+        <input type="text" name="source_key" id="src-key-{{ lib.library_key }}" required pattern="[a-z0-9-]+">
+      </div>
+      <div class="filter-group">
+        <label for="src-uri-{{ lib.library_key }}">{{ t.admin.libraries.uri_label }}</label>
+        <input type="text" name="uri" id="src-uri-{{ lib.library_key }}" required>
+      </div>
+      <div class="filter-group">
+        <label for="src-kind-{{ lib.library_key }}">{{ t.admin.libraries.kind_label }}</label>
+        <input type="text" name="source_kind" id="src-kind-{{ lib.library_key }}" value="object-prefix">
+      </div>
+      <div class="filter-group">
+        <label for="src-match-{{ lib.library_key }}">{{ t.admin.libraries.match_label }}</label>
+        <input type="text" name="match" id="src-match-{{ lib.library_key }}"
+               placeholder='{"category": ["地方性法规", "地方法规"]}'>
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn">{{ t.admin.libraries.add_source_btn }}</button>
+      </div>
+    </form>
+    <p class="muted">{{ t.admin.libraries.match_hint }}</p>
+  </details>
+
+  <details>
+    <summary>{{ t.admin.libraries.subscribe_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_library_subscribe', library_key=lib.library_key) }}" class="filter-form">
+      <div class="filter-group">
+        <label for="sub-dom-{{ lib.library_key }}">{{ t.admin.libraries.domain_label }}</label>
+        <select name="domain_key" id="sub-dom-{{ lib.library_key }}">
+          {% for d in domains %}<option value="{{ d.key }}">{{ d.name }} — {{ d.path or d.key }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="sub-src-{{ lib.library_key }}">{{ t.admin.libraries.sources_label }}</label>
+        <input type="text" name="sources" id="sub-src-{{ lib.library_key }}"
+               placeholder="statutes,judicial">
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn">{{ t.admin.libraries.subscribe_btn }}</button>
+      </div>
+    </form>
+    <p class="muted">{{ t.admin.libraries.subscribe_hint }}</p>
+  </details>
+</div>
+{% endfor %}
+{% else %}
+<div class="panel"><p class="muted">{{ t.admin.libraries.empty }}</p></div>
+{% endif %}
+{% endblock %}

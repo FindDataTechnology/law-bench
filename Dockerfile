@@ -86,6 +86,11 @@ ENV UV_CACHE_DIR=/tmp/uv-cache \
 # registry (pypi.org) and would ignore UV_DEFAULT_INDEX, whereas a plain sync
 # resolves against the configured index while preferring the locked versions.
 COPY --chown=appuser:appuser pyproject.toml uv.lock ./
+# Vendored path-source deps (pyproject [tool.uv.sources]): uv resolves
+# `fd-ontology-kernel` from vendor/*.whl, not from any index, so the wheel MUST
+# be in the build context before `uv sync` or the build dies on
+# "Failed to generate package metadata … No such file or directory".
+COPY --chown=appuser:appuser vendor ./vendor
 
 USER appuser
 
@@ -100,6 +105,10 @@ RUN uv sync --no-install-project --no-dev \
 COPY --chown=appuser:appuser src ./src
 COPY --chown=appuser:appuser packs ./packs
 COPY --chown=appuser:appuser main.py ./
+# 线自描述端点的真源（change converge-line-identity-and-keys 1.4）。MCP pod 以
+# `python -m fd_coding_law_bench_mcp` 起在 WORKDIR /app，而包在 site-packages，
+# 所以端点按 `Path.cwd() / "line-manifest.json"` 取这一份——不 COPY 就只有 404。
+COPY --chown=appuser:appuser line-manifest.json ./
 COPY --chown=appuser:appuser templates ./templates
 COPY --chown=appuser:appuser db ./db
 COPY --chown=appuser:appuser scripts ./scripts

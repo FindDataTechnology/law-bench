@@ -121,6 +121,10 @@ tr:last-child td { border-bottom: none; }
   white-space: nowrap;
 }
 .badge.harbor { background: var(--harbor); color: #fff; }
+/* Verdict badges: tint × same-hue text, never an icon (brief Tint Verdict Rule).
+   Used for the states that need a human decision: out-of-vocabulary kinds, an
+   outdated template anchor, a revoked consumer, a reconciliation gap. */
+.badge.bad { background: var(--fail-tint); color: var(--fail-text); }
 .badge.local { background: var(--local-deep); color: #fff; }
 
 .btn {
@@ -297,7 +301,10 @@ table.matrix td.cell.rate { color: var(--accent); background: #eff6ff; }
   /* Wide data tables become their own horizontal scroll container; row rules
      and header styling are untouched (flat ledger — the matrix keeps its
      dedicated .matrix-scroll wrapper, this catches the rest). */
-  .panel table { display: block; overflow-x: auto; }
+  .panel table, .ledger-sheet table { display: block; overflow-x: auto; }
+  /* Headers keep one line inside the scroll area; stacking 状态 / 版本 into
+     one character per row made the table look broken on a phone. */
+  .panel table.data-table th, .ledger-sheet table.data-table th { white-space: nowrap; }
 }
 @media (max-width: 560px) {
   .toolbar { flex-direction: column; align-items: flex-start; }
@@ -356,3 +363,254 @@ table.data-table td.dl-cell .btn + .btn { margin-left: 0.3rem; }
   margin-top: 1rem;
 }
 .pagination .page-info { color: var(--muted); font-size: 0.9rem; }
+
+/* ---- polish-bench-workbench 0.2: shared tokens + reusable state styles ----
+   Tokens formalize values that previously lived only as literals inside
+   individual rules (fail/pass/info tint pairs, nested paper, matrix header,
+   hover fill, badge fill). Names are new; no existing rule or value is
+   changed — this block is append-only (zero behavior change). */
+:root {
+  --fail-tint: #fef2f2;
+  --fail-border: #fecaca;
+  --fail-text: #b91c1c;
+  --pass-tint: #ecfdf5;
+  --pass-border: #a7f3d0;
+  --info-tint: #eef6ff;
+  --nested-paper: #fbfcfd;
+  --matrix-header: #f5f7fa;
+  --hover-fill: #f0f2f5;
+  --badge-bg: #eef1f5;
+}
+
+/* Keyboard focus baseline (checklist item 5): the flat 2px Bench Blue ring
+   already used by matrix verdict buttons, extended to every focusable surface.
+   :focus-visible only — mouse clicks stay ringless, exactly as before. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Empty state (_empty_state.html): honest empty data with optional next-step
+   guidance. One tonal nesting step (Nested Paper) inside the panel — flat,
+   no shadow, no icon, muted voice; the data is the loudest thing or nothing. */
+.empty-state {
+  background: var(--nested-paper);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.6rem;
+}
+.empty-state .empty-state-text { margin: 0; color: var(--muted); }
+.empty-state .empty-state-hint { margin: 0.2rem 0 0; font-size: 0.78rem; color: var(--muted); }
+.empty-state .empty-state-action { margin-top: 0.6rem; }
+
+/* Error card (_error_card.html): in-flow error report with its cause, at the
+   flash.error tint pair (fail tint + deep objection text + #fecaca border). */
+.error-card {
+  background: var(--fail-tint);
+  border: 1px solid var(--fail-border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  color: var(--fail-text);
+}
+.error-card .error-card-text { margin: 0; }
+.error-card .error-card-detail { margin: 0.2rem 0 0; font-size: 0.85rem; }
+
+/* Form field error (_form_error.html): the same error tint pair scaled to an
+   inline strip under the offending field (generalizes .rubric-warning, which
+   stays untouched for the compare form). */
+.field-error {
+  margin: 0.3rem 0 0;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--fail-border);
+  border-radius: var(--radius);
+  background: var(--fail-tint);
+  color: var(--fail-text);
+  font-size: 0.85rem;
+}
+
+/* ── polish-bench-workbench sweep additions (2026-11-07, presentational only) ── */
+/* Two-column form rows outside .criterion-row (prompt_form / compare_form /
+   rubric_detail add-criterion form) — density without behavior change. */
+form .grid2 { display: grid; grid-template-columns: 1fr 2fr; gap: 0.6rem; align-items: start; }
+@media (max-width: 720px) { form .grid2 { grid-template-columns: 1fr; } }
+/* Detail-page action rows may wrap on narrow screens instead of cramming. */
+@media (max-width: 560px) { .crit-actions { flex-wrap: wrap; } }
+/* Bare label+input children of .filter-form (no .filter-group wrapper) stack
+   cleanly on narrow screens; desktop inline flow untouched. */
+@media (max-width: 720px) {
+  .filter-form > label,
+  .filter-form > input,
+  .filter-form > select { flex: 1 1 100%; }
+  .filter-form { align-items: stretch; }
+}
+
+/* ── C5 add-domain-first-workbench: domain console (presentational only) ──
+   All rules stay inside The Evidence Ledger: existing tokens only, 1px Rule
+   Gray structure, one Nested Paper step, no shadow, no gradient, no new hue.
+   Breakpoints are the incumbent 1024/900/720/560 set — nothing new. */
+
+/* Header domain context: replaces the old per-domain link pair in the topbar. */
+/* Domain context in the ledger cover: current domain + my role + switcher.
+   It must never shrink: as a shrinking flex item its inner form wrapped the
+   「切换域」 label one character per line and collided with the platform gate. */
+.domain-context {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.domain-context-name { color: var(--text); }
+.domain-switch { display: inline-flex; align-items: center; gap: 0.35rem; }
+.domain-switch-label { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+.domain-switch select { padding: 0.2rem 0.3rem; font: inherit; font-size: 0.85rem; max-width: 12rem; }
+
+/* L2/L3 shell: the breadcrumb + six-area nav sit in the content column. */
+.zone-shell { max-width: 980px; margin: 1.1rem auto 0; padding: 0 1.25rem; }
+.zone-shell:empty { margin: 0; }
+
+/* Breadcrumb (L3): plain textual trail, no chevrons-as-icons. */
+.breadcrumb { margin: 0 0 0.6rem; font-size: 0.82rem; color: var(--muted); }
+.breadcrumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0; padding: 0; }
+.breadcrumb li + li::before { content: "/"; margin-right: 0.4rem; color: var(--border); }
+.breadcrumb a { color: var(--accent); }
+.breadcrumb [aria-current="page"] { color: var(--text); }
+
+/* Zone nav (L2): the ledger's section tabs — flat text with a 2px accent rule
+   under the current area, matching the incumbent aria-current treatment. */
+.zone-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border);
+}
+.zone-nav a { color: var(--muted); text-decoration: none; padding-bottom: 0.4rem; }
+.zone-nav a:hover { color: var(--text); text-decoration: none; }
+.zone-nav a[aria-current="page"] { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* Overview status strip: four cells, separated by 1px rules only. Not a KPI
+   card grid — no fill, no icon, no accent number. */
+.stat-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  margin-bottom: 1.25rem;
+}
+.stat { padding: 0.85rem 1rem; }
+.stat + .stat { border-left: 1px solid var(--border); }
+.stat-label { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.03em; color: var(--muted); text-transform: uppercase; }
+.stat-value { margin-top: 0.2rem; font-size: 1rem; font-variant-numeric: tabular-nums; }
+
+/* Four-layer ledger sheet: rows, not cards. Each row is a subject line on the
+   ledger page; the head column carries the layer name + its exact source. */
+.ledger-sheet {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  margin-bottom: 1.25rem;
+}
+.layer-row { display: grid; grid-template-columns: 11rem 1fr; gap: 1.25rem; padding: 1.1rem 1.25rem; }
+.layer-row + .layer-row { border-top: 1px solid var(--border); }
+.layer-head h2 { margin: 0; font-size: 1rem; }
+.layer-source { margin-top: 0.25rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.72rem; color: var(--muted); overflow-wrap: anywhere; }
+.layer-body > :first-child { margin-top: 0; }
+.layer-body > :last-child { margin-bottom: 0; }
+
+/* Vocabulary / reconciliation definition grid: label column + values. */
+.vocab-grid { display: grid; grid-template-columns: 11rem 1fr; gap: 0.35rem 1rem; margin: 0.4rem 0 0; }
+.vocab-grid dt { font-size: 0.8rem; color: var(--muted); }
+.vocab-grid dd { margin: 0; }
+
+/* Full digests must stay copyable in full: monospace, wraps anywhere. */
+code.digest { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
+
+/* Proposal state = tint × same-hue text, never an icon or a new badge hue. */
+.state-pending { background: var(--info-tint); color: var(--accent-hover); border-radius: var(--radius); padding: 0.05rem 0.4rem; font-size: 0.8rem; }
+.state-confirmed { background: var(--pass-tint); color: var(--ok); border-radius: var(--radius); padding: 0.05rem 0.4rem; font-size: 0.8rem; }
+.state-rejected { background: var(--fail-tint); color: var(--fail-text); border-radius: var(--radius); padding: 0.05rem 0.4rem; font-size: 0.8rem; }
+
+/* Timestamps and verdicts never break mid-word: a wrapped 待/确/认 reads as
+   three states and a stacked 驳回 button is unusable. Long ISO strings are
+   sliced at the template; `nowrap` guards the remaining short cells. */
+.nowrap { white-space: nowrap; }
+
+/* Proposal decision cell: the confirm button and the reject form share the
+   cell, so they WRAP rather than overflow the panel. Buttons keep their text
+   whole; only the reason input shrinks. */
+.proposal-actions { white-space: normal; }
+.proposal-actions .inline-form { margin: 0 0.35rem 0.3rem 0; white-space: nowrap; }
+.proposal-actions .inline-form input[type="text"] { width: 8.5rem; min-width: 6rem; }
+.proposal-impact td { padding-top: 0; }
+.align-right { text-align: right; }
+.inline-form { display: inline-flex; align-items: center; gap: 0.3rem; margin: 0.15rem 0.3rem 0.15rem 0; }
+.inline-form input[type="text"] { width: 11rem; }
+
+@media (max-width: 720px) {
+  /* The domain context gets its own rows on a phone: kept nowrap on one line it
+     forces document-level horizontal scroll (the select cannot shrink). */
+  .domain-context { flex: 1 1 100%; flex-wrap: wrap; white-space: normal; }
+  .domain-switch { flex: 1 1 100%; display: flex; }
+  .domain-switch select { flex: 1 1 auto; min-width: 0; max-width: 100%; width: auto; }
+  .domain-switch .btn { flex: 0 0 auto; white-space: nowrap; }
+
+  .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(3) { border-left: none; }
+  .stat:nth-child(n + 3) { border-top: 1px solid var(--border); }
+  .layer-row { grid-template-columns: 1fr; gap: 0.5rem; }
+  .vocab-grid { grid-template-columns: 1fr; gap: 0.1rem; }
+  .vocab-grid dd { margin-bottom: 0.5rem; }
+  .inline-form input[type="text"] { width: 100%; }
+  .zone-nav { gap: 0.8rem; }
+}
+
+/* ── ontology graph ──────────────────────────────────────────────────────────
+   Server-rendered SVG: the picture is deterministic on purpose — a graph that
+   reshuffles on reload cannot be read as a structure. Concepts sit left, the
+   documents they rest on sit right, edges are the relationships between them.
+   Colour carries the kind (concept = accent, document = local/cyan); nothing
+   else in the drawing competes. */
+.onto-graph__svg {
+  width: 100%;
+  height: auto;
+  max-height: 520px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+}
+.onto-graph__edge {
+  fill: none;
+  stroke: #9aa3af;
+  stroke-width: 1.25;
+}
+.onto-graph__node rect { stroke-width: 1; }
+.onto-graph__node text {
+  font-size: 0.78rem;
+  dominant-baseline: middle;
+}
+.onto-graph__node--concept rect { fill: #eff6ff; stroke: var(--accent); }
+.onto-graph__node--concept text { fill: #1e3a8a; }
+.onto-graph__node--doc rect { fill: #ecfeff; stroke: var(--local); }
+.onto-graph__node--doc text { fill: var(--local-deep); }
+.onto-graph__node:hover rect { fill: #fff; }
+.onto-graph__isolated {
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+.onto-grounding {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.onto-grounding__kind {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  color: var(--local-deep);
+}

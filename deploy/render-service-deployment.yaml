@@ -1,0 +1,70 @@
+# Shared document-rendering service (extract-render-service): headless
+# LibreOffice behind HTTP, consumed by the web / assistant-MCP / review
+# backend pods via DOCS_PDF_BACKEND=http + RENDER_SERVICE_URL
+# (http://render-service.law-bench.svc.cluster.local:8090). Those images no
+# longer carry LibreOffice; this is the only pod that does.
+#
+# Stateless (per-request temp workspaces) — no PVC, no node pin: it can run
+# and reschedule on any node. Scale by replicas if conversion demand grows.
+#
+# dnsPolicy None + kube-dns: the nodes' resolv.conf carries a wildcard
+# search domain (see deploy/deployment.yaml); same fix as the other
+# law-bench pods.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: render-service
+  namespace: law-bench
+  labels:
+    app: render-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: render-service
+  template:
+    metadata:
+      labels:
+        app: render-service
+    spec:
+      # TCR personal edition pull creds (switch-image-pipeline-github-actions-tcr).
+      imagePullSecrets:
+        - name: tcr-pull
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - law-bench.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      containers:
+        - name: render-service
+          image: ccr.ccs.tencentyun.com/law-bench/law-render:sha-ba0a6c9
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8090
+          # LibreOffice spikes on large CJK documents (hundreds of MiB while
+          # rendering); requests stay modest, the limit absorbs the spikes.
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 5
+            periodSeconds: 10

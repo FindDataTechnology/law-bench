@@ -70,12 +70,14 @@ def test_chrome_shows_login_link_when_anonymous(seeded_db, monkeypatch):
 
 
 def test_chrome_nav_visible_for_viewer_hidden_when_anonymous(seeded_db, monkeypatch):
-    # /dashboard is a hardcoded nav href (not in the i18n catalog), so it can't
-    # collide with the locale JSON embedded in every page.
+    # The estate entry (/d) is the platform-level nav item now. It is also the
+    # brand's href, so the assertion counts occurrences rather than presence.
+    # Brand always links /d; the nav adds a second one for a signed-in reader
+    # with content:read. Anonymous gets the brand alone.
     with _client(seeded_db, monkeypatch, VIEWER) as client:
-        assert 'href="/dashboard"' in client.get("/rubrics").text
+        assert client.get("/rubrics").text.count('href="/d"') == 2
     with _client(seeded_db, monkeypatch, ANON) as client:
-        assert 'href="/dashboard"' not in client.get("/rubrics").text
+        assert client.get("/rubrics").text.count('href="/d"') == 1
 
 
 # --- permission-gated actions (usability layer; server require_scope rules) - #

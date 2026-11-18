@@ -1,0 +1,25 @@
+{#- 域上下文切换器（change add-domain-first-workbench）。
+
+    顶栏里替代「我的域」那串重复链接：当前域 + 我的角色 + 切换控件。
+    原生 <select> + GET 表单，无 JS：提交到 `/d/switch`，由服务端按 active
+    成员资格校验后再跳（`src/web/routes/console.py::console_switch`）。
+
+    事实边界：可选域只来自 `switcher_domains`（服务端解析）；模板从不自行
+    拼域名列表，也不接受客户端自造的域标识 —— 表单值只是候选，最终仍由
+    服务端重新校验。 -#}
+<div class="domain-context">
+  <span class="domain-context-name">{{ domain.name }}</span>
+  <code>{{ domain.key }}</code>
+  <span class="badge">{% if cap.role == 'admin' %}{{ t.console.role.admin }}{% elif cap.role %}{{ t.console.role[cap.role] }}{% endif %}</span>
+  {% if switcher_domains | length > 1 %}
+  <form method="GET" action="{{ url_for('console_switch') }}" class="domain-switch">
+    <label for="domain-switch-select" class="domain-switch-label">{{ t.console.switch.label }}</label>
+    <select name="to" id="domain-switch-select">
+      {% for d in switcher_domains %}
+      <option value="{{ d.key }}"{% if d.key == domain.key %} selected{% endif %}>{{ d.name }} · {{ d.key }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-sm">{{ t.console.switch.go }}</button>
+  </form>
+  {% endif %}
+</div>

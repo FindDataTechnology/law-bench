@@ -1,0 +1,103 @@
+# law-bench admin-assistant CopilotKit runtime — Node service bridging the
+# admin-gated /copilotkit proxy (law-bench web) to the dedicated MCP instance.
+#
+# Change: add-admin-copilot-assistant. Cluster-internal only (ClusterIP, no
+# Ingress): the only public path to assistant functionality is law-bench's
+# /copilotkit route, which enforces the admin scope before forwarding here.
+#
+# Required secret (create once; rotate independently):
+#   kubectl -n law-bench create secret generic copilot-runtime \
+#     --from-literal=OPENAI_API_KEY=<llm-key> \
+#     --from-literal=OPENAI_BASE_URL=<openai-compatible endpoint> \
+#     --from-literal=COPILOT_MODEL=<model id> \
+#     --from-literal=COPILOT_MCP_TOKEN=<MCP_HTTP_TOKEN of law-bench-mcp-assistant>
+#
+# Probes use httpGet /health, which is the one unauthenticated path this
+# service exposes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: copilot-runtime
+  namespace: law-bench
+  labels:
+    app: copilot-runtime
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: copilot-runtime
+  template:
+    metadata:
+      labels:
+        app: copilot-runtime
+    spec:
+      # Keep every law-bench pod on the image-bearing node (see
+      # deploy/deployment.yaml). The runtime image is imported into the same
+      # containerd store.
+      nodeSelector:
+        kubernetes.io/hostname: cheap-4
+      # Same resolv.conf-pollution fix as every other law-bench pod; the
+      # runtime resolves both the in-cluster MCP service and the public LLM
+      # endpoint through kube-dns.
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - law-bench.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      containers:
+        - name: copilot-runtime
+          image: ccr.ccs.tencentyun.com/law-bench/copilot-runtime:sha-f164eac
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: PORT
+              value: "3111"
+            - name: COPILOT_ENDPOINT
+              value: "/copilotkit"
+            - name: COPILOT_MCP_URL
+              value: "http://law-bench-mcp-assistant.law-bench.svc.cluster.local/mcp"
+          envFrom:
+            - secretRef:
+                name: copilot-runtime
+          ports:
+            - containerPort: 3111
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3111
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3111
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "768Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: copilot-runtime
+  namespace: law-bench
+  labels:
+    app: copilot-runtime
+spec:
+  # ClusterIP only: the law-bench web pod proxies to
+  # http://copilot-runtime.law-bench.svc.cluster.local:3111/copilotkit
+  type: ClusterIP
+  selector:
+    app: copilot-runtime
+  ports:
+    - port: 3111
+      targetPort: 3111

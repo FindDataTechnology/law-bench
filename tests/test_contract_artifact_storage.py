@@ -155,7 +155,21 @@ def test_by_type_markdown(app_client: TestClient, seeded_db, fake_minio):
     assert body["artifacts"][0]["pdf_url"] is None
 
 
+def _requires_soffice():
+    """PDF half of `both` needs LibreOffice; the runner image has no soffice.
+
+    Skipping keeps the DOCX path covered everywhere instead of turning an
+    environment gap into a permanent red build gate (measured 2026-11-11: the
+    image workflow could never go green on a stock runner for this reason).
+    """
+    import shutil
+
+    if shutil.which("soffice") is None:
+        pytest.skip("soffice (LibreOffice) not installed - PDF conversion leg not runnable here")
+
+
 def test_by_type_both_formats(app_client: TestClient, seeded_db, fake_minio):
+    _requires_soffice()
     _seed_base(seeded_db)
     r = app_client.post("/api/contracts/sale/generate-stored", json={"format": "both"})
     body = r.json()
@@ -225,6 +239,7 @@ def test_dedup_same_inputs_reuse(app_client: TestClient, seeded_db, fake_minio):
 
 
 def test_dedup_fill_missing_format(app_client: TestClient, seeded_db, fake_minio):
+    _requires_soffice()   # the second half fills in a PDF for the existing artifact
     _seed_base(seeded_db)
     _seed_tagged(seeded_db, "生鲜乳购销")
     first = app_client.post(

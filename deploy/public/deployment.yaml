@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: law-bench-public
+  namespace: law-bench
+  labels:
+    app: law-bench-public
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: law-bench-public
+  template:
+    metadata:
+      labels:
+        app: law-bench-public
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull
+      # ----------------------------------------------------------------- #
+      # DNS hardening (task 6.2).
+      #
+      # Copy the origin's dnsPolicy:None + kube-dns-only dnsConfig ONLY when the
+      # China box is itself a k3s node whose resolv.conf inherited the wildcard
+      # `mesh.finddata.cn` search domain (every name -> 8.218.137.223 black hole,
+      # so postgres.postgres.svc.cluster.local hangs at connect() -> CrashLoop-
+      # BackOff). On a box with CLEAN DNS, delete this whole block (set the
+      # default dnsPolicy: ClusterFirst) — do NOT carry origin-specific pins onto
+      # clean infra, and do NOT strip them blindly on a polluted node.
+      #
+      # NOTE on hostAliases: the origin pins auth.finddatatech.cloud ->
+      # 124.220.7.175 (chengsi nginx -> xinru fd-logto) and
+      # lawbench.finddatatech.cloud -> 103.236.89.212 because its fail-closed
+      # auth boot path must reach Logto JWKS. The PUBLIC pod has NO Logto
+      # dependency
+      # (check_public_auth_config, key-only against the replicated api_keys
+      # table), so those origin hostAliases are intentionally NOT replicated here.
+      # If the China box needs a host pin for its OWN MinIO/Postgres endpoints
+      # (e.g. a bare-IP China MinIO with no DNS), add a hostAliases entry for
+      # that endpoint here; otherwise leave it off.
+      # ----------------------------------------------------------------- #
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - 10.43.0.10
+        searches:
+          - law-bench.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+        options:
+          - name: ndots
+            value: "5"
+      # No initContainers: the public pod does NOT seed a bundled SQLite DB. Its
+      # data source is the replicated China Postgres (option B, §2 of
+      # docs/public-api-deploy.md) or the cron-pg_dump snapshot (fallback A) —
+      # either way the rows arrive via replication, not from /app/db. So there
+      # is no `seed-db` initContainer and no `db` PVC volume here (contrast the
+      # origin's deploy/deployment.yaml).
+      containers:
+        - name: law-bench-public
+          image: harbor.local/law-bench/law-template:sha-2e6de71
+          imagePullPolicy: IfNotPresent
+          # PUBLIC_API=1 selects create_public_app() in scripts/docker-entrypoint.sh
+          # (read-only router subset, docs locked off, key-only auth, no Logto).
+          # The same image runs the origin when PUBLIC_API is unset/0.
+          env:
+            - name: PUBLIC_API
+              value: "1"
+            - name: READONLY_REPLICA
+              value: "1"
+            - name: RATE_LIMIT_ENABLED
+              value: "1"
+            - name: RATE_LIMIT_RPS
+              value: "10"
+            - name: RATE_LIMIT_BURST
+              value: "20"
+          # All secrets via a dedicated law-bench-public SecretRef — SEPARATE from
+          # the origin's law-bench-* secrets so the China pod never reads origin
+          # creds. Populate with: database_url (China replica DSN), AUTH_SESSION_SECRET
+          # (so the dormant cookie path does not fail open), minio_root_user /
+          # minio_root_password (China-local MinIO creds), MINIO_PUBLIC_HOST
+          # (China-local MinIO endpoint, task 5.2). No LOGTO_* vars (public pod has
+          # no Logto dependency).
+          envFrom:
+            - secretRef:
+                name: law-bench-public
+          ports:
+            - containerPort: 8010
+          # /healthz is the probe target (unchanged from origin). It is exempt
+          # from auth (get_current_user skips /healthz) AND from rate limiting
+          # (rate_limit middleware short-circuits _EXEMPT_PATH), so probes never
+          # get 401/429 on a healthy pod (task 6.4).
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8010
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8010
+            initialDelaySeconds: 5
+            periodSeconds: 10

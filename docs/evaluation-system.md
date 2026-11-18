@@ -75,6 +75,18 @@ rubric 是「规则集」，每条规则三个字段。DB schema 存一套命名
 
 当前库内 harbor rubric 只有 2 条，且 context 非 contract（`task_quality` 评 benchmark 任务设计质量、`trial_behavior` 评 trial 行为），**不用于合同评估**。合同 rubric 全部是 `local`。
 
+> **2026-11-11 补记（查实）**：这两条 harbor 尺子挂在 legal 域下，曾被读成"法律域有尺子但没跑过"。它们与合同无关；而合同类 `contract_*` 尺子当时在库里**一条都没有**（`prompts` 也是 0 条）——`scripts/seed_contract_rubrics.py` 的素材一直在仓里，只是从没对这套 Postgres 落过。现在已用 `python3 scripts/seed_contract_rubrics.py --domain legal` 落库：86 条 `contract_*`、848 条判据，`source='local'`、`context='contract'`、`domain_id` 指向 legal。legal 的"生效标准"因此从 2 条（两条无关的 harbor 尺子）变成 88 条。
+>
+> 归属必须显式做：`domain_rubrics.effective_rubrics` 只认 `domain_id` 命中的行，落库但不挂域的尺子在域矩阵里**完全看不见**（等于没落）。
+
+### 3.2.1 判官的自证行为什么必须进 `evaluation_steps`（2026-11-11 实测）
+
+第一轮真评（`contract_sale_v2`，10 条判据）回来 10/10 `invalid`、score 0.0，可判官原文写的是"双方均以完整法律主体名称列明"这种**明确通过**的理由。原因：deepeval 3.9.6 的 strict 模板只要 `{"score", "reason"}` 两个键，并注明"no words or explanation is needed"；结构规则（含 `CONFIDENCE: <0.xx>` 自证行）此前只塞进 `criteria`，而 `criteria` 只喂给**步骤生成器**，最终判分调用看到的是被模型改写过的步骤。模型照模板办事 → 自证行永不出现 → 每个 pass 都被 `classify_structural_soundness` 判成 `contract_violation`。**一把只会返回 invalid 的尺子，和永远绿灯的尺子一样没用。**
+
+修法：`build_evaluation_steps()` 把判据与结构规则作为 `evaluation_steps` 直接传给 GEval（对照实验：同一判据、同一模型，输出从无自证行变为 `CONFIDENCE: 0.99`），并对"通过但漏写自证行"的判定做一次定向重问（`needs_self_report_retry`）。回归守卫：`tests/test_judge_prompt_steps.py`。
+
+**顺带的测试陷阱**：纯函数测试若让 `_load_judge_rules_from_domain` 走真实兜底路径，会打开进程级共享连接并把它钉在当时的 `database_url`（开发库）上，随后会话测试库拿不到 schema——症状是 fixture setup 阶段 `relation "review_tasks" does not exist`，与业务断言无关。
+
 ### 3.3 版本演进：v1 → v2 → v3
 
 合同 rubric 命名 `contract_<type>_v<N>`，覆盖约 45 个合同类型，每类三个版本：
@@ -295,3 +307,142 @@ id, label, contract_type, rubric_name, task_desc, gen_mode, n_drafts, created_at
 - **harbor rubric 与合同无关**：库内 2 条 harbor rubric（`task_quality` / `trial_behavior`）不用于合同评估，`contract_evaluate` 应传 `contract_<type>_v<N>`。
 - **`draft_text` 体积**：对比场景下 `draft_text` 入库但默认不返回，需显式 `run_draft` 懒取。
 - **drafter-only 对比**：`compare_run` 只比 prompt 的单次起草质量，不含生产 crew 的多步加工，故对比结论不等于生产管线表现。
+
+---
+
+## 12. 结论台账（verdict ledger）
+
+> change `add-eval-verdict-ledger`。这一节回答的是「这次评测能不能和上次比」，
+> 而不是「怎么打分」——打分逻辑在 §2–§9，本文档其余部分不变。
+
+### 12.1 为什么需要
+
+每条产品线都长出了自己的自动修正/自动迭代闭环，也各自长出了一把尺子、一道门和
+一套裁决词汇（all-pass 二值 / 两臂盲评「不劣于」/ 降幅拦截 / 分层校准 / golden
+重放 / 规则求值）。落点也各不相同。结果是**一行评测结论结构上无法与另一行的结论
+放进同一张图**：不知道跟谁比、「跑了一遍绿了」被当成「变好了」、复核者拿不到用的是
+哪把尺子的哪一版。
+
+结论台账不新增一套评测，只给既有结论补上四个字段级别的身份，让它们可比。
+
+### 12.2 一行结论长什么样
+
+| 字段 | 取值 | 说明 |
+|---|---|---|
+| `subject_kind` / `subject_key` / `subject_version` | 任意 | 被评对象地址。版本必填——「同一对象的两代」不是同一对象 |
+| `ruler_kind` / `ruler_key` / `ruler_digest` | 任意 | 尺子地址。digest 由**唯一的** `canonical_digest()` 算出 |
+| `channel` | `text` / `data` / `meta` | 既有字段，未改语义 |
+| `gate` | 四道门之一 | 见 12.3 |
+| `outcome` | `pass` / `fail` / `inconclusive` | 三态，见 12.4 |
+| `baseline_run_id` | 自引用外键 / 空 | 空 = 立基线 |
+| `provisional` | bool | 判官未过校准门时为 true |
+| 逐条证据 | `eval_criteria_results` | 既有表，未改 |
+
+全部列在 `eval_runs` 上、全部可空。legacy 行读出来与迁移前逐字节等价；
+`outcome` 在未显式给出时由 `all_pass` 推导（1→pass，0→fail），**绝不回填
+`inconclusive`**——它是新语义，没有历史行可以被假定为那个意思。
+
+### 12.3 四道门（六种既有门 → 四个标签）
+
+| 门 | 语义 | 今天谁在这么干 |
+|---|---|---|
+| `no-worse` | 候选不劣于对照 | 壹座技能/人格两臂（三臂）盲评 |
+| `regression` | 相对基线降幅超阈值即拦 | 检索 >5%、覆盖/质量比阈值、爬虫 golden 重放 |
+| `all-pass` | 逐条全过才 1.0 | 合同评审（§2） |
+| `calibrated` | 尺子/判官自身可信 | meta-eval 分层校准门 |
+
+闭集，写入未知值即拒并列出全部合法值。**门只是标签**：`src/bench/verdicts.py`
+不实现任何一条线的判定逻辑，各线保住自己的阈值与算法。
+
+### 12.4 三态结局：「判不出来」不得冒充
+
+`inconclusive` 覆盖：样本量不足、判官车道不可达、校验器未执行、超时、全部判据
+invalid。它 SHALL NOT 被任何晋升闸当通过处理，读面 SHALL 与 `fail` 分列。
+
+同一条纪律今天在三条线各写了一遍（技能 `markUnevaluated`、蓝图试跑
+`insufficient-evidence`、验收读数「判不出≠违规」），台账把它收成一个词。
+
+三个具体落点：
+- 合同：全部判据 invalid → `inconclusive`（分母空了，不能怪合同）；
+- 数据通道：空选择 → `inconclusive`（什么都没查）；既有 `all_pass` 也不会为真；
+- 校准：门过了但 n < `CALIBRATION_MIN_SAMPLES`(50) → `inconclusive`。
+  这是 `all_pass=1` 长期掩盖的那类情形——「尺子通过了自己的门，但证据太少」。
+
+### 12.5 可比性 = 同一把尺子
+
+```
+baseline 为空            → no-baseline     立基线，不构成进步证据
+ruler_digest 相等        → comparable      可算差、可进同一条趋势
+ruler_digest 不等        → ruler-migrated  口径已迁移，本条按立基线处理
+```
+
+任何换算系数都是编造，不做。改一条 rubric 判据 → digest 变 → 旧分数自动不可比；
+这是期望行为，不是故障。
+
+### 12.6 provisional：判官可信度由结论推导
+
+`provisional(judge_model, prompt_version)` 查该判官最近一条 `calibrated` 门结论：
+`outcome == 'pass'` → 已校准；其余（fail / inconclusive / 无记录）→ provisional。
+
+不设配置位——「配置说已校准、实际没有」正是要消灭的漂移。换 gold 集（digest 变）
+之后旧校准不再算数，判官自动退回未校准。
+
+现状：判官 4.1 尚未销账（无候选 balanced accuracy ≥0.70），因此**当前产出的判官
+结论一律 provisional**，不足以单独构成晋升依据。
+
+### 12.7 运行台账互链
+
+`domain_agent_runs.verdict_run_ids`（JSONB 数组，默认空）指向本轮产出的结论；
+`agent_runs.run_for_verdict()` 反查产出某条结论的那一轮。只存 id，不复制内容。
+未产出结论的运行留空数组，**不指向任一「最近的」结论**。
+
+### 12.8 晋升后强制复测
+
+`verdicts.register_retest()` 在晋升/发版之后登记一张工单（`target_kind =
+verdict-retest`），携带新版本地址与晋升前基线结论 id。**只登记不执行**——评测
+有成本，何时跑由人定（沿 `fleet-owner-iteration`「跟新只提示不迁移」）。同版本
+重复登记幂等，新版本是新义务。
+
+闭环今天断在末尾的分界：评测 → 提案 → 人批 → 新版本之后没有下文。这一步把它焊上。
+
+### 12.9 六条线的接入清单
+
+| 线 | subject | ruler | gate | 状态 |
+|---|---|---|---|---|
+| 合同（`evaluate_contract`） | 草稿文本指纹 | rubric digest | all-pass | ✅ 本 change |
+| 数据通道（`data_checks`） | `knowledge-units:<kind>` + 单元集合指纹 | checker-set digest | regression | ✅ 本 change |
+| 判官校准（`run_calibration`） | `judge:<model>@<prompt>` | gold-set digest | calibrated | ✅ 本 change |
+| 壹座技能/人格 | `pack:<slug>@v` / `preset:<id>` | rubric | no-worse | 后续（paas 伴随 change） |
+| 检索 | `index:<vertical>@<build>` | 查询集 digest | regression | 后续 |
+| 柏讯数据集 / 爬虫自愈 | `dataset:<slug>@<snap>` / `spider:<src>@<sha>` | 规则集 / golden 集 | regression | 后续 |
+
+其余三条按同一形状落一行即可，**不需要改它们各自的判定逻辑**。
+
+### 12.10 已知边界
+
+- 尺子 digest 目前对「当前 rubric 内容」直接算（`canonical_digest()`）。等
+  `add-typed-publications` 把 rubric/gold 发布为不可变版本后，同一份实现会自动
+  一致，无需迁移。复核者「凭 digest 取回原件」这一步依赖那条 change。
+- checker-set 的 digest 覆盖种类与检查器**名字**，不覆盖检查器**函数体**：
+  只改函数体不改名字时 digest 不变。升级路径是把每个 checker 的源码哈希折进去。
+- `baseline_run_id` 是自引用外键（`ON DELETE SET NULL`）：结论行被删除时基线上的
+  比对静默变为「无基线」，读面按 `no-baseline` 呈现。
+
+---
+
+## 13. 建表引导的并发语义
+
+`src/eval/store.py::ensure_schema` 是全部表创建的单一入口，每个 store 函数都会防御性地调它一次。
+
+**它会缓存「这个库已就绪」**，但就绪只能由**实测**断言：一组必需表（`_REQUIRED_TABLES`）确实存在，一次 `to_regclass` 批量查询确认。异常没抛出来不算数。
+
+**锁竞争是可重试，不是成功。** 建表用 `lock_timeout`（默认 3s，`SCHEMA_LOCK_TIMEOUT_MS` 可覆盖）防并发首启互相堵死。超时的处理是：
+
+- 不抛错（并发建表是正常竞争，不该变成一次可用性事件）；
+- **不缓存**（下一个调用会重试）；
+- 记一条带库名的 warning；
+- 顺手探一次：若并发方已经建完，就如实标记就绪。
+
+2026-11-18 之前的行为是 `except LockNotAvailable: 标记已就绪`——它假设「另一个进程在建并且建完了」，而两个进程同时首启时双方都超时、都没建，该库却被永久标记就绪，此后每次写入都在远处炸 `UndefinedTable`。
+
+**连接缓存是 per-DSN 的。** `get_shared_conn()` 每次调用都读 `database_url`，DSN 变了就丢弃旧连接。此前连接被进程级缓存且不比对 DSN，运行期切换 `database_url` 的进程（测试夹具、回填脚本）会**对着第一个库**执行所有后续写入。

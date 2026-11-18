@@ -15,6 +15,8 @@
      href="{{ url_for('page_law_catalog_revisions') }}?batch={{ b.batch }}">{{ b.batch }}（{{ b.n }}）</a>
   {% endfor %}
 </div>
+{% if rows %}
+<div class="panel">
 <table>
   <thead>
     <tr><th>#</th><th>{{ t.catalog.col_clause }}</th><th>{{ t.catalog.col_type }}</th><th>{{ t.catalog.col_cited_before_after }}</th><th>{{ t.catalog.col_evidence }}</th><th>{{ t.catalog.col_disposition }}</th><th>{{ t.catalog.col_rule }}</th></tr>
@@ -37,4 +39,11 @@
     {% endfor %}
   </tbody>
 </table>
+</div>
+{% else %}
+{# 真空态：修复流尚未产生留痕，如实呈现并给下一步（不摆空表） #}
+{% with message=t.catalog.rev_empty, hint=t.catalog.rev_empty_hint %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{% endif %}
 {% endblock %}

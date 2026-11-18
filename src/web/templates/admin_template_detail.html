@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.templates.detail_h1 }} {{ template.name }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+<style>
+  /* polish-bench-workbench 0.3, this page only: the corpus-declaration JSON
+     keeps its preformat but wraps long lines instead of stretching the panel
+     on narrow screens. */
+  .wb-pre { white-space: pre-wrap; word-break: break-word; margin: 0; }
+</style>
+
+<p><a href="{{ url_for('admin_templates') }}">{{ t.admin.templates.back }}</a></p>
+<div class="toolbar between">
+  <h1>{{ template.name }} <span class="badge">v{{ template.version }}</span></h1>
+  <span class="muted">{{ t.admin.templates.col_created_by }}: {{ template.created_by }} · {{ t.admin.templates.col_created_at }}: {{ template.created_at }}</span>
+</div>
+
+{# Version history: every edit appends a row; rows are immutable (D2). #}
+<div class="panel">
+  <h2>{{ t.admin.templates.versions_h2 }}</h2>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ t.admin.templates.col_version }}</th>
+        <th>{{ t.admin.templates.col_created_by }}</th>
+        <th>{{ t.admin.templates.col_created_at }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in versions|reverse %}
+      <tr>
+        <td>
+          <span class="badge">v{{ v.version }}</span>
+          {% if v.version == template.version %}<span class="badge">{{ t.admin.templates.latest_badge }}</span>{% endif %}
+        </td>
+        <td>{{ v.created_by }}</td>
+        <td class="muted">{{ v.created_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{# Layer / authority / inheritance / alignment: the facts that say where this
+   vocabulary's owner lives and which layer it may inherit into. Read from the
+   schema, never inferred — an unlayered legacy template says so instead of
+   being rendered as some default layer. #}
+<div class="panel">
+  <h2>{{ t.admin.templates.layer_h2 }}</h2>
+  <table class="data-table">
+    <tbody>
+      <tr>
+        <th>{{ t.admin.templates.col_layer }}</th>
+        <td>
+          {% if schema.get('layer') %}<span class="badge">{{ schema.get('layer') }}</span>
+          {% else %}<span class="muted">{{ t.admin.templates.layer_unlayered }}</span>{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>{{ t.admin.templates.col_authority }}</th>
+        <td>
+          {% set authority = schema.get('authority') or {} %}
+          {% if authority.get('kind') == 'external' %}
+            <span class="badge">{{ t.admin.templates.authority_external }}</span>
+            <code>{{ authority.get('source') }}</code> <span class="muted">{{ authority.get('version') }}</span>
+          {% elif authority.get('kind') %}
+            <span class="badge">{{ authority.get('kind') }}</span>
+          {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>{{ t.admin.templates.col_extends }}</th>
+        <td>
+          {% set ext = schema.get('extends') %}
+          {% if ext %}<code>{{ ext.get('name') }}</code> <span class="badge">v{{ ext.get('version') }}</span>
+          {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>{{ t.admin.templates.col_rulers }}</th>
+        <td>
+          {% set readiness = readiness %}
+          {% if readiness.get('declared') %}
+            <span class="badge">{{ readiness.get('resolved') }}/{{ readiness.get('declared') }}</span>
+            {% if readiness.get('missing') %}
+              <span class="muted">{{ t.admin.templates.rulers_missing }}:</span>
+              {% for m in readiness.get('missing') %}<code>{{ m }}</code> {% endfor %}
+            {% endif %}
+          {% else %}
+            <span class="badge warn">{{ t.admin.templates.rulers_none }}</span>
+          {% endif %}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+{# Full three-part schema, rendered readably per design D1. Empty vocabularies
+   say so (muted 「（无）」) instead of a silent blank line. #}
+<div class="panel">
+  <h2>{{ t.admin.templates.schema_h2 }}</h2>
+  <h3>{{ t.admin.templates.entity_types }}</h3>
+  <p>
+    {% for item in schema.get('entity_types', []) %}<span class="badge">{{ item }}</span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}
+  </p>
+  <h3>{{ t.admin.templates.concept_structures }}</h3>
+  {% if schema.get('concept_structures') %}
+  <table class="data-table">
+    <thead><tr><th>{{ t.admin.templates.col_name }}</th><th>{{ t.admin.templates.col_fields }}</th></tr></thead>
+    <tbody>
+      {% for entity, fields in schema.get('concept_structures', {}).items() %}
+      <tr>
+        <td><code>{{ entity }}</code></td>
+        <td>
+          {% if fields is iterable and fields is not string %}
+            {% for f in fields %}<span class="badge">{{ f }}</span> {% endfor %}
+          {% else %}{{ fields }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">{{ t.admin.templates.none }}</p>{% endif %}
+  <h3>{{ t.admin.templates.relationship_kinds }}</h3>
+  <p>
+    {% for item in schema.get('relationship_kinds', []) %}<span class="badge">{{ item }}</span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}
+  </p>
+  <h3>{{ t.admin.templates.tier_vocabulary }}</h3>
+  <p>
+    {% for item in schema.get('tier_vocabulary', []) %}<span class="badge">{{ item }}</span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}
+  </p>
+  <h3>{{ t.admin.templates.sensitivity_vocabulary }}</h3>
+  <p>
+    {% for item in schema.get('sensitivity_vocabulary', []) %}<span class="badge">{{ item }}</span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}
+  </p>
+  <h3>{{ t.admin.templates.corpus_declaration }}</h3>
+  {% if schema.get('corpus_declaration') %}
+  <pre class="wb-pre"><code>{{ corpus_pretty }}</code></pre>
+  {% else %}<p class="muted">{{ t.admin.templates.none }}</p>{% endif %}
+  <h3>{{ t.admin.templates.rubric_refs }}</h3>
+  <p>
+    {% for item in schema.get('rubric_refs', []) %}<span class="badge">{{ item }}</span> {% else %}<span class="muted">{{ t.admin.templates.none }}</span>{% endfor %}
+  </p>
+</div>
+
+{# Editing appends a new version (update_template); history rows stay intact. #}
+<div class="panel">
+  <details>
+    <summary>{{ t.admin.templates.new_version_h2 }}</summary>
+    <form method="POST" action="{{ url_for('admin_template_version_create', name=template.name) }}" class="filter-form">
+      <div class="filter-group wide">
+        <label for="tpl-schema-new">{{ t.admin.templates.schema_label }}</label>
+        <textarea name="schema" id="tpl-schema-new" rows="16" required>{{ schema_pretty }}</textarea>
+      </div>
+      <div class="filter-group">
+        <label>&nbsp;</label>
+        <button type="submit" class="btn btn-primary">{{ t.admin.templates.update_btn }}</button>
+      </div>
+    </form>
+  </details>
+</div>
+{% endblock %}

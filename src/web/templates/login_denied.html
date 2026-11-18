@@ -13,6 +13,9 @@
       <p>{{ t.auth.denied_body }}</p>
       {% if email %}<p class="muted">{{ t.auth.signed_in_as }} {{ email }}</p>{% endif %}
       <p><a class="btn btn-primary" href="/auth/login">{{ t.auth.denied_login_again }}</a></p>
+      {# 互认回链 (C5 P0-D): a denied identity must still be able to read what this
+         workbench is; the marketing page is one click away, not a dead end. #}
+      <p><a href="{{ official_bench_url }}" target="_blank" rel="noopener noreferrer">{{ t.auth.denied_read_about }} ↗</a></p>
     </div>
   </main>
 </body>

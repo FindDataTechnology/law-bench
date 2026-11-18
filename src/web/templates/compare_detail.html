@@ -9,8 +9,13 @@
   <div id="compare-meta" class="muted" role="status" aria-live="polite"></div>
 </div>
 
-<div class="panel" id="compare-loading">{{ tr('detail.loading_compare', id=compare_id) }}</div>
-<div class="panel" id="compare-error" style="display:none"></div>
+{#- Compare states (all three live): loading panel (role=status so the wait is
+    announced), error card (flash-error tint pair + role=alert — app.js fills
+    the cause via matrix.not_found / matrix.error_loading), result panel with
+    the verdict matrix inside .matrix-scroll (40rem min-width; scrolls inside
+    the panel on narrow screens — no template style block needed). -#}
+<div class="panel" id="compare-loading" role="status">{{ tr('detail.loading_compare', id=compare_id) }}</div>
+<div class="error-card" id="compare-error" role="alert" style="display:none"></div>
 
 <div class="panel" id="compare-result" style="display:none">
   <h2 id="compare-headline"></h2>

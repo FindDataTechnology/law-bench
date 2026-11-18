@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ t.console.ontology.import_h2 }} - {{ domain.name }} - {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'ontology' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.ontology.import_h2 }}</h1>
+    <p class="hint">{{ domain.path }}</p>
+  </div>
+  <a class="btn btn-sm" href="{{ url_for('console_ontology', domain_key=domain.key) }}">{{ t.console.ontology.back_to_ledger }}</a>
+</div>
+
+<div class="panel">
+  <p class="hint">
+    {% if dry %}{{ t.console.ontology.import_preview_counts }}{% else %}{{ t.console.ontology.import_done_counts }}{% endif %}
+    <strong>{{ summary.created }}</strong> / <strong>{{ summary.updated }}</strong> / <strong>{{ summary.failed }}</strong>
+  </p>
+
+  {% if summary.rows %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{{ t.console.ontology.col_section }}</th>
+        <th>{{ t.console.ontology.col_key }}</th>
+        <th>{{ t.console.ontology.col_kind }}</th>
+        <th>{{ t.console.ontology.col_action }}</th>
+        <th>{{ t.console.ontology.col_reason }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in summary.rows %}
+      <tr>
+        <td>{{ row.section }}</td>
+        <td><code>{{ row.external_key }}</code></td>
+        <td>{{ row.kind }}</td>
+        <td><span class="badge">{{ row.result or row.action }}</span></td>
+        <td>{{ row.reason }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if dry and summary.created + summary.updated > 0 %}
+  <form method="POST" action="{{ url_for('console_ontology_import', domain_key=domain.key) }}">
+    <input type="hidden" name="dry" value="0">
+    <input type="hidden" name="payload" value="{{ payload }}">
+    <button type="submit" class="btn btn-primary">{{ t.console.ontology.import_confirm }}</button>
+  </form>
+  <p class="hint">{{ t.console.ontology.import_confirm_hint }}</p>
+  {% endif %}
+</div>
+{% endblock %}

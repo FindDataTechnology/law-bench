@@ -84,10 +84,20 @@ def _session_cookie(payload: dict) -> str:
 
 
 def test_healthz_open_without_creds(auth_client: TestClient):
-    """``/healthz`` is exempt — 200 with no credential (Task 8.2)."""
+    """``/healthz`` is exempt — 200 with no credential (Task 8.2).
+
+    2026-11-09 起响应体多了 `retrieval` 计数（审计 03 §11：检索降级要留痕）。
+    这里改成**断言子集**而不是全等——原来那条全等断言等于把响应形状冻死，
+    以后加任何诊断字段都会误报。但仍然要求 `status` 必须是 `"ok"`，且**限制
+    允许的键**：探针是匿名可达的，多出别的键就意味着往外漏了不该漏的东西。
+    """
     r = auth_client.get("/healthz")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+    body = r.json()
+    assert body["status"] == "ok"
+    assert set(body) <= {"status", "retrieval"}, f"探针响应混入了额外字段：{set(body)}"
+    if "retrieval" in body:
+        assert set(body["retrieval"]) == {"failures", "denied"}
 
 
 def test_auth_login_returns_302_not_401(auth_client: TestClient, monkeypatch):

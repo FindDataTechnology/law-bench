@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.bench.h1 }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'bench' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 评测资产区：归属本域的资产（按类型分组）+ 未归属池。
+
+    归属是目录语义：同一份资产可属多域，解除归属不动资产本身。
+    `exists=False` 的条目是孤儿（资产已被删），显式标注并提供清理入口，
+    绝不静默隐藏。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.bench.h1 }}</h1>
+    <p class="hint">{{ t.console.bench.intro }}</p>
+  </div>
+  {% if cap.can_catalog and has_orphans %}
+  <form method="POST" action="{{ url_for('console_bench_purge', domain_key=domain.key) }}">
+    <button type="submit" class="btn btn-sm">{{ t.console.bench.purge }}</button>
+  </form>
+  {% endif %}
+</div>
+
+{% if groups.groups %}
+{% for g in groups.groups %}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ tr(g.label_key) }}</h2>
+    <span class="muted">{{ tr('console.bench.group_count', n=g['items'] | length) }}</span>
+  </div>
+  <table class="data-table">
+    <tbody>
+      {% for item in g['items'] %}
+      <tr>
+        <td>
+          {% if item.exists %}{{ item.name }}{% else %}<span class="muted">{{ item.name }}</span> <span class="badge bad">{{ t.console.bench.orphan }}</span>{% endif %}
+          {#- The key is the identity; show it only when it adds information
+              (many kinds display their key AS the name). -#}
+          {% if item.asset_key != item.name %}<div class="muted"><code>{{ item.asset_key }}</code></div>{% endif %}
+        </td>
+        <td class="align-right">
+          {% if cap.can_catalog %}
+          <form method="POST" action="{{ url_for('console_bench_unassign', domain_key=domain.key) }}" class="inline-form">
+            <input type="hidden" name="asset_kind" value="{{ g.kind }}">
+            <input type="hidden" name="asset_key" value="{{ item.asset_key }}">
+            <button type="submit" class="btn btn-sm">{{ t.console.bench.unassign }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
+{% else %}
+<div class="panel">
+  {% with message=t.console.bench.no_assets, hint=t.console.bench.no_assets_hint %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+</div>
+{% endif %}
+
+<div class="panel">
+  <h2>{{ t.console.bench.unassigned_h2 }}</h2>
+  {% if unassigned.groups %}
+  {% for g in unassigned.groups %}
+  <h3>{{ tr(g.label_key) }} <span class="muted">{{ tr('console.bench.group_count', n=g['items'] | length) }}</span></h3>
+  <table class="data-table">
+    <tbody>
+      {% for item in g['items'] %}
+      <tr>
+        <td>
+          {{ item.name }}
+          {% if item.asset_key != item.name %}<div class="muted"><code>{{ item.asset_key }}</code></div>{% endif %}
+        </td>
+        <td class="align-right">
+          {% if cap.can_catalog %}
+          <form method="POST" action="{{ url_for('console_bench_assign', domain_key=domain.key) }}" class="inline-form">
+            <input type="hidden" name="asset_kind" value="{{ g.kind }}">
+            <input type="hidden" name="asset_key" value="{{ item.asset_key }}">
+            <button type="submit" class="btn btn-sm">{{ t.console.bench.assign }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+  {% else %}
+  {% with message=t.console.bench.no_unassigned %}
+    {% include '_empty_state.html' %}
+  {% endwith %}
+  {% endif %}
+</div>
+
+<div class="panel">
+  <h2>{{ t.console.bench.lane_h2 }}</h2>
+  {% if lane.configured %}
+  <p class="hint">{{ t.console.bench.lane_configured }} <code>{{ lane.model }}</code> · {{ lane.base }}</p>
+  {% else %}
+  <p class="hint"><span class="badge badge-warn">{{ t.console.bench.lane_missing }}</span>
+    {{ lane.missing|join(', ') }}</p>
+  {% endif %}
+  {% if cap.can_assign and lane.configured %}
+  <form method="POST" action="{{ url_for('console_lane_probe', domain_key=domain.key) }}">
+    <button type="submit" class="btn btn-sm">{{ t.console.bench.lane_probe_btn }}</button>
+  </form>
+  <p class="hint">{{ t.console.bench.lane_probe_hint }}</p>
+  {% endif %}
+</div>
+{% endblock %}

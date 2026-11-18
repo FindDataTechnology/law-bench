@@ -106,11 +106,13 @@ def main() -> int:
     run_id = None
     if not args.no_store:
         from .store import store_result
+        from src.bench.verdicts import ledger_kwargs
 
         run_id = store_result(
             result,
             contract_path=str(args.contract),
             task_desc=args.task,
+            **ledger_kwargs(result, gate="all-pass"),
         )
 
     print("=" * 60)

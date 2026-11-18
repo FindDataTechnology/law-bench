@@ -28,6 +28,7 @@ from psycopg.types.json import Jsonb
 
 from src.clauses import generate_contract_assembled
 from src.contracts import get_template
+from src.contracts.digest import sha256_file, sha256_text
 from src.eval.db import connect, now_iso
 from src.eval.errors import NotFoundError
 from src.eval.store import ensure_schema
@@ -117,10 +118,25 @@ def _set_key(conn, artifact_id: int, fmt: str, key: str, variant: str = "final")
     )
 
 
+def _set_digest(conn, artifact_id: int, fmt: str, digest: str | None, variant: str = "final") -> None:
+    """记录该格式**上传的那份字节**的 sha256（lex-matter-spine 5.3）。
+
+    必须与 ``_set_key`` 同批写入：key 指向 MinIO 对象，digest 描述该对象内容，
+    两者脱节就等于"下载得到的东西无法自证"。
+    """
+    if not digest:
+        return
+    col = f"{fmt}_sha256" if variant == "final" else f"{fmt}_sha256_slotted"
+    conn.execute(
+        f"UPDATE contract_artifacts SET {col} = %s, updated_at = %s WHERE id = %s",
+        (digest, now_iso(), artifact_id),
+    )
+
+
 def _render_upload_variant(
     conn, contract_type: str, artifact_id: int, body_text: str, title: str | None,
     want_docx: bool, want_pdf: bool, need_docx: bool, need_pdf: bool, variant: str,
-) -> None:
+) -> dict[str, str]:
     """Render one variant (final/slotted) to temp files, upload needed formats.
 
     ``variant`` selects the MinIO prefix + key column (``final`` -> ``artifacts/``
@@ -128,9 +144,14 @@ def _render_upload_variant(
     and the render ``slot_style`` (``underline`` for final, ``literal`` for
     slotted). ``need_*`` gate uploads (false = already stored, skip); ``want_*``
     gate which formats exist at all (false = format not requested).
+
+    Returns ``{fmt: sha256}`` for the formats actually **rendered in this call**
+    (empty when nothing needed re-upload). The caller merges it with the digests
+    already stored on the row, so a reused artifact still reports a fingerprint.
     """
+    digests: dict[str, str] = {}
     if not (need_docx or need_pdf):
-        return
+        return digests
     # ponytail: literal renders {{中文slot}} as plain text, no yellow highlight;
     # tokens are still find_slots()-fillable. User: "我不要高亮，需要中文".
     style = "underline" if variant == "final" else "literal"
@@ -141,6 +162,10 @@ def _render_upload_variant(
             create_docx(body_text, str(docx), title=title, slot_style=style)
             _set_key(conn, artifact_id, "docx",
                      _upload(contract_type, artifact_id, str(docx), "docx", variant), variant)
+            digest = sha256_file(docx)
+            _set_digest(conn, artifact_id, "docx", digest, variant)
+            if digest:
+                digests["docx"] = digest
         if need_pdf:
             # pdf-only request: build the docx transiently even if docx wasn't stored
             if not docx.exists():
@@ -149,6 +174,11 @@ def _render_upload_variant(
             docx_to_pdf(str(docx), output_path=str(pdf))
             _set_key(conn, artifact_id, "pdf",
                      _upload(contract_type, artifact_id, str(pdf), "pdf", variant), variant)
+            digest = sha256_file(pdf)
+            _set_digest(conn, artifact_id, "pdf", digest, variant)
+            if digest:
+                digests["pdf"] = digest
+    return digests
 
 
 def generate_stored(
@@ -198,6 +228,8 @@ def generate_stored(
     want_pdf = format in ("pdf", "both")
 
     conn = connect(db)
+    fresh: dict[str, str] = {}
+    sha_fields: dict[str, Any] = {}
     try:
         ensure_schema(conn)
         existing = _select_row(conn, body_hash)
@@ -205,18 +237,18 @@ def generate_stored(
         if existing:
             artifact_id = existing["id"]
             reused = True
-            _render_upload_variant(
+            fresh.update(_render_upload_variant(
                 conn, contract_type, artifact_id, body_text, title, want_docx, want_pdf,
                 want_docx and (force or not existing.get("docx_key")),
                 want_pdf and (force or not existing.get("pdf_key")),
                 "final",
-            )
-            _render_upload_variant(
+            ))
+            fresh.update(_render_upload_variant(
                 conn, contract_type, artifact_id, body_text, title, want_docx, want_pdf,
                 want_docx and (force or not existing.get("docx_key_slotted")),
                 want_pdf and (force or not existing.get("pdf_key_slotted")),
                 "slotted",
-            )
+            ))
             conn.commit()
         else:
             reused = False
@@ -246,15 +278,18 @@ def generate_stored(
                 ),
             )
             artifact_id = cur.fetchone()["id"]
-            _render_upload_variant(
+            fresh.update(_render_upload_variant(
                 conn, contract_type, artifact_id, body_text, title, want_docx, want_pdf,
                 want_docx, want_pdf, "final",
-            )
-            _render_upload_variant(
+            ))
+            fresh.update(_render_upload_variant(
                 conn, contract_type, artifact_id, body_text, title, want_docx, want_pdf,
                 want_docx, want_pdf, "slotted",
-            )
+            ))
             conn.commit()
+        # 指纹取自**行上已存的字节哈希**：本次新渲染的写入行后读回，复用的直接读列。
+        # 取行而不是取 fresh，保证复用场景也有指纹（fresh 在无上传时为空）。
+        sha_fields = _digest_fields(_select_row(conn, body_hash) or {}, fresh, body_text)
     finally:
         conn.close()
 
@@ -267,6 +302,38 @@ def generate_stored(
         "body_text": body_text,
         "slots": slots,
         "reused": reused,
+        **sha_fields,
+    }
+
+
+def _digest_fields(row: dict, fresh: dict[str, str], body_text: str) -> dict:
+    """把行上的字节哈希整理成对外三件套（约定见 :mod:`src.contracts.digest`）。
+
+    ``fresh`` 只覆盖本次真的重渲染过的格式；行上的列覆盖复用场景。
+    两处都没有就是 ``None``——遗留行（本变更之前写入的）本来就没有指纹，
+    这里如实报未知，而不是拿正文哈希冒充文件哈希。
+    """
+    by_format: dict[str, str] = {}
+    for fmt in ("pdf", "docx"):
+        value = row.get(f"{fmt}_sha256") or fresh.get(fmt)
+        if value:
+            by_format[fmt] = value
+
+    body = sha256_text(body_text)
+    if "pdf" in by_format:
+        primary, source = by_format["pdf"], "pdf"
+    elif "docx" in by_format:
+        primary, source = by_format["docx"], "docx"
+    elif body:
+        primary, source = body, "body_text"
+    else:
+        primary, source = None, None
+
+    return {
+        "sha256": primary,
+        "sha256_source": source,
+        "sha256_body": body,
+        "sha256_by_format": by_format,
     }
 
 
@@ -334,6 +401,10 @@ def generate_all_stored(
                     "pdf_url": r.get("pdf_url"),
                     "docx_url_slotted": r.get("docx_url_slotted"),
                     "pdf_url_slotted": r.get("pdf_url_slotted"),
+                    # 指纹要跟着走：批量路径若不透传，调用方就拿不到可校验的哈希，
+                    # 而这正是"批量产出后逐份对账"最需要的字段。
+                    "sha256": r.get("sha256"),
+                    "sha256_source": r.get("sha256_source"),
                     "reused": r["reused"],
                 }
             )

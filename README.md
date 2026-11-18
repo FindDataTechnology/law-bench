@@ -8,13 +8,11 @@
 
 > 邻近的合同生成器负责「产出草稿」，law-bench 负责「度量草稿」：每一条起草策略的变化，都要经过 rubric 评审的量化验证才会合入。
 
-> **产品站**：[bench.finddatatech.cloud](https://bench.finddatatech.cloud/) —— 一站一链介绍页：知识沉淀 → 本体发布 → 柏讯消费；发布面活数字与 as_of 直拉自匿名概览端点。
-
 ## 核心能力
 
 | 能力 | 说明 |
 |------|------|
-| **条款语料库** | 43 类中国合同的种子条款（[data/clause_seeds/](data/clause_seeds/)），带法条引用、标签维度（场景 `scenario`、立场 `stance` 等）、三级来源（base / tagged / custom）与人工审核工作流 |
+| **条款语料库** | 66 类合同母版模板，其中 41 类带种子条款（[data/clause_seeds/](data/clause_seeds/)，41 份 YAML 实测 2026-11-12），带法条引用、标签维度（场景 `scenario`、立场 `stance` 等）、三级来源（base / tagged / custom）与人工审核工作流 |
 | **标签驱动组装** | 按合同类型 + 标签组合装配母版，槽位（`{{slot}}`）由 LLM 或规则填充，输出 Markdown / DOCX / PDF |
 | **LLM 评审** | rubric × criteria 逐条判定（PASS/FAIL + 理由），多评审模型并行、429/503 退避——限流永远不允许变成 criterion FAIL |
 | **自愈管线** | `generate → fill → evaluate → improve` 迭代至达标（LangGraph 驱动），最佳迭代自动落库 |
@@ -123,7 +121,7 @@ src/
 packs/
   legal/          法律域包（pack.yaml 声明 + 法规目录实现 + 域组件清单）
 data/
-  clause_seeds/   43 类合同种子条款（YAML）
+  clause_seeds/   41 类合同种子条款（YAML；母版模板共 66 类）
   finetune/       微调数据管线 schema 与产物（见 微调说明.md）
 db/               内置种子（rubric/标准/提示词，含 Harbor v0.20.0 衍生规则）
 fd-coding-law-bench-mcp/   FastMCP server（37 工具，包装 src.* 原地实现）
@@ -158,6 +156,14 @@ tests/           pytest 套件（本地 PG 即可运行，无外部网络依赖�
 ## 关于寻数·识律
 
 law-bench 是**寻数·识律**（FindData 法律 AI 产品线）的合同评测与起草基座，由寻数团队（[FindDataTechnology](https://github.com/FindDataTechnology)）维护。识律产品线的对外服务部署于 `*.finddatatech.cloud`；本仓库为其核心引擎与工作台的开源版本，公开镜像位于 [FindDataTechnology/law-bench](https://github.com/FindDataTechnology/law-bench)。
+
+## 案卷产物契约（跨仓共用）
+
+本仓的链路商业工具（装配 / 条款 / 法条引用 / 审查共 19 件）在登记为案卷产物时，须满足
+`../fd-lex/contracts/lex-artifact.schema.json`：四项必填 `producer` / `refs` / `sha256` / `payload`，
+结论性输出另需 `provenance` 三件套（`source` / `stable_id` / `as_of`）。输出结构声明
+（`tool-surface.json` 的 `output_structure.declared`）须来自真实调用采集，不得凭代码阅读推定
+（change `lex-matter-spine`）。
 
 ## License
 

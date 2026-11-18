@@ -1,0 +1,27 @@
+{#- Reusable empty-state card (polish-bench-workbench 0.2).
+
+    Usage (caller passes PRE-TRANSLATED strings from t.* keys — bilingual
+    parity stays at the call site; the partial holds no copy):
+
+    {% with message=t.rubrics.empty,
+            hint=t.rubrics.empty_hint,
+            action_href=url_for('page_new_rubric'),
+            action_label=t.rubrics.new_local_rubric %}
+      {% include '_empty_state.html' %}
+    {% endwith %}
+
+    `message` is the only load-bearing variable; `hint` and the
+    action link are optional. Omit the action for a plain honest empty.
+    Flat-ledger grammar: one tonal nesting step (Nested Paper fill +
+    1px Rule Gray border), muted text, no icon, no placeholder data —
+    real emptiness with the next step. role="status": an announcement
+    of real state, not an error. -#}
+<div class="empty-state" role="status">
+  <p class="empty-state-text">{{ message | default('', true) }}</p>
+  {%- if hint is defined and hint -%}
+  <p class="empty-state-hint">{{ hint }}</p>
+  {%- endif -%}
+  {%- if action_href is defined and action_href and action_label is defined and action_label -%}
+  <div class="empty-state-action"><a class="btn btn-sm" href="{{ action_href }}">{{ action_label }}</a></div>
+  {%- endif -%}
+</div>

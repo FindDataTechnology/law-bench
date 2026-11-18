@@ -161,11 +161,34 @@ def _load_constraints(contract_type: str) -> list[dict]:
     conn = connect(None)
     rows = conn.execute(
         "SELECT constraint_id, kind, field, params, message, "
-        "severity, law_ref "
+        "severity, law_ref, inherited_from "
         "FROM type_validations WHERE contract_type = %s ORDER BY id",
         (contract_type,),
     ).fetchall()
     return [dict(r) for r in rows]
+
+
+def _provenance(contract_type: str, constraint: dict) -> dict:
+    """单条结论的溯源三件套（契约见 fd-lex/contracts/lex-artifact.schema.json）。
+
+    - ``source``：这条约束从哪来。继承来的写明上级类型（``inherited_from``），
+      否则就是本类型的约束表——两者都指得出具体来源，不是"系统生成"这种空话。
+    - ``stable_id``：``type_validations:<类型>#<约束 id>``。表名+主业务键，重灌不换号，
+      案卷侧可以拿它对账"同一约束"。
+    - ``as_of``：结论产生时刻（UTC ISO8601）。约束行本身没有时间戳列，
+      所以这里如实标 ``as_of_source="run"``——它说明的是"此刻依据这套约束评的"，
+      而不是"约束是哪年写的"；后者要有列才能说，不能编。
+    """
+    from src.eval.db import now_iso
+
+    origin = constraint.get("inherited_from")
+    source = f"type_validations:{origin}" if origin else f"type_validations:{contract_type}"
+    return {
+        "source": source,
+        "stable_id": f"type_validations:{contract_type}#{constraint.get('constraint_id', '')}",
+        "as_of": now_iso(),
+        "as_of_source": "run",
+    }
 
 
 def validate_draft(
@@ -182,9 +205,17 @@ def validate_draft(
         slots: dict ``{slot_name: value}``.
         _constraints: internal — bypass DB (for self-check).
 
-    Returns ``{errors: [...], warnings: [...], passed: bool}``.
-    Each entry: ``{constraint_id, message, law_ref, severity}``.
-    ``passed = not errors``.
+    Returns ``{errors: [...], warnings: [...], passed: bool,
+    checked_constraints: int, degraded: bool[, degraded_reason]}``.
+    Each entry: ``{constraint_id, message, law_ref, severity, provenance}``.
+
+    ``passed = not errors`` —— 但**只有 ``checked_constraints > 0`` 时才有意义**。
+    约束集为空（该 contract_type 尚未配置规则，或语料表为空）时 ``passed`` 恒为
+    True，那只是"没有东西可违反"，**不是"查过且合规"**。2026-11-11 实测线上
+    ``validation_list('sale')`` 返回 ``[]``，而 ``validation_check('sale')`` 回
+    ``passed: true`` —— 法务产品把它读成"合同评审通过"是危险的假绿，故新增
+    ``checked_constraints`` 与 ``degraded`` 把两态分开：``degraded=true`` 表示
+    本次评审什么也没查，消费方 MUST NOT 据此声称合规。
     """
     if slots is None:
         slots = {}
@@ -208,6 +239,9 @@ def validate_draft(
             "message": message,
             "law_ref": law_ref,
             "severity": severity,
+            # 每条结论自带溯源：案卷侧要能从一条"不合规"反查到它依据哪条约束、
+            # 那条约束来自哪张表/哪个上级类型。缺三件套即无法反查。
+            "provenance": _provenance(contract_type, c),
         }
 
         if kind not in _KNOWN_KINDS:
@@ -222,7 +256,21 @@ def validate_draft(
             else:
                 warnings.append(entry)
 
-    return {"errors": errors, "warnings": warnings, "passed": not errors}
+    checked = len(_constraints)
+    result: dict = {
+        "errors": errors,
+        "warnings": warnings,
+        "passed": not errors,
+        # 「没有可违反的约束」与「查过且合规」必须可分（见 docstring）。
+        "checked_constraints": checked,
+        "degraded": checked == 0,
+    }
+    if checked == 0:
+        result["degraded_reason"] = (
+            f"contract_type={contract_type!r} 未配置任何验证约束；"
+            "passed=true 只表示没有可违反的约束，不代表已合规"
+        )
+    return result
 
 
 # ── self-check ──────────────────────────────────────────────────

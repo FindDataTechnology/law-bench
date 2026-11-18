@@ -76,6 +76,16 @@ LAW_TRGM_THRESHOLD = float(_env("LAW_TRGM_THRESHOLD", "0.65"))
 # 法规库计量 API（law-api，APISIX key-auth + Lago 计量；integrate-law-semantic-search）。
 # law-bench 保持"无向量"：模型/维度/Qdrant 全部在网关后面，这里只配端点与 key。
 # key 为空或 LAW_SEARCH_ENABLED=false 时法规检索整体不启用、零请求。
+# The marketing site. The console links back to it (identity area + the denied
+# login page) so a signed-out visitor is never trapped inside the workbench with
+# no way to read what it is. Env-overridable: the site and the app deploy
+# independently.
+OFFICIAL_SITE_URL = _env("OFFICIAL_SITE_URL", "https://www.finddatatech.cloud")
+#: The bench product page on the marketing site: the one "what is this?" link.
+OFFICIAL_BENCH_URL = _env(
+    "OFFICIAL_BENCH_URL", f"{OFFICIAL_SITE_URL}/products/zhiyantai"
+)
+
 LAW_API_BASE_URL = _env("LAW_API_BASE_URL", "https://law-api.finddatatech.cloud/v1")
 LAW_API_KEY = _env("LAW_API_KEY", "")
 LAW_SEARCH_ENABLED = _env("LAW_SEARCH_ENABLED", "").lower() in ("1", "true", "yes", "on")
@@ -339,3 +349,7 @@ READONLY_REPLICA = _env("READONLY_REPLICA", "0") == "1"
 RATE_LIMIT_ENABLED = _env("RATE_LIMIT_ENABLED", "0") == "1"
 RATE_LIMIT_RPS = float(_env("RATE_LIMIT_RPS", "10"))    # sustained tokens/sec refill
 RATE_LIMIT_BURST = int(_env("RATE_LIMIT_BURST", "20"))  # bucket capacity (max burst)
+# Ceiling on tracked caller buckets. A key-flood (fresh X-API-Key per request)
+# would otherwise grow the dict without bound — the middleware runs before auth,
+# so it never rejects an unknown key. Sized for ~50k live callers on one pod.
+RATE_LIMIT_MAX_BUCKETS = int(_env("RATE_LIMIT_MAX_BUCKETS", "50000"))

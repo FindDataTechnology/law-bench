@@ -32,6 +32,12 @@ load_dotenv()
 # Legal contract text must not leave the machine; opt out of deepeval telemetry
 # for the whole suite (src/eval/run.py sets the same at runtime).
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "true")
+# CrewAI's telemetry handler raises SystemExit(0) when its posthog client
+# misbehaves mid-run, which kills the whole pytest session (observed: a run
+# stopped dead at 881 passed with INTERNALERROR). The suite is hermetic and has
+# no telemetry worth sending; forbid it outright.
+os.environ.setdefault("OTEL_SDK_DISABLED", "true")
+os.environ.setdefault("CREWAI_TELEMETRY_OPT_OUT", "true")
 # Constructing CrewAI/LiteLLM LLMs otherwise triggers a remote model-cost-map
 # fetch; point it at an empty URL so it fails fast and falls back to the local
 # copy (keeps the suite hermetic and network-free).
@@ -81,6 +87,17 @@ _ALL_TABLES = (
     "law_catalog.clause_article_refs",
     "law_catalog.successor_map",
     "law_catalog.citation_revisions",
+    # Workspace tables (see src/bench/workspace_store.py). Referencing tables
+    # go first; TRUNCATE ... CASCADE handles the rest regardless of order.
+    "domain_members",
+    "domain_invitations",
+    "authoring_events",
+    "authoring_tasks",
+    "ontology_publications",
+    "distribution_consumers",
+    "rag_corpora",
+    "domains",
+    "ontology_templates",
 )
 
 
@@ -172,7 +189,25 @@ def _session_db_name() -> str:
         conn.commit()
     finally:
         conn.close()
-    ensure_schema()  # eval_runs / eval_criteria_results / compare_runs (opens from env)
+    # eval_runs / eval_criteria_results / compare_runs / bench kernel ...
+    ensure_schema()
+    # Assert the bootstrap actually landed before seeding. Without this a
+    # bootstrap that did not finish surfaces as "UndefinedTable: review_tasks"
+    # from the fixture's own TRUNCATE — pointing at whatever the test happened to
+    # touch instead of at the thing that failed (fix-ensure-schema-lock-masking).
+    from src.eval.store import _missing_required_tables
+
+    _probe = psycopg.connect(dsn, row_factory=dict_row)
+    try:
+        _absent = _missing_required_tables(_probe)
+    finally:
+        _probe.close()
+    if _absent:
+        pytest.fail(
+            "schema bootstrap did not complete on the session DB: "
+            f"{len(_absent)} required table(s) absent ({', '.join(_absent)}). "
+            "This is the bootstrap, not the test under it."
+        )
     # law_catalog schema (法规目录副本) - created up front so the per-test
     # TRUNCATE of _ALL_TABLES (which includes law_catalog.*) never hits a
     # missing table in a fresh session DB.

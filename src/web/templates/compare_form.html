@@ -25,6 +25,12 @@
     <div class="row">
       <label for="f-rubric_name">{{ t.form.rubric }}</label>
       <select name="rubric_name" id="f-rubric_name" required>
+        {#- Honest empty: with zero rubrics the select would render as a silent
+            blank control; a disabled option states the real cause (required
+            still blocks submission — no behavior change). -#}
+        {% if not rubrics %}
+        <option value="" disabled selected>{{ t.empty.rubrics }}</option>
+        {% endif %}
         {% for r in rubrics %}
         <option value="{{ r.name }}">{{ title_for_rubric(r.name) }} ({{ label_for('context', r.context) }})</option>
         {% endfor %}

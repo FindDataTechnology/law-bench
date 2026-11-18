@@ -124,3 +124,28 @@ def test_generate_stored_write_route_not_registered(public_client: TestClient):
     ``write_router`` -> 404."""
     r = public_client.post("/api/contracts/sale/generate-stored", json={})
     assert r.status_code == 404
+
+
+def test_the_fleet_machine_surface_is_not_registered(public_client: TestClient):
+    """舰队机器面（工单读 / 认领 / 关单 / 回写运行 / 提交提案 / 读结局）不在公开面上。
+
+    两个理由，任一成立就足够：① 它是**写面**——认领、回写运行、以舰队身份提交产物，
+    公开 pod 只该是只读面；② 公开 pod 的库是**复制来的 dump**，`distribution_consumers`
+    上根本没有 `kind` / `fleet_ref` 两列（DDL 只在 origin 的 entrypoint 里跑），真把路由
+    挂上去，症状会是 500 而不是「用不了」。
+
+    判据是 **404 而不是 401**：401 说明路由在、只是被挡住，那正是要防的形态。
+    """
+    cases = (
+        ("get", "/api/v1/distribution/legal/work-orders", None),
+        ("post", "/api/v1/distribution/legal/work-orders/1/claim", None),
+        ("post", "/api/v1/distribution/legal/work-orders/1/complete", {}),
+        ("post", "/api/v1/distribution/legal/runs", {}),
+        ("get", "/api/v1/distribution/legal/runs?runner_ref=fleet:a/p#1", None),
+        ("post", "/api/v1/distribution/legal/proposals", {}),
+        ("get", "/api/v1/distribution/legal/proposals/outcomes?source=fleet:a/p", None),
+    )
+    for method, path, body in cases:
+        call = getattr(public_client, method)
+        response = call(path) if body is None else call(path, json=body)
+        assert response.status_code == 404, f"{method.upper()} {path} -> {response.status_code}"

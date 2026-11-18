@@ -1,0 +1,257 @@
+{
+  "_note": "法律域起始概念集 v1（2026-11-09）。逐条来自指导性案例裁判要点，每条带案例号与所引法条，供人复核后导入。只求把「概念 → 法条依据」这条路径打通，不追求覆盖；概念分层（合同/居间合同）留待后续重排。 2026-11-09 修订：defines 改指法规而不是条款——条款实体需要带条文，凭空造条文比不挂更糟；法规实体（合同法/公司法/刑法/民事诉讼法）一并立起。",
+  "_source": "law_db.guide_cases（293 条，280 条含 gist + statutes）",
+  "units": [
+    {
+      "kind": "concept",
+      "external_key": "居间合同",
+      "body": "居间合同",
+      "attrs": {
+        "definition": "委托人向居间人支付报酬、居间人向委托人报告订立合同机会或提供订立合同的媒介服务的合同",
+        "statute_refs": [
+          "《中华人民共和国合同法》第四百二十四条"
+        ],
+        "source_case_no": 1
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "和解协议",
+      "body": "和解协议",
+      "attrs": {
+        "definition": "当事人自行达成的、未经人民法院制作调解书的诉讼外协议",
+        "statute_refs": [
+          "《中华人民共和国民事诉讼法》第二百零七条第二款"
+        ],
+        "source_case_no": 2
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "受贿",
+      "body": "受贿",
+      "attrs": {
+        "definition": "国家工作人员利用职务上的便利，索取或非法收受他人财物并为他人谋取利益",
+        "statute_refs": [
+          "《中华人民共和国刑法》第三百八十五条第一款"
+        ],
+        "source_case_no": 3
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "坦白悔罪",
+      "body": "坦白悔罪",
+      "attrs": {
+        "definition": "被告人如实供述自己罪行并表达悔意的从轻处罚情节",
+        "statute_refs": [
+          "《中华人民共和国刑法》第五十条第二款"
+        ],
+        "source_case_no": 4
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "行政许可",
+      "body": "行政许可",
+      "attrs": {
+        "definition": "行政机关根据公民、法人或其他组织的申请，经依法审查准予其从事特定活动的行为；设定权限受法律、行政法规限制",
+        "statute_refs": [
+          "《中华人民共和国行政许可法》第十五条第一款",
+          "《中华人民共和国行政许可法》第十六条第二款"
+        ],
+        "source_case_no": 5
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "听证程序",
+      "body": "听证程序",
+      "attrs": {
+        "definition": "行政机关作出重大行政处罚决定前，告知当事人有要求听证的权利并依法举行听证的程序",
+        "statute_refs": [
+          "《中华人民共和国行政处罚法》第四十二条"
+        ],
+        "source_case_no": 6
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "公司解散之诉",
+      "body": "公司解散之诉",
+      "attrs": {
+        "definition": "股东在公司经营管理发生严重困难、继续存续会使股东利益受重大损失时请求解散公司的诉讼",
+        "statute_refs": [
+          "《中华人民共和国公司法》第一百八十三条"
+        ],
+        "source_case_no": 8
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "清算义务",
+      "body": "清算义务",
+      "attrs": {
+        "definition": "有限责任公司股东、股份有限公司董事和控股股东在公司被吊销营业执照后依法组织清算的义务",
+        "statute_refs": [
+          "《中华人民共和国公司法》第二十条",
+          "《中华人民共和国公司法》第一百八十四条"
+        ],
+        "source_case_no": 9
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "连带清偿责任",
+      "body": "连带清偿责任",
+      "attrs": {
+        "definition": "多个责任人对同一债务各负全部清偿义务、债权人可向任一责任人主张的责任形态",
+        "statute_refs": [
+          "《中华人民共和国公司法》第二十条"
+        ],
+        "source_case_no": 9
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "公司决议撤销",
+      "body": "公司决议撤销",
+      "attrs": {
+        "definition": "股东会或董事会决议在召集程序、表决方式违法或违反章程，或内容违反章程时被请求撤销的情形",
+        "statute_refs": [
+          "《中华人民共和国公司法》第二十二条第二款"
+        ],
+        "source_case_no": 10
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "贪污",
+      "body": "贪污",
+      "attrs": {
+        "definition": "国家工作人员利用职务上的便利，侵吞、窃取、骗取或以其他手段非法占有公共财物",
+        "statute_refs": [
+          "《中华人民共和国刑法》第三百八十二条第一款"
+        ],
+        "source_case_no": 11
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "利用职务上的便利",
+      "body": "利用职务上的便利",
+      "attrs": {
+        "definition": "利用职务上主管、管理、经手公共财物的权力及方便条件，不以直接经手为限",
+        "statute_refs": [
+          "《中华人民共和国刑法》第三百八十二条第一款"
+        ],
+        "source_case_no": 11
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "举证责任",
+      "body": "举证责任",
+      "attrs": {
+        "definition": "当事人对自己主张的事实负提供证据证明的责任；特定情形下依法倒置",
+        "statute_refs": [],
+        "source_case_no": null,
+        "grounding": "case"
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "合同解除",
+      "body": "合同解除",
+      "attrs": {
+        "definition": "合同有效成立后因法定或约定事由使合同关系归于消灭的行为",
+        "statute_refs": [
+          "《中华人民共和国民法典》第五百六十三条"
+        ],
+        "source_case_no": null,
+        "grounding": "case"
+      }
+    },
+    {
+      "kind": "concept",
+      "external_key": "违约责任",
+      "body": "违约责任",
+      "attrs": {
+        "definition": "合同当事人不履行合同义务或履行不符合约定时依法应当承担的责任",
+        "statute_refs": [
+          "《中华人民共和国民法典》第五百七十七条"
+        ],
+        "source_case_no": null,
+        "grounding": "case"
+      }
+    },
+    {
+      "kind": "law",
+      "external_key": "合同法",
+      "body": "中华人民共和国合同法",
+      "attrs": {
+        "full_title": "中华人民共和国合同法",
+        "grounding": "guide-cases"
+      }
+    },
+    {
+      "kind": "law",
+      "external_key": "公司法",
+      "body": "中华人民共和国公司法",
+      "attrs": {
+        "full_title": "中华人民共和国公司法",
+        "grounding": "guide-cases"
+      }
+    },
+    {
+      "kind": "law",
+      "external_key": "刑法",
+      "body": "中华人民共和国刑法",
+      "attrs": {
+        "full_title": "中华人民共和国刑法",
+        "grounding": "guide-cases"
+      }
+    },
+    {
+      "kind": "law",
+      "external_key": "民事诉讼法",
+      "body": "中华人民共和国民事诉讼法",
+      "attrs": {
+        "full_title": "中华人民共和国民事诉讼法",
+        "grounding": "guide-cases"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "kind": "defines",
+      "from_key": "居间合同",
+      "to_key": "合同法"
+    },
+    {
+      "kind": "defines",
+      "from_key": "清算义务",
+      "to_key": "公司法"
+    },
+    {
+      "kind": "defines",
+      "from_key": "公司解散之诉",
+      "to_key": "公司法"
+    },
+    {
+      "kind": "defines",
+      "from_key": "公司决议撤销",
+      "to_key": "公司法"
+    },
+    {
+      "kind": "defines",
+      "from_key": "受贿",
+      "to_key": "刑法"
+    },
+    {
+      "kind": "defines",
+      "from_key": "贪污",
+      "to_key": "刑法"
+    }
+  ]
+}

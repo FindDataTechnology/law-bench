@@ -12,7 +12,13 @@ import os
 
 from fastmcp import FastMCP
 
+from . import wellknown
+
 mcp: FastMCP = FastMCP("law-bench")
+
+# 线自描述端点（change converge-line-identity-and-keys 1.4）：公开、免鉴权。
+# 路由挂在这里；匿名可达还需要下方 ``EXEMPT_PATHS`` 里的豁免，两处缺一不可。
+wellknown.register(mcp)
 
 # Importing the tool modules registers their @mcp.tool decorators. Order does
 # not matter; the names are re-exported for callers / tests that want them.
@@ -37,27 +43,53 @@ from .tools import validation as _validation  # noqa: E402,F401
 
 
 def _extract_access_token(headers: list[tuple[bytes, bytes]]) -> str | None:
-    """Pull the shared token from ``Authorization: Bearer`` or ``X-API-Key``.
+    """Pull the shared token from the caller's credential headers.
 
-    Direct MCP clients authenticate with the standard bearer header; the AI
-    Gateway's ``api_key`` backend scheme forwards the credential as
-    ``X-API-Key``, so both must be accepted.
+    Precedence, highest first:
+
+    1. ``X-Authorization: Bearer <token>`` — the *line* credential on a relayed
+       call. The MCP gateway authenticates the caller against its own audience
+       and, for allowlisted servers, forwards the caller's original
+       ``Authorization`` **and** ``X-Authorization``. After relay the plain
+       ``Authorization`` carries the **gateway identity**, so the line credential
+       has to win — otherwise a call arrives holding the right token and is
+       still rejected 401 (gateway-reach-for-shared-token-mcp).
+    2. ``Authorization: Bearer <token>`` — direct MCP clients.
+    3. ``X-API-Key: <token>`` — the AI Gateway's ``api_key`` backend scheme.
+
+    A header in the wrong shape is skipped, not fatal: an unusable
+    ``X-Authorization`` falls through to the lower-precedence sources.
     """
-    bearer: str | None = None
-    api_key: str | None = None
+    found: dict[bytes, str] = {}
     for name, value in headers:
         lowered = name.lower()
-        if lowered == b"authorization":
-            bearer = value.decode("latin-1")
-        elif lowered == b"x-api-key":
-            api_key = value.decode("latin-1")
-    if bearer and bearer.lower().startswith("bearer ") and bearer[7:].strip():
-        return bearer[7:].strip()
-    return api_key
+        if lowered in (b"authorization", b"x-authorization", b"x-api-key"):
+            found[lowered] = value.decode("latin-1")
+
+    def _bearer(raw: str | None) -> str | None:
+        if raw and raw.lower().startswith("bearer "):
+            return raw[7:].strip() or None
+        return None
+
+    for key in (b"x-authorization", b"authorization"):
+        token = _bearer(found.get(key))
+        if token:
+            return token
+    return found.get(b"x-api-key")
+
+
+#: 共享令牌门必须放行的精确路径。唯一的路径字面量在 ``wellknown.WELL_KNOWN_PATH``；
+#: 这里引用它，不复制第二份。``/mcp`` 不在集合里——门本身没有被这条豁免削弱。
+EXEMPT_PATHS: frozenset[str] = frozenset({wellknown.WELL_KNOWN_PATH})
 
 
 class _TokenGuard:
     """ASGI middleware that rejects any HTTP request lacking the shared token.
+
+    ``EXEMPT_PATHS`` are the deliberate holes: public metadata that a caller
+    without this line's credential must still be able to read (currently only
+    the line self-description endpoint). Everything else, including ``/mcp``,
+    still needs the token.
 
     Non-HTTP scopes (the ASGI lifespan) pass through untouched so the wrapped
     app still starts and shuts down normally.
@@ -68,9 +100,11 @@ class _TokenGuard:
         self.token = token
 
     async def __call__(self, scope, receive, send) -> None:
-        if scope["type"] != "http" or _extract_access_token(
-            scope.get("headers", [])
-        ) == self.token:
+        if (
+            scope["type"] != "http"
+            or (scope.get("path") or "") in EXEMPT_PATHS
+            or _extract_access_token(scope.get("headers", [])) == self.token
+        ):
             await self.app(scope, receive, send)
             return
         from starlette.responses import PlainTextResponse

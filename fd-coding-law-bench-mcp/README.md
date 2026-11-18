@@ -8,7 +8,7 @@ is relocated or copied.
 
 ## Tools
 
-The server advertises 37 tools, wrapping `src.*` in place (nothing relocated).
+The server advertises **54** tools (`tools/list` on the deployed pod, 2026-11-12), wrapping `src.*` in place (nothing relocated). The count was 37 when this file was first written; the metrics group (`task_status`, `task_failed_items`) and later additions raised it — quote the live `tools/list`, not this line, if you need today's number.
 Tools are grouped into 9 concepts two ways: by concept-first verb names
 (`<concept>_<verb>`, so any client's tool picker lists them grouped) and by a
 FastMCP `tags={"<concept>"}` kwarg exposed on each tool's `meta.fastmcp.tags`.

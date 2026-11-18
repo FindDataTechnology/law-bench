@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }} · {{ t.console.areas.library }} · {{ t.nav.brand }}{% endblock %}
+
+{% block nav_items %}{% endblock %}
+{% block console_context %}{% include '_domain_switcher.html' %}{% endblock %}
+{% block zone_nav %}{% set area = 'library' %}{% include '_domain_zone_nav.html' %}{% endblock %}
+
+{% block content %}
+{#- 语料文档：把「库里有什么」按**文档**列出来，并允许把一份文档（或它的条款）
+    取进本域本体。
+
+    这一页存在的理由：检索回答「哪句话最像」，回答不了「库里有哪些法、我要哪
+    几部」。而本体要长出概念，先得有文档和条款。目录是从存储实时派生的，不落
+    表——清单漂移的代价是人拿错清单做取材决定。 -#}
+<div class="toolbar between">
+  <div>
+    <h1>{{ t.console.areas.library }}</h1>
+    <p class="hint">{{ domain.path }} · {{ t.console.library.intro }}</p>
+  </div>
+</div>
+
+{% if scope_error %}
+<div class="flash error" role="alert">{{ t.console.library.scope_error }} {{ scope_error }}</div>
+{% endif %}
+
+{% if not catalog %}
+<p class="hint">{{ t.console.library.no_libraries }}</p>
+{% else %}
+
+{#- 库与来源选择：目录永远按「库 → 来源」定位，因为不同来源的文档结构由各自声明，
+    跨来源混列会把一种字段名套到另一种存储上。 -#}
+<div class="panel">
+  <div class="toolbar gap wrap">
+    {% for lib in catalog %}
+    <div class="library-picker">
+      <strong>{{ lib.name }}</strong>
+      <span class="muted">{{ lib.backend }}</span>
+      <ul class="plain">
+        {% for src in lib.sources %}
+        <li>
+          {% if src.document_declared %}
+          <a href="{{ url_for('console_library', domain_key=domain.key) }}?lib={{ lib.library_key|urlencode }}&src={{ src.source_key|urlencode }}"
+             {% if lib.library_key == lib_key and src.source_key == src_key %}aria-current="page"{% endif %}>
+            {{ src.source_key }}
+          </a>
+          <span class="muted">{{ src.content_type or '' }}</span>
+          {% else %}
+          <span class="muted">{{ src.source_key }} · {{ t.console.library.undeclared }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+
+  <form method="GET" action="{{ url_for('console_library', domain_key=domain.key) }}" class="toolbar gap">
+    <input type="hidden" name="lib" value="{{ lib_key or '' }}">
+    <input type="hidden" name="src" value="{{ src_key }}">
+    <label for="lib-q">{{ t.console.library.search_label }}</label>
+    <input type="text" name="q" id="lib-q" value="{{ q }}" placeholder="{{ t.console.library.search_placeholder }}">
+    <button type="submit" class="btn btn-primary">{{ t.console.library.search_btn }}</button>
+  </form>
+</div>
+
+{% if page_error %}
+{#- 读不到 ≠ 没有：库不可达时如实报错，不显示空清单。 -#}
+<div class="flash error" role="alert">{{ t.console.library.page_error }} {{ page_error }}</div>
+{% elif page %}
+<div class="panel">
+  <div class="toolbar between">
+    <h2>{{ t.console.library.documents_h2 }} {{ page.total }}</h2>
+    <span class="muted">
+      {{ t.console.library.showing }} {{ page.rows|length }}
+      {% if page.partial %} · {{ t.console.library.partial }} {{ page.window }}{% endif %}
+    </span>
+  </div>
+
+  {% if not page.rows %}
+  <p class="hint">{{ t.console.library.no_documents }}</p>
+  {% else %}
+  <table class="table">
+    <thead><tr>
+      <th>{{ t.console.library.col_title }}</th>
+      <th>{{ t.console.library.col_kind }}</th>
+      <th>{{ t.console.library.col_status }}</th>
+      <th>{{ t.console.library.col_published }}</th>
+      <th>{{ t.console.library.col_chunks }}</th>
+      <th>{{ t.console.library.col_adopted }}</th>
+      {% if cap.can_write %}<th>{{ t.console.library.col_actions }}</th>{% endif %}
+    </tr></thead>
+    <tbody>
+      {% for row in page.rows %}
+      <tr>
+        <td>{{ row.title }}</td>
+        <td>{{ row.kind or '—' }}</td>
+        <td>{{ row.status or '—' }}</td>
+        <td>{{ row.published or '—' }}</td>
+        <td>{{ row.chunks }}</td>
+        <td>{% if row.adopted_as %}<code>{{ row.adopted_as }}</code>{% else %}<span class="muted">—</span>{% endif %}</td>
+        {% if cap.can_write %}
+        <td class="toolbar gap">
+          <form method="POST" action="{{ url_for('console_library_adopt', domain_key=domain.key) }}">
+            <input type="hidden" name="lib" value="{{ lib_key }}">
+            <input type="hidden" name="src" value="{{ src_key }}">
+            <input type="hidden" name="doc" value="{{ row.id }}">
+            <button type="submit" class="btn">{{ t.console.library.adopt_btn }}</button>
+          </form>
+          <form method="POST" action="{{ url_for('console_library_clauses', domain_key=domain.key) }}">
+            <input type="hidden" name="lib" value="{{ lib_key }}">
+            <input type="hidden" name="src" value="{{ src_key }}">
+            <input type="hidden" name="doc" value="{{ row.id }}">
+            <button type="submit" class="btn">{{ t.console.library.clauses_btn }}</button>
+          </form>
+        </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="toolbar gap">
+    {% if offset > 0 %}
+    <a class="btn" href="{{ url_for('console_library', domain_key=domain.key) }}?lib={{ lib_key|urlencode }}&src={{ src_key|urlencode }}&q={{ q|urlencode }}&offset={{ [offset - page_size, 0]|max }}">{{ t.console.library.prev }}</a>
+    {% endif %}
+    {% if offset + page_size < page.total %}
+    <a class="btn" href="{{ url_for('console_library', domain_key=domain.key) }}?lib={{ lib_key|urlencode }}&src={{ src_key|urlencode }}&q={{ q|urlencode }}&offset={{ offset + page_size }}">{{ t.console.library.next }}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

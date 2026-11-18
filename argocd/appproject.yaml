@@ -1,0 +1,33 @@
+# ArgoCD AppProject for the law-bench repo.
+#
+# An AppProject is the ArgoCD logical project: it scopes which source repos
+# may be deployed and which cluster/namespaces the applications may target.
+# Apply with:
+#   kubectl apply -f argocd/appproject.yaml -n argocd
+# ArgoCD watches AppProject resources in the `argocd` namespace and reconciles
+# them, so this is the GitOps source of truth for the project.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: law-bench
+  namespace: argocd
+  # Cascade-delete the project's applications when this AppProject is deleted.
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Chinese contract drafter + evaluation rules manager (gitee.com/FindDataTechnology/law-bench).
+  # Only this repo may be deployed under this project. The old
+  # github.com/scs001/law-bench URL is retired — the deployed repo is the Gitee
+  # one (the ArgoCD repository credential `gitee-law-bench` covers it).
+  sourceRepos:
+    - https://gitee.com/FindDataTechnology/law-bench.git
+  # Applications in this project may target the in-cluster server, in the
+  # law-bench namespace (and default for ad-hoc resources).
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: law-bench
+    - server: https://kubernetes.default.svc
+      namespace: default
+  # No resource whitelist = all namespaced and cluster-scoped resource types
+  # are permitted. Tighten with namespaceResourceWhitelist / clusterResource*
+  # once the deployed resource set is known.

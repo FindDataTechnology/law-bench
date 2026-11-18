@@ -52,7 +52,13 @@ def _flash(
 
 @router.get("/", include_in_schema=False)
 def index() -> RedirectResponse:
-    return RedirectResponse(url="/rubrics")
+    """Land on my domains (C5), not on a business asset list.
+
+    ``/rubrics`` was the old landing point and remains reachable at its own
+    path; what changed is that a signed-in identity is no longer dropped into
+    the legal rubric list regardless of which domain it works in.
+    """
+    return RedirectResponse(url="/d", status_code=302)
 
 
 @router.get("/rubrics", include_in_schema=False, name="page_list_rubrics")

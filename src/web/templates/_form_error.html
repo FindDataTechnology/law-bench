@@ -1,0 +1,13 @@
+{#- Reusable inline form-field error strip (polish-bench-workbench 0.2).
+    Generalizes the established .rubric-warning grammar to any form: the
+    flash-error tint pair scaled to an inline strip, placed directly
+    under the offending field.
+
+    <label for="name">{{ t.rubrics.name_label }}</label>
+    <input id="name" name="name" type="text">
+    {% with message=t.rubrics.name_missing %}{% include '_form_error.html' %}{% endwith %}
+
+    role="alert" so the cause is announced; the input itself is never
+    re-chromed (design: error via tint strip, not field chrome). The
+    caller passes a pre-translated string (t.* key). -#}
+<p class="field-error" role="alert">{{ message | default('', true) }}</p>

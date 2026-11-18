@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin.invite.title }} · {{ t.nav.brand }}{% endblock %}
+
+{% block content %}
+{% if invalid %}
+{# Neutral fail state: unknown / already-used / expired token. No 500, and
+   nothing about the domain leaks from an unusable token. #}
+<div class="panel denied">
+  <h1>{{ t.admin.invite.invalid_h1 }}</h1>
+  <p>{{ t.admin.invite.invalid_body }}</p>
+  <p><a class="btn btn-primary" href="/">{{ t.admin.invite.back_home }}</a></p>
+</div>
+{% else %}
+<div class="toolbar between">
+  <h1>{{ t.admin.invite.title }}</h1>
+</div>
+<div class="panel">
+  <p>{{ t.admin.invite.intro }}</p>
+  <table class="data-table">
+    <tbody>
+      <tr><th>{{ t.admin.invite.domain_label }}</th><td><strong>{{ domain.name }}</strong> <code>{{ domain.key }}</code></td></tr>
+      <tr><th>{{ t.admin.invite.role_label }}</th><td><span class="badge">{{ t.admin.role[invitation.role] }}</span></td></tr>
+      <tr><th>{{ t.admin.invite.expires_label }}</th><td class="muted">{{ invitation.expires_at }}</td></tr>
+      <tr><th>{{ t.admin.invite.invited_by_label }}</th><td>{{ invitation.invited_by }}</td></tr>
+    </tbody>
+  </table>
+
+  {% if signed_in_name %}
+  <p>{{ t.admin.invite.signed_in_as }} <strong>{{ signed_in_name }}</strong></p>
+  <form method="POST" action="{{ url_for('admin_invite_accept', token=token) }}">
+    <button type="submit" class="btn btn-primary">{{ t.admin.invite.accept_btn }}</button>
+  </form>
+  {% else %}
+  {# 未登录受邀者先走既有 Logto 登录流，回跳后在本页接受（domain-workspace
+     邀请制场景）；不新建 OIDC 流程。 #}
+  <p>{{ t.admin.invite.login_hint }}</p>
+  <a class="btn btn-primary" href="/auth/login?next={{ request.url.path }}">{{ t.admin.invite.login_btn }}</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

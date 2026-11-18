@@ -106,8 +106,12 @@ async def contract_download(
             top-level ``download_url`` when ``format`` is set.
 
     Returns ``{artifact_id, contract_type, scenario, stance, body_text, slots,
-    docx_key, pdf_key, docx_key_slotted, pdf_key_slotted, created_at,
-    download_urls, download_url?}``, or ``None`` if no artifact has that id.
+    docx_key, pdf_key, docx_key_slotted, pdf_key_slotted, sha256_by_format,
+    created_at, download_urls, download_url?}``, or ``None`` if no artifact has
+    that id. ``sha256_by_format`` maps ``pdf``/``docx`` to the digest of the
+    **stored bytes**, so the caller can verify what it downloaded; a legacy row
+    written before fingerprints existed reports an empty map (unknown, which is
+    not the same as "verified").
     """
     from src.contracts.artifacts import get_artifact
 
@@ -127,6 +131,11 @@ async def contract_download(
             "pdf_key": row.get("pdf_key"),
             "docx_key_slotted": row.get("docx_key_slotted"),
             "pdf_key_slotted": row.get("pdf_key_slotted"),
+            "sha256_by_format": {
+                fmt: value
+                for fmt in ("pdf", "docx")
+                if (value := row.get(f"{fmt}_sha256"))
+            },
             "created_at": row.get("created_at"),
             "download_urls": urls,
         }

@@ -6,6 +6,7 @@
   {% if has_scope('content:write') %}<a class="btn btn-primary" href="{{ url_for('page_new_prompt') }}">{{ t.btn.new_prompt }}</a>{% endif %}
 </div>
 
+{%- if prompts -%}
 <div class="panel">
   <table>
     <thead>
@@ -18,7 +19,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for p in prompts %}
+      {%- for p in prompts -%}
       <tr>
         <td><a href="{{ url_for('page_prompt_detail', name=p.name) }}"><strong>{{ title_for_prompt(p.name) }}</strong></a>
           {% if p.description %}<div class="muted">{{ p.description[:80] }}{% if p.description|length > 80 %}…{% endif %}</div>{% endif %}
@@ -28,13 +29,21 @@
         <td>{% if p.prompt_type %}<span class="badge">{{ label_for('prompt_type', p.prompt_type) }}</span>{% else %}<span class="muted">-</span>{% endif %}</td>
         <td><span class="badge local">{{ t.badge.local }}</span></td>
       </tr>
-      {% endfor %}
-      {% if not prompts %}
-      <tr><td colspan="5" class="muted">{{ t.empty.prompts|safe }}</td></tr>
-      {% endif %}
+      {%- endfor -%}
     </tbody>
   </table>
 </div>
+{%- else -%}
+{#- Honest empty ledger page: real emptiness + the next step. t.empty.prompts
+    carries the guidance (and <code>, hence |safe — the partial renders the
+    pre-translated string verbatim). The action link is writer-only; readers
+    get the plain honest empty. -#}
+{% with message=t.empty.prompts|safe,
+        action_href=url_for('page_new_prompt') if has_scope('content:write') else none,
+        action_label=t.btn.new_prompt if has_scope('content:write') else none %}
+  {% include '_empty_state.html' %}
+{% endwith %}
+{%- endif -%}
 
 <p class="hint">{{ t.hint.prompts_list|safe }}</p>
 {% endblock %}

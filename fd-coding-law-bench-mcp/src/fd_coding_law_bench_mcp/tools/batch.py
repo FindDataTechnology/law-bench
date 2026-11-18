@@ -66,13 +66,16 @@ async def contract_generate_batch(
     result = await contract_generate_batch("sale", enumerate_all=True)
     ```
     """
-    from src.clauses.tags import tag_vocab_list, validate_tags
+    # 函数真名是 tag_vocab_for_type（`tag_vocab_list` 是 MCP 侧工具名，不是这里的符号）。
+    # 2026-11-10 实测：写成 tag_vocab_list 会让本工具一调就 ImportError——
+    # 与 catalog.py 里 type_metadata 那一处同型，那次只修了一处，这里漏了。
+    from src.clauses.tags import tag_vocab_for_type, validate_tags
     from src.eval.errors import NotFoundError
 
     # ponytail: combine tag enumeration + validation in single thread hop
     def _prepare_combinations() -> tuple[list[dict], bool]:
         if enumerate_all:
-            vocab = tag_vocab_list(contract_type)
+            vocab = tag_vocab_for_type(contract_type)
             dims_to_enum = [k for k in vocab.keys() if k not in ("source",)]
 
             # Cartesian product via itertools

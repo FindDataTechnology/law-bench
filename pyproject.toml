@@ -21,10 +21,28 @@ dependencies = [
     "python-docx>=1.1",
     "pypdf>=6.14.2",
     "itsdangerous>=2.2",
+    "fd-ontology-kernel",
 ]
 
+[tool.uv.sources]
+# The ontology kernel is vendored as a wheel (establish-ontology-kernel 8.1):
+# keys, vocabularies, the single write path, manifests/digests, proposals and the
+# ledger live there once, and every surface adapts to them.
+#
+# Why a wheel instead of the sibling checkout: the kernel is **not a git
+# repository**, so a standalone CI checkout cannot fetch it, and pip cannot
+# resolve the name from any index either (`tool.uv.sources` is uv-only). Measured
+# 2026-11-12: `pip install fd-ontology-kernel` → "No matching distribution
+# found", the same requirement from this wheel → "Would install
+# fd-ontology-kernel-0.1.0". So uv resolves it here and CI/pip installs
+# `vendor/*.whl` before `pip install -e .`.
+fd-ontology-kernel = { path = "vendor/fd_ontology_kernel-0.1.0-py3-none-any.whl" }
+
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = [
+    "fastmcp>=3.2,<4",
+    "pytest>=8.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
