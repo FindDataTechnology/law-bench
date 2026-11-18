@@ -39,9 +39,37 @@ def fresh_db(empty_db, monkeypatch):
     store_mod._ensured_dbs.discard(key)
 
 
+def _password_from_database_url() -> str | None:
+    """The password from ``database_url``; ``conn.info.dsn`` never carries it.
+
+    Locally that omission is masked by trust auth, so these tests passed for
+    months. On CI (Postgres service with password auth) the second connection
+    fails with ``fe_sendauth: no password supplied`` and the tests look broken
+    for a reason that has nothing to do with the lock path they pin.
+    """
+    import os
+    from urllib.parse import urlsplit
+
+    dsn = os.environ.get("database_url") or os.environ.get("DATABASE_URL") or ""
+    if not dsn:
+        return None
+    try:
+        return urlsplit(dsn).password
+    except ValueError:
+        return None
+
+
+def _connect_for_lock(dsn: str):
+    """A second connection to the same DB, carrying the password explicitly."""
+    password = _password_from_database_url()
+    return psycopg.connect(
+        dsn, autocommit=False, **({"password": password} if password else {})
+    )
+
+
 def _hold_lock_on(dsn: str, table: str):
     """An open transaction holding ACCESS EXCLUSIVE on ``table``."""
-    holder = psycopg.connect(dsn, autocommit=False)
+    holder = _connect_for_lock(dsn)
     holder.execute(f"LOCK TABLE {table} IN ACCESS EXCLUSIVE MODE")
     return holder
 
