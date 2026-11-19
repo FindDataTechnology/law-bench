@@ -1072,7 +1072,7 @@ dependencies = [
     { name = "pyyaml" },
 ]
 wheels = [
-    { filename = "fd_open_data_protocol-0.3.2-py3-none-any.whl", hash = "sha256:9ae6af8ab02ce380735b0a91dadb88b1e4fa1eddf4ebc3879b2a0bb63f980263" },
+    { filename = "fd_open_data_protocol-0.3.2-py3-none-any.whl", hash = "sha256:f1c73be5baf65db27739685e6d01e255ed545519b0a2d4a214e2f71021755086" },
 ]
 
 [package.metadata]
