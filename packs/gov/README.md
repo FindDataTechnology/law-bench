@@ -8,7 +8,7 @@ judge_model='deterministic'），**零 LLM、零判官、零网络**，与判官
 
 ## 资产来源（兄弟仓只读，一字节不改、不复制进本仓）
 
-- 源仓：`/Users/chengsishi/finddata/fd-cn-gov`（公文爬虫/registry；可经环境
+- 源仓：`<workspace>/fd-cn-gov`（公文爬虫/registry；可经环境
   变量 `FD_GOV_REPO` 覆盖路径，`adapters.py` 每次调用重读）。
 - 数据文件（已核实存在，2026-11-03）：
   `fd_cn_gov/registry/registry.json`，四个 section 的真实条数：
@@ -39,10 +39,10 @@ judge_model='deterministic'），**零 LLM、零判官、零网络**，与判官
 判据脚本**已找到、真实存在**（不在 fd-legal-kg，而在 **fd-text-core**——
 任务记忆的偏差如下，附证据路径）：
 
-- `/Users/chengsishi/finddata/fd-text-core/scripts/kg_graph_checks.py`：四条
+- `<workspace>/fd-text-core/scripts/kg_graph_checks.py`：四条
   硬判据——①「法规名+条号」分裂节点清零、②同名不同文号实体可分（113/71
   口径）、③规模统计（节点/边/条级属性）、④脏文号（重复机关名）清零。
-- 配套判据实现：`/Users/chengsishi/finddata/fd-text-core/scripts/kg_statute_repair_names.py`
+- 配套判据实现：`<workspace>/fd-text-core/scripts/kg_statute_repair_names.py`
   的 `is_dirty_name`（文号形态 `第N号` 卡口 + 机关名归一对账）。
 - `fd-legal-kg` 本体（非图判据）：`fd_legal_kg/ontology.py` 是 7 类实体的
   schema 约束；`fd_legal_kg/evalrunner.py` 是双口径人工评阅跑分器（网络 +
@@ -72,7 +72,7 @@ judge_model='deterministic'），**零 LLM、零判官、零网络**，与判官
 
 ## zhengxin（fd-zhengxin）接入状态：未接入（如实）
 
-盘上核实：`/Users/chengsishi/finddata/fd-zhengxin` 是 API 服务仓
+盘上核实：`<workspace>/fd-zhengxin` 是 API 服务仓
 （`server/fd_zhengxin_api`），V-Dem/MARPOR 只出现在
 `reference_mcp.py` / `locate.py` 对**远程 MCP 端点**
 （`FDZX__REFERENCE_BASE_URL`）的调用注释里，**没有任何可只读加载的本地指标

@@ -1,6 +1,6 @@
 """标注查询集契约（迁入自 fd-text-core，原尺只读真源见下）。
 
-真源：``/Users/chengsishi/finddata/fd-text-core/fd_text_core/eval/dataset.py``。
+真源：``fd-text-core/fd_text_core/eval/dataset.py``。
 迁入即单一真源；原仓为该尺的历史真源，直至其入口 deprecation（见 README.md，
 口径同 finance-data 包「迁入 ≠ 取代」——等价双跑完成前，原仓尺子仍是行为基准）。
 
@@ -33,7 +33,7 @@ from typing import Optional, Union
 # 覆盖顺序：显式 datasets_dir > FD_TEXT_CORE_DATASETS_DIR > <FD_TEXT_CORE_REPO 或
 # 下述默认路径>/fd_text_core/eval/datasets。机器上没有原仓时显式传目录即可
 # （如 tests/fixtures/retrieval/datasets），默认不依赖。
-DEFAULT_FD_TEXT_CORE_REPO = "/Users/chengsishi/finddata/fd-text-core"
+DEFAULT_FD_TEXT_CORE_REPO = ""
 
 # 域名形态：与引擎的 domain 取值一致（小写字母数字与连字符）
 _DOMAIN_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")

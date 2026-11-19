@@ -30,7 +30,15 @@ _checks = importlib.import_module("packs.finance-data.checks")
 BAND_TO_DIRECTION = _adapters.BAND_TO_DIRECTION
 check_band_direction_consistency = _checks.check_band_direction_consistency
 
-SENTIMENT_REPO = Path(os.environ.get("FD_SENTIMENT_REPO", "/Users/chengsishi/finddata/fd-sentiment"))
+# 这个测试要读 sibling repo 的源码，而 sibling 不在本仓。没有路径时跳过并说明，
+# 不假装通过——「没有输入时判通过」的闸比没有闸更糟。
+_SENTIMENT_ENV = os.environ.get("FD_SENTIMENT_REPO")
+SENTIMENT_REPO = Path(_SENTIMENT_ENV) if _SENTIMENT_ENV else None
+
+pytestmark = pytest.mark.skipif(
+    SENTIMENT_REPO is None or not SENTIMENT_REPO.is_dir(),
+    reason="FD_SENTIMENT_REPO not set or missing — this suite compares against the sibling repo",
+)
 BANDS = ("strong_bullish", "bullish", "neutral", "bearish", "strong_bearish")
 
 

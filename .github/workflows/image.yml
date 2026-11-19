@@ -61,7 +61,8 @@ jobs:
           # vendored path-source deps ([tool.uv.sources]): the name resolves on no
           # index, so install the wheel first — see pyproject.toml's note. Without
           # this line the whole release line is dead (No matching distribution).
-          pip install vendor/fd_ontology_kernel-*.whl
+          pip install vendor/fd_ontology_kernel-*.whl \
+                    vendor/fd_open_data_protocol-*.whl
           pip install -e .
           # fd-coding-law-bench-mcp 的 server.py 在 tests/test_tool_annotations.py
           # 导入链上（MCP 工具注解对账），fastmcp 是其声明依赖。

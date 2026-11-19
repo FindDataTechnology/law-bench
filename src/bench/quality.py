@@ -19,6 +19,94 @@ def _ratio(numerator: int, denominator: int) -> Optional[float]:
     return round(numerator / denominator, 4) if denominator else None
 
 
+#: 映射算"已复核"的置信下限。低置信的行要人去复核，在复核之前它不能算覆盖率——
+#: 否则覆盖率会被"先挂一条 0.3 凑数"刷高，而那正是质量比要防的事。
+#: 0.8 与 spec 里的场景一致（confidence=0.4 视为待复核）。
+CROSSWALK_CONFIDENCE_THRESHOLD = 0.8
+
+
+def crosswalk_coverage(
+    conn: Any, *, namespace: str,
+    threshold: float = CROSSWALK_CONFIDENCE_THRESHOLD,
+) -> dict:
+    """映射覆盖率：至少有一条已复核 crosswalk 的实体 / 全部活实体。
+
+    **按实体计，不按映射行计。** 给一个实体挂十条映射与挂一条，对该实体的贡献
+    应当相同——按行计会让覆盖率被"多挂几条"刷高，而那正是质量比要防的事
+    （同 `缺口关闭不等于质量达标`）。
+
+    "已复核"的口径来自 `crosswalk.is_confirmed`：缺 confidence 视为未复核，
+    与写入口用的是同一个判据。
+    """
+    from . import crosswalk as crosswalk_mod
+
+    entities = {
+        r["external_key"]
+        for r in conn.execute(
+            "SELECT external_key FROM knowledge_units "
+            "WHERE namespace = %s AND (tags->>'deleted') IS NULL "
+            "  AND kind <> 'crosswalk'",
+            (namespace,),
+        ).fetchall()
+    }
+    mapped: set[str] = set()
+    for row in conn.execute(
+        "SELECT external_key, attrs FROM knowledge_units "
+        "WHERE namespace = %s AND kind = 'crosswalk' AND (tags->>'deleted') IS NULL",
+        (namespace,),
+    ).fetchall():
+        attrs = row["attrs"] or {}
+        if not crosswalk_mod.is_confirmed(attrs, threshold=threshold):
+            continue
+        mapped.add(row["external_key"])
+
+    covered = entities & mapped
+    return _metric(
+        _ratio(len(covered), len(entities)),
+        len(covered),
+        len(entities),
+        "至少有一条已复核映射的实体 / 全部活实体（分母按实体，不按映射行数）",
+        gaps=sorted(entities - mapped)[:20],
+    )
+
+
+def crosswalk_gaps(
+    conn: Any, *, namespace: str, max_age_days: Optional[float] = None
+) -> dict:
+    """两类映射缺口，分开计数。
+
+    - `stale`：三态证据没齐（或 ok 却没证据）。问的是"这个外部系统还通不通"。
+    - `unconfirmed`：缺 confidence。问的是"这条断言有没有人看过"。
+
+    合并成一个数会让值班的人无法决定该做什么——前者要重验对接，后者要找人看。
+    """
+    from . import crosswalk as crosswalk_mod
+
+    stale, unconfirmed = [], []
+    for row in conn.execute(
+        "SELECT external_key, attrs FROM knowledge_units "
+        "WHERE namespace = %s AND kind = 'crosswalk' AND (tags->>'deleted') IS NULL",
+        (namespace,),
+    ).fetchall():
+        attrs = row["attrs"] or {}
+        # Missing *or expired*: "checked once, in March" is not a live connection.
+        # ``max_age_days=None`` means the domain declared no expiry — nothing is
+        # then treated as stale, which is honest rather than silently assuming.
+        missing = crosswalk_mod.effective_missing_states(
+            attrs.get("connectivity"), max_age_days=max_age_days
+        )
+        # Only rows that *claim* connectivity can be stale; a crosswalk with no
+        # connectivity block at all is simply unverified, not overdue.
+        if attrs.get("connectivity") is not None and missing:
+            stale.append({"key": row["external_key"], "missing": missing})
+        if not crosswalk_mod.is_confirmed(attrs, threshold=None):
+            unconfirmed.append(row["external_key"])
+    return {
+        "stale": stale,
+        "unconfirmed": sorted(unconfirmed),
+    }
+
+
 def _metric(value: Optional[float], numerator: int, denominator: int, how: str,
             gaps: Optional[list] = None) -> dict:
     return {
@@ -107,6 +195,12 @@ def referential_integrity(conn: Any, *, namespace: str) -> dict:
         for r in conn.execute(
             "SELECT external_key FROM knowledge_units "
             "WHERE namespace = %s AND (tags->>'deleted') IS NULL "
+            # A crosswalk is NOT an edge: it asserts a mapping *about* an
+            # entity and must never be counted as a relationship. Its keys
+            # usually lack "->" so the LIKE below skips them by luck — but
+            # "by luck" is not a rule, and a key that happened to contain an
+            # arrow would silently pollute this ratio.
+            "  AND kind <> 'crosswalk' "
             "AND external_key LIKE '%%->%%'",
             (namespace,),
         ).fetchall()
@@ -230,6 +324,9 @@ def all_metrics(
                                  threshold_hours=review_threshold_hours),
         "key_hygiene": key_hygiene(conn, domain_key=domain_key, namespace=ns),
         "judge": judge_health(probed=probed),
+        # 映射覆盖率：第八项。同模板可评性一样，它统计的对象不是语料而是
+        # "本体与外部世界的缝"，所以单独算、单独呈现。
+        "crosswalk": crosswalk_coverage(conn, namespace=ns),
     }
     if template_readiness is not None:
         out["template"] = _template_metric(template_readiness)
@@ -264,6 +361,7 @@ HIGHER_IS_BETTER: dict[str, bool] = {
     "evidence": True,
     "referential": True,
     "key_hygiene": False,   # 还能继续归名的键越少越好
+    "crosswalk": True,      # 覆盖率越高越好
 }
 
 #: 达标线。这些值是策略，不是测量结果——所以集中一处，谁要改都得看见彼此。
@@ -272,6 +370,9 @@ QUALITY_THRESHOLDS: dict[str, float] = {
     "evidence": 0.9,       # 依据是复核唯一抓手
     "referential": 1.0,    # 悬空关系零容忍
     "key_hygiene": 0.0,    # 能归名的键就该已归名
+    # 一半以上实体没有任何已复核映射 = 本体与外部世界没有缝。刻意不设 1.0：
+    # 不是每个实体都值得映射，逼到 100% 只会让人挂低质量的行来凑数。
+    "crosswalk": 0.5,
 }
 
 #: 评审时滞阈值（小时）；另算，因为它衡量的是"人跟不跟得上"，不是内容质量。

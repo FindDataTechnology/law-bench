@@ -48,7 +48,12 @@ from typing import Any, Iterable, Optional
 from fd_ontology_kernel import proposals as kernel_proposals
 from fd_ontology_kernel.errors import ProposalStaleEvidence
 
-from . import agent_ids, authoring, distribution, keys, submitters, templates, workspaces
+from . import agent_ids, authoring, crosswalk, distribution, keys, submitters, templates, workspaces
+
+#: The KU kind a crosswalk assertion is stored under. Deliberately NOT part of
+#: any template's `entity_types` vocabulary: asserting "this entity maps to that
+#: external record" must not require every domain to declare a crosswalk type.
+CROSSWALK_KIND = "crosswalk"
 
 # Mirror of the CHECK constraint on domain_proposals.state (see
 # src/bench/workspace_store.py).
@@ -300,6 +305,61 @@ class KindNotInVocabulary(ValueError):
     """
 
 
+def _check_crosswalk_proposal(
+    conn: Any, *, domain: dict, kind: str, external_key: str,
+    evidence: Any, known: set[str],
+) -> None:
+    """Validate a crosswalk submission before it enters the inbox.
+
+    Two checks, both of which must fail *here* rather than at confirmation:
+
+    1. **Shape** — relation, peer and connectivity follow `crosswalk.validate_*`.
+       A malformed assertion that waits for a reviewer occupies a slot and then
+       fails, which teaches the submitter nothing.
+    2. **Endpoint exists** — our endpoint must be a live unit or a pending
+       proposal in this domain. The same discipline as relationships: the inbox
+       does not manufacture endpoints, so a crosswalk pointing at nothing is a
+       promise nobody can keep.
+    """
+    if not isinstance(evidence, dict):
+        raise ProposalTargetExists(
+            "crosswalk_evidence_not_object",
+            external_key=external_key,
+            detail="crosswalk 提案的 evidence 必须是对象并携带 mapping 字段",
+            hint="把 crosswalk 属性放进 evidence.mapping，与关系提案的 from_key/to_key 同款",
+        )
+    mapping = evidence.get("mapping")
+    if not isinstance(mapping, dict):
+        raise ProposalTargetExists(
+            "crosswalk_mapping_missing",
+            external_key=external_key,
+            detail="crosswalk 提案的 evidence.mapping 缺失或不是对象",
+            hint='evidence.mapping 形如 {"relation": "same_as", "peer": {...}, "confidence": 0.9}',
+        )
+    problems = crosswalk.validate_crosswalk(mapping)
+    if problems:
+        raise ProposalTargetExists(
+            "crosswalk_malformed",
+            external_key=external_key,
+            detail="crosswalk 断言不成立：" + "；".join(problems),
+            hint="按 crosswalk.validate_crosswalk 的报错逐条修正后重提",
+        )
+
+    if external_key not in known:
+        raise ProposalTargetExists(
+            "crosswalk_endpoint_missing",
+            external_key=external_key,
+            detail=(
+                f"crosswalk 的本端 {external_key!r} 既不在本域活单位里、"
+                "也不在本域提案箱里"
+            ),
+            hint=(
+                "先提交或确认这个实体（crosswalk 是对已存在实体的断言，"
+                "不是新实体的入口）"
+            ),
+        )
+
+
 def _lane_for_kind(conn: Any, *, domain: dict, kind: str) -> str:
     """Decide which kernel entry point a proposal kind belongs to.
 
@@ -325,6 +385,12 @@ def _lane_for_kind(conn: Any, *, domain: dict, kind: str) -> str:
     relationship_kinds = (
         relationship_kinds if isinstance(relationship_kinds, list) else []
     )
+    # A crosswalk is neither an entity type nor a relationship kind: it is an
+    # assertion *about* an existing entity. Gating it against the template
+    # vocabulary would force every domain to declare a `crosswalk` type just to
+    # map its own entities, which defeats the point of a seam.
+    if kind == CROSSWALK_KIND:
+        return "crosswalk"
     if kind in entity_types:
         return "entity"
     if kind in relationship_kinds:
@@ -461,6 +527,13 @@ def preflight_targets(
     }
     known = set(live) | pending
 
+    if lane == "crosswalk":
+        _check_crosswalk_proposal(
+            conn, domain=domain, kind=kind, external_key=external_key,
+            evidence=evidence, known=known,
+        )
+        return
+
     if lane == "relationship":
         from_key, to_key = _relationship_endpoints(evidence)
         missing = [key for key in (from_key.strip(), to_key.strip()) if key not in known]
@@ -516,7 +589,21 @@ def _write_through_kernel(
     caller updates the proposal row only after this returns.
     """
     kind = proposal["kind"]
-    if _lane_for_kind(conn, domain=domain, kind=kind) == "relationship":
+    lane = _lane_for_kind(conn, domain=domain, kind=kind)
+    if lane == "crosswalk":
+        # The assertion itself lives in evidence.mapping (that is what the
+        # reviewer read); it becomes the unit's attrs verbatim, so what was
+        # reviewed is what lands.
+        mapping = (proposal["evidence"] or {}).get("mapping") or {}
+        return authoring.authoring_create_crosswalk(
+            conn,
+            domain_key=domain["key"],
+            external_key=proposal["external_key"],
+            body=proposal["body"],
+            operator=actor,
+            attrs=dict(mapping),
+        )
+    if lane == "relationship":
         from_key, to_key = _relationship_endpoints(proposal["evidence"])
         attrs = proposal["evidence"].get("attrs")
         return authoring.authoring_create_relationship(

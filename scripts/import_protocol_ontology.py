@@ -44,23 +44,31 @@ CREATED_BY = "system:protocol-import"
 TEMPLATE_NAME = "external-world"
 
 
-def protocol_dir() -> Path:
-    """Where the protocol package lives: env override, then the sibling checkout."""
-    env = os.environ.get("FD_OPEN_DATA_PROTOCOL_DIR")
-    if env:
-        return Path(env)
-    return REPO_ROOT.parent / "fd-open-data-protocol"
+def _load_registry(source_dir: Path | None):
+    """Load the protocol vocabulary.
 
+    Two paths, in this order, and the order matters:
 
-def _load_registry(source_dir: Path):
-    """Import the protocol loader without installing it as a dependency.
+    1. **Installed package** (the normal case in production and CI) — the wheel
+       lives in ``vendor/`` and is declared as a dependency, so the vocabulary
+       ships with the image and no sibling checkout is needed.
+    2. **Sibling checkout** (``--protocol-dir`` / ``FD_OPEN_DATA_PROTOCOL_DIR``)
+       — for local work against an unreleased protocol change.
 
-    The path insert is deliberate: this script must work in a checkout where the
-    protocol repo sits next to this one, without that repo becoming a runtime
-    dependency of the platform. A missing checkout is a hard failure — an empty
-    vocabulary template would look like "the upstream has no types", which is a
-    silent lie.
+    A missing source is a hard failure. An empty vocabulary template would look
+    like "the upstream has no types", which is a silent lie.
     """
+    if source_dir is None:
+        try:
+            from fd_open_data_protocol.vocabulary import load_vocabulary
+        except ModuleNotFoundError as exc:
+            raise SystemExit(
+                "fd_open_data_protocol is not installed and no --protocol-dir "
+                "was given. It ships as vendor/fd_open_data_protocol-*.whl "
+                "(see pyproject [tool.uv.sources])."
+            ) from exc
+        return load_vocabulary()
+
     if not (source_dir / "fd_open_data_protocol" / "vocabulary.py").exists():
         raise SystemExit(
             f"protocol package not found at {source_dir} "
@@ -72,6 +80,37 @@ def _load_registry(source_dir: Path):
     finally:
         sys.path.pop(0)
     return load_vocabulary()
+
+
+def _aligned_with(registry) -> list:
+    """Cross-layer alignment, read from the protocol's own declaration.
+
+    Hardcoding the map here was a second copy of a fact the protocol already
+    publishes (`vocabulary/alignment/foundation.yaml`), and the two drifted
+    immediately: this file listed 7 entries while the declaration had 8 (it was
+    missing `venue`). Reading the declaration means there is exactly one place
+    to add an alignment.
+
+    An empty/missing declaration is not an error — an older protocol release
+    simply has no alignment file, and the template then declares none.
+    """
+    from fd_open_data_protocol.vocabulary import load_alignment
+
+    try:
+        declared = load_alignment()
+    except Exception:  # noqa: BLE001 - alignment is optional; never block an import
+        return []
+    alignments = declared.get("alignments") or {}
+    if not alignments:
+        return []
+    target = declared.get("target") or {}
+    return [
+        {
+            "target_template": target.get("template", "foundation-v1"),
+            "target_layer": target.get("layer", "foundation"),
+            "type_map": {src: entry["to"] for src, entry in alignments.items()},
+        }
+    ]
 
 
 def build_schema(registry) -> dict:
@@ -96,21 +135,7 @@ def build_schema(registry) -> dict:
         # the observation layer's `company` is an object being observed (it has
         # tickers and identifiers), the foundation's `organization` is a party
         # to transactions. Same referent, different lifecycles.
-        "aligned_with": [
-            {
-                "target_template": "foundation-v1",
-                "target_layer": "foundation",
-                "type_map": {
-                    "company": "organization",
-                    "organization": "organization",
-                    "institution": "organization",
-                    "city": "place",
-                    "port": "place",
-                    "person": "person",
-                    "author": "person",
-                },
-            }
-        ],
+        "aligned_with": _aligned_with(registry),
         "entity_types": entity_types,
         "concept_structures": {concept: ["code", "unit", "frequency"] for concept in concept_ids},
         "relationship_kinds": relation_ids,
@@ -134,7 +159,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--database-url", default=None)
     args = parser.parse_args(argv)
 
-    source = Path(args.protocol_dir) if args.protocol_dir else protocol_dir()
+    # An explicit source (flag or env) means "use this checkout"; otherwise the
+    # installed package is authoritative — that is what ships in the image.
+    explicit = args.protocol_dir or os.environ.get("FD_OPEN_DATA_PROTOCOL_DIR")
+    source = Path(explicit) if explicit else None
     registry = _load_registry(source)
     schema = build_schema(registry)
 
@@ -145,8 +173,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     upstream_version = schema["authority"]["version"]
+    where = str(source) if source is not None else "installed package"
     print(
-        f"protocol {upstream_version} at {source}: "
+        f"protocol {upstream_version} at {where}: "
         f"{len(schema['entity_types'])} entity types, "
         f"{len(schema['relationship_kinds'])} relationship kinds, "
         f"{len(schema['concept_structures'])} concept structures, "

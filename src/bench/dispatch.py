@@ -48,6 +48,12 @@ GAP_ROUTE: dict[str, str] = {
     # 模板改进需要判断（添哪些类型、挂哪些尺子），确定性内核岗位做不了。
     # 这是 FLEET_ROUTE 第一次真的被用上：此前它只是词汇表里一个常量。
     "quality:template": "fleet",
+    # 两类映射缺口分开路由，虽然都去 fleet：它们的处置动作不同，合成一个词会让
+    # 值班的人以为是一件事。聚合键是「域 + 外部系统」，同一系统的同一类缺口
+    # 重复确认时收敛到既有工单（dispatch.open_targets 按 target_key 去重）。
+    "quality:crosswalk": "fleet",
+    "quality:crosswalk_stale": "fleet",
+    "quality:crosswalk_unconfirmed": "fleet",
 }
 
 #: Route prefix for "an in-process deterministic role owns this".
@@ -106,6 +112,24 @@ GAP_TASKS: dict[str, dict[str, str]] = {
         "title": "清复核积压：提案等待超过阈值",
         "detail": "缺口＝待确认提案最老一条超过阈值。做法：按批复核（不是逐条），"
                   "先在批次里看共同主张与差异清单。验收：最老待确认年龄回到阈值以内。",
+    },
+    "quality:crosswalk": {
+        "title": "补映射：本体与外部世界之间没有缝",
+        "detail": "缺口＝有映射的实体比例低于阈值。做法：确认这个域对接了哪些外部系统，"
+                  "逐实体提交 crosswalk（同一实体可挂多条：对端可以是另一层本体键，"
+                  "也可以是外部系统标识符）。验收：映射覆盖率回到阈值以上。",
+    },
+    "quality:crosswalk_stale": {
+        "title": "重验映射：外部系统变了或证据过期",
+        "detail": "缺口＝crosswalk 声称已接通、但三态证据（catalog / executor_tests / live）"
+                  "不齐或已过期。这问的是「那个外部系统还通不通」，处置是重新核验对接，"
+                  "不是找人看。验收：该系统的三态证据重新齐全且未过期。",
+    },
+    "quality:crosswalk_unconfirmed": {
+        "title": "复核映射：有人提交但还没人看过",
+        "detail": "缺口＝crosswalk 缺 confidence（视为未复核）。这问的是「这条断言有没有人"
+                  "看过」，处置是找人复核，不是重验对接。验收：该系统的映射都有 confidence，"
+                  "且低置信的已逐条复核。",
     },
     "quality:template": {
         "title": "给模板挂尺子：该域锚定模板无法被评测",

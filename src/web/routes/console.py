@@ -2000,3 +2000,133 @@ def console_legacy_sources(
         "mode": bench_proposals._submitter_mode(),
         "sources": bench_proposals.legacy_sources(db),
     }
+
+
+# ---------------------------------------------------------------- crosswalks
+#
+# Two separate read faces, deliberately not merged into one response:
+#
+#   GET .../relations    — the entity's edges in the ontology graph
+#   GET .../crosswalks   — its mapping assertions to other layers/systems
+#
+# A crosswalk is NOT an edge. Merging the two would put a mapping in a graph
+# traversal, which is exactly what `ontology-authoring` forbids; and a reader who
+# gets one blended list cannot tell "this entity participates in these
+# relationships" from "this entity has been mapped outward".
+
+
+def _crosswalk_rows(db, *, path: str, entity_key: Optional[str]) -> list[dict]:
+    sql = (
+        "SELECT external_key, body, attrs, tier, updated_at "
+        "FROM knowledge_units WHERE namespace = %s AND kind = 'crosswalk' "
+        "  AND (tags->>'deleted') IS NULL"
+    )
+    params: list = [path]
+    if entity_key:
+        sql += " AND external_key = %s"
+        params.append(entity_key)
+    sql += " ORDER BY external_key, updated_at DESC"
+    out = []
+    for row in db.execute(sql, tuple(params)).fetchall():
+        attrs = row["attrs"] or {}
+        out.append({
+            "key": row["external_key"],
+            "body": row["body"],
+            "relation": attrs.get("relation"),
+            "peer": attrs.get("peer"),
+            "confidence": attrs.get("confidence"),
+            "connectivity": attrs.get("connectivity"),
+            "missing_states": _crosswalk().effective_missing_states(
+                attrs.get("connectivity")
+            ),
+            "confirmed": _crosswalk().is_confirmed(attrs, threshold=None),
+            "tier": row["tier"],
+            "updated_at": row["updated_at"],
+        })
+    return out
+
+
+def _crosswalk():
+    from ...bench import crosswalk
+
+    return crosswalk
+
+
+@read_only_router.get(
+    "/d/{domain_key}/crosswalks", include_in_schema=False,
+    name="console_crosswalks",
+    dependencies=[Depends(require_scope("content:read"))],
+)
+def console_crosswalks(
+    request: Request,
+    domain_key: str,
+    entity: Optional[str] = None,
+    db: DbConn = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Mapping assertions, optionally narrowed to one entity.
+
+    Distinct from ``.../relations``: this endpoint never returns edges, and that
+    endpoint never returns crosswalks. Same entities, two different questions.
+    """
+    from ...bench import quality
+
+    domain = resolve_domain(db, domain_key)
+    capability(db, domain, user)
+    path = domain.get("path") or domain["key"]
+    return {
+        "domain": domain_key,
+        "entity": entity,
+        "crosswalks": _crosswalk_rows(db, path=path, entity_key=entity),
+        "gaps": quality.crosswalk_gaps(db, namespace=path),
+    }
+
+
+@read_only_router.get(
+    "/d/{domain_key}/crosswalks/connectivity/{system}", include_in_schema=False,
+    name="console_crosswalk_connectivity",
+    dependencies=[Depends(require_scope("content:read"))],
+)
+def console_crosswalk_connectivity(
+    request: Request,
+    domain_key: str,
+    system: str,
+    db: DbConn = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    """Three-state evidence for one external system, shaped like the ERP file.
+
+    The shape mirrors `connector-status.json` (`integrations[].states.{catalog,
+    executor_tests, live}.{ok,evidence}`) on purpose: the ERP-side generator can
+    switch its source to this endpoint without changing its consumers, and a
+    fallback to the local file stays byte-comparable.
+    """
+    crosswalk = _crosswalk()
+    domain = resolve_domain(db, domain_key)
+    capability(db, domain, user)
+    path = domain.get("path") or domain["key"]
+
+    states = {s: {"ok": False, "evidence": None} for s in crosswalk.CONNECTIVITY_STATES}
+    bound_keys: list[str] = []
+    for row in _crosswalk_rows(db, path=path, entity_key=None):
+        peer = row.get("peer") or {}
+        if peer.get("kind") != "external_id" or peer.get("system") != system:
+            continue
+        bound_keys.append(row["key"])
+        for state, value in (row.get("connectivity") or {}).items():
+            if state in states and isinstance(value, dict) and value.get("ok"):
+                states[state] = {
+                    "ok": True,
+                    "evidence": value.get("evidence"),
+                    "at": value.get("at"),
+                }
+
+    missing = [s for s in crosswalk.CONNECTIVITY_STATES if not states[s]["ok"]]
+    return {
+        "domain": domain_key,
+        "system": system,
+        "connected": not missing,
+        "missing": missing,
+        "states": states,
+        "maps": bound_keys,
+    }

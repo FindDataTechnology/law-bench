@@ -42,7 +42,7 @@ FIXTURES = REPO_ROOT / "tests" / "fixtures" / "retrieval"
 FIXTURE_DATASETS = FIXTURES / "datasets"
 
 # 原仓（只读真源）：与 adapters.py 的同名常量口径一致，环境变量可覆盖。
-FD_TEXT_CORE = Path(os.environ.get("FD_TEXT_CORE_REPO", "/Users/chengsishi/finddata/fd-text-core"))
+FD_TEXT_CORE = Path(os.environ.get("FD_TEXT_CORE_REPO", ""))
 LEGACY_SRC = FD_TEXT_CORE / "fd_text_core"
 LEGACY_DATASETS = LEGACY_SRC / "eval" / "datasets"
 LEGACY_AVAILABLE = (LEGACY_SRC / "eval" / "runner.py").is_file()

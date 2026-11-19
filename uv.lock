@@ -482,6 +482,7 @@ dependencies = [
     { name = "elasticsearch" },
     { name = "fastapi" },
     { name = "fd-ontology-kernel" },
+    { name = "fd-open-data-protocol" },
     { name = "itsdangerous" },
     { name = "jinja2" },
     { name = "llama-index-core" },
@@ -510,6 +511,7 @@ requires-dist = [
     { name = "elasticsearch", specifier = ">=8.15" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "fd-ontology-kernel", path = "vendor/fd_ontology_kernel-0.1.0-py3-none-any.whl" },
+    { name = "fd-open-data-protocol", path = "vendor/fd_open_data_protocol-0.3.2-py3-none-any.whl" },
     { name = "itsdangerous", specifier = ">=2.2" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "llama-index-core", specifier = ">=0.12" },
@@ -1060,6 +1062,27 @@ source = { path = "vendor/fd_ontology_kernel-0.1.0-py3-none-any.whl" }
 wheels = [
     { filename = "fd_ontology_kernel-0.1.0-py3-none-any.whl", hash = "sha256:08174c28f5b8fc896de0f4ba3ecb93a3581fd76b252acf4fa145c8158f4f1704" },
 ]
+
+[[package]]
+name = "fd-open-data-protocol"
+version = "0.3.2"
+source = { path = "vendor/fd_open_data_protocol-0.3.2-py3-none-any.whl" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pyyaml" },
+]
+wheels = [
+    { filename = "fd_open_data_protocol-0.3.2-py3-none-any.whl", hash = "sha256:9ae6af8ab02ce380735b0a91dadb88b1e4fa1eddf4ebc3879b2a0bb63f980263" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'registry'", specifier = ">=3.1" },
+    { name = "pydantic", specifier = ">=2.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
+]
+provides-extras = ["dev", "registry"]
 
 [[package]]
 name = "filelock"

@@ -1,9 +1,9 @@
 """text-retrieval 域包：迁入的文本检索评测尺（数据重尺子）。
 
 真源（只读，一个字节不改）：
-  · 契约层 ``/Users/chengsishi/finddata/fd-text-core/fd_text_core/eval/dataset.py``
-  · 跑分层 ``/Users/chengsishi/finddata/fd-text-core/fd_text_core/eval/runner.py``
-  · 持久层 ``/Users/chengsishi/finddata/fd-text-core/fd_text_core/eval/store.py``
+  · 契约层 ``fd-text-core/fd_text_core/eval/dataset.py``
+  · 跑分层 ``<workspace>/fd-text-core/fd_text_core/eval/runner.py``
+  · 持久层 ``<workspace>/fd-text-core/fd_text_core/eval/store.py``
     （原表 DDL：migrations/versions/0006_eval_runs.py、0008_eval_ndcg_variant.py）
 
 迁入 = 逻辑复制进本包，**不 import fd_text_core 包**（零跨仓代码依赖）；

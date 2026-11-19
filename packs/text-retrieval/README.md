@@ -8,7 +8,7 @@
 
 ## 真源资产（只读，一字节不改）
 
-| 原仓文件（`/Users/chengsishi/finddata/fd-text-core/`） | 内容 | 本包对应物 |
+| 原仓文件（`<workspace>/fd-text-core/`） | 内容 | 本包对应物 |
 |---|---|---|
 | `fd_text_core/eval/dataset.py` | 标注查询集契约：`Grade`/`Query`（二值 `expect_doc_id` 与分级 `expect` 两形态并存）、`Dataset`、`DatasetError`（缺 `why`/缺 `_provenance.how_targets_chosen` 即拒绝）、**数据集指纹 = 文件字节 sha256 前 16 位** | `adapters.py`（逐条同校验语义；`datasets_dir` 由硬编码改为可注入） |
 | `fd_text_core/eval/runner.py` | **nDCG@k**（2^g−1 增益、按 document_id 去重保首现、IDCG=0 返 0）、hit@k/MRR 聚合、`EvalReport`（`saturated`/`hybrid_not_worse` 判定）、**配置指纹**（embedding 模型/维度/provider/rrf_k/融合权重 + 垂域切块策略段）、`compare_with_previous`（两指纹+k+variant 全同才判回归，任一不同即 `not_comparable`） | `scorer.py`（逐行照迁；检索后端由 `search` 回调注入——注入点即原件调 `querylib.hybrid_search` 处，度量与被度量同路径的 design D5 精神不变） |

@@ -56,7 +56,7 @@ NAMESPACE = "finance-data"
 # Sibling repo root (read-only). Env override FD_SENTIMENT_REPO wins at call
 # time via sentiment_repo(); the constant is the documented default.
 SENTIMENT_REPO = Path(
-    os.environ.get("FD_SENTIMENT_REPO", "/Users/chengsishi/finddata/fd-sentiment")
+    os.environ.get("FD_SENTIMENT_REPO", "")
 )
 
 # Gold file inside the sibling repo (verified to exist there).

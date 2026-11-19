@@ -220,6 +220,13 @@ def gaps_for(pillars: dict, quality_metrics: Optional[dict] = None) -> list[str]
             if metric.get("over_threshold"):
                 gaps.append("quality:review_lag")
             continue
+        if name == "crosswalk":
+            # 覆盖率不达标是缺口；两类"映射有问题"由 estate 单独追加（见
+            # crosswalk_gaps），因为它们的处置动作不同：stale 要重验对接，
+            # unconfirmed 要找人看。合成一个数，值班的人无从下手。
+            if quality.below_threshold(name, metric):
+                gaps.append("quality:crosswalk")
+            continue
         if name == "template":
             # 模板一条尺子都没声明是**独立缺口**，不能靠 value=None 悄悄略过：
             # 一个本体与语料都非空、却完全无法被评的域，正是这条判据要抓的。

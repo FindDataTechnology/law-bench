@@ -1,7 +1,7 @@
 """Tests for the gov domain pack (packs/gov/).
 
 Data source discipline: the tests monkeypatch ``FD_GOV_REPO`` to the real
-sibling repo ``/Users/chengsishi/finddata/fd-cn-gov`` (its registry file
+sibling repo ``<workspace>/fd-cn-gov`` (its registry file
 ``fd_cn_gov/registry/registry.json`` exists there — verified 2026-11-03:
 sources 11 / datasource_columns 57 / scraw_configs 11 / organizations 11), so
 every truth assertion runs against real data. **No registry data is copied

@@ -12,9 +12,9 @@
 
 | 兄弟仓 | 用到的入口文件 | 在本包中的对应物 |
 |---|---|---|
-| `/Users/chengsishi/finddata/fd-sentiment` | `gold/gold-v9.json`（金标数据，105 条）；打分器 `fd_sentiment/scoring.py`（`score_document`）；评测/校准 `fd_sentiment/evaluate.py`；金标构建与重标 `scripts/build_gold_set.py`、`scripts/relabel_gold_set.py` | `adapters.py` 语料适配（gold-v9 → knowledge_units）；`checks.py` 的五档词表/方向口径 |
-| `/Users/chengsishi/finddata/fd-data-quality` | `CONTRACTS.md`（文件驱动重灌契约：值域/键唯一/格式校验、FAIL 不得重灌）；`baselines/*.yaml` | `checks.py` 的确定性 checker 语义（显式允许集、字段契约先行） |
-| `/Users/chengsishi/finddata/dashboards` | `data_plane.py` 的 `finalize()` 出片闸门与对账判据（声明值必须与实际数据一致，否则 FATAL） | `checks.py` 的 `build_data_qa_goldset`（判据改写为可执行 QA 题目） |
+| `<workspace>/fd-sentiment` | `gold/gold-v9.json`（金标数据，105 条）；打分器 `fd_sentiment/scoring.py`（`score_document`）；评测/校准 `fd_sentiment/evaluate.py`；金标构建与重标 `scripts/build_gold_set.py`、`scripts/relabel_gold_set.py` | `adapters.py` 语料适配（gold-v9 → knowledge_units）；`checks.py` 的五档词表/方向口径 |
+| `<workspace>/fd-data-quality` | `CONTRACTS.md`（文件驱动重灌契约：值域/键唯一/格式校验、FAIL 不得重灌）；`baselines/*.yaml` | `checks.py` 的确定性 checker 语义（显式允许集、字段契约先行） |
+| `<workspace>/dashboards` | `data_plane.py` 的 `finalize()` 出片闸门与对账判据（声明值必须与实际数据一致，否则 FATAL） | `checks.py` 的 `build_data_qa_goldset`（判据改写为可执行 QA 题目） |
 
 ## kind 说明（如实）
 
@@ -45,4 +45,4 @@
 
 ## 测试
 
-`tests/test_finance_data_pack.py`：monkeypatch `FD_SENTIMENT_REPO` 指向真实兄弟仓（存在即用真数据，105 条）；另用 `tests/fixtures/finance/broken-gold/` 的**残缺文件**（非金标数据，仅用于错误路径）验证「加载失败如实抛错」。注意：若本机没有 `/Users/chengsishi/finddata/fd-sentiment`，依赖真实金标的用例会 skip——这是有意的：本包不复制数据文件，也就不在仓内编造假金标。
+`tests/test_finance_data_pack.py`：monkeypatch `FD_SENTIMENT_REPO` 指向真实兄弟仓（存在即用真数据，105 条）；另用 `tests/fixtures/finance/broken-gold/` 的**残缺文件**（非金标数据，仅用于错误路径）验证「加载失败如实抛错」。注意：若本机没有 `<workspace>/fd-sentiment`，依赖真实金标的用例会 skip——这是有意的：本包不复制数据文件，也就不在仓内编造假金标。

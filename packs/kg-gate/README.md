@@ -13,12 +13,12 @@
 
 | 迁移件 | 真源路径 |
 |---|---|
-| 判据①③④ 与判据②读数 | `/Users/chengsishi/finddata/fd-text-core/scripts/kg_graph_checks.py`（注意：**在 fd-text-core，不在 fd-legal-kg**；fd-legal-kg 无同名脚本，与 packs/gov 的勘察结论一致） |
-| 判据④ 脏文号判读 | `/Users/chengsishi/finddata/fd-text-core/scripts/kg_statute_repair_names.py`（`is_dirty_name`/`docno_of`） |
-| 判据② 语义文档 | `/Users/chengsishi/finddata/fd-text-core/fd_text_core/kg_lane/merge.py`（`normalize_docno_issuer`、`split_doc_number` 的 113/71 教训） |
-| 发布门主判定 | `/Users/chengsishi/paas/lib/publish-tool-gate.js`（`toolGateErrors`/`declaredToolsByServer`/`toolFaceErrors`/`toolClosureErrors`/`namedMcpTools`） |
-| registry 条目→serverInfo 映射 | `/Users/chengsishi/paas/registry-bridge.js`（`toolListNames`、`metadata.surface.commercial_tools`/`tools_commercial` 双字段） |
-| 商业名单推导 | `/Users/chengsishi/finddata/scripts/export_surface_commercial.py::commercial_tools`（tool-surface manifest → 名集；分组级与工具级 level alike） |
+| 判据①③④ 与判据②读数 | `<workspace>/fd-text-core/scripts/kg_graph_checks.py`（注意：**在 fd-text-core，不在 fd-legal-kg**；fd-legal-kg 无同名脚本，与 packs/gov 的勘察结论一致） |
+| 判据④ 脏文号判读 | `<workspace>/fd-text-core/scripts/kg_statute_repair_names.py`（`is_dirty_name`/`docno_of`） |
+| 判据② 语义文档 | `<workspace>/fd-text-core/fd_text_core/kg_lane/merge.py`（`normalize_docno_issuer`、`split_doc_number` 的 113/71 教训） |
+| 发布门主判定 | `paas/lib/publish-tool-gate.js`（`toolGateErrors`/`declaredToolsByServer`/`toolFaceErrors`/`toolClosureErrors`/`namedMcpTools`） |
+| registry 条目→serverInfo 映射 | `paas/registry-bridge.js`（`toolListNames`、`metadata.surface.commercial_tools`/`tools_commercial` 双字段） |
+| 商业名单推导 | `<workspace>/scripts/export_surface_commercial.py::commercial_tools`（tool-surface manifest → 名集；分组级与工具级 level alike） |
 | 闭合契约文字 | finddata `openspec/changes/archive/2026-10-11-pack-publish-surface-closure/`；`fd-wire/docs/registry-tool-snapshot-longterm.md` §十（发布门先判商业闭包、后判存在性） |
 
 同址旁证：`fd-text-core/fd_text_core/kg_lane/eval.py` 是 KG 车道的**双口径
@@ -103,7 +103,7 @@ registry 条目 `metadata.surface.commercial_tools` 名单，越界即拒（`con
 3. `export_surface_commercial.py` 的写入端（registry PATCH）——只迁推导。
 
 **双跑零漂移**：`tests/test_kg_gate.py::TestGateDualRun` 在 node 可用且
-`/Users/chengsishi/finddata/paas/lib/publish-tool-gate.js` 可读时，对同一组
+`<workspace>/paas/lib/publish-tool-gate.js` 可读时，对同一组
 (manifest, index) 输入同时跑真实 JS 门（`toolGateErrors(m, serverInfo, {})`，
 无 probe、零网络）与本包 Python 内核，逐字段比对 errors/notes（含文案）
 与三个纯函数的返回结构，断言零漂移；node 或 paas 仓缺席时如实 skip。
@@ -148,6 +148,6 @@ FAIL（score/max 记进聚合行，不做「洗绿」）。
 ## 跑法
 
 ```bash
-cd /Users/chengsishi/finddata/law-bench
+cd <workspace>/law-bench
 uv run pytest tests/test_kg_gate.py -q -m "not external"
 ```

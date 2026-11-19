@@ -6,7 +6,7 @@ checkers below into ``src.bench.data_checks.register_checker`` for kind
 no filesystem.
 
 **KG 车道验收判据迁移（v1 降级实现）**：四条硬判据源文件已找到并落地在
-``/Users/chengsishi/finddata/fd-text-core/scripts/kg_graph_checks.py``（配套
+``<workspace>/fd-text-core/scripts/kg_graph_checks.py``（配套
 ``kg_statute_repair_names.py`` 的脏文号判据；注意它在 fd-text-core，不在
 fd-legal-kg）。原脚本连 FalkorDB 图查询（网络依赖），无法在本平台离线跑；
 本包提炼其中**确定性判据的语义**，降级为对 registry「元数据图」

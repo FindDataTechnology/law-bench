@@ -657,6 +657,13 @@ class TemplateVocabulary:
             values={
                 "entity_types": entity_types,
                 "relationship_kinds": relationship_kinds,
+                # Crosswalks are asserted *about* entities, so they must not
+                # require a template change. The kernel gates the **kind** name
+                # against this set, so it must contain the kind itself — the
+                # relation vocabulary (same_as / role_of / maps_to) is checked
+                # separately by `crosswalk.validate_crosswalk`, because it lives
+                # in the assertion's attrs, not in the unit's kind.
+                "crosswalk": ["crosswalk"],
             },
         )
 

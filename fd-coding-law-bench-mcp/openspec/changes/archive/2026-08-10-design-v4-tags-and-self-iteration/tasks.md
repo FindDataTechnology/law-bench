@@ -29,7 +29,7 @@
 
 ### Task 1: Delete dead dimensions from starter vocab
 
-**Location**: `/Users/chengsishi/law-template/src/clauses/tags.py`
+**Location**: `<path-to>/src/clauses/tags.py`
 
 **Steps**:
 1. Update `_STANDARD_TAG_VALUES` to remove `strength`, `risk`, `mandatory`
@@ -44,7 +44,7 @@
 
 ### Task 2: Register legal_topic dimension for all types
 
-**Location**: `/Users/chengsishi/law-template/src/clauses/tags.py`, `/Users/chengsishi/law-template/src/eval/rubric_crud.py`
+**Location**: `<path-to>/src/clauses/tags.py`, `<path-to>/src/eval/rubric_crud.py`
 
 **Steps**:
 1. Create function `register_legal_topic_dims(contract_type, criteria_names)`
@@ -59,7 +59,7 @@
 
 ### Task 3: Implement stance alias mapping
 
-**Location**: `/Users/chengsishi/law-template/src/clauses/tags.py`
+**Location**: `<path-to>/src/clauses/tags.py`
 
 **Steps**:
 1. Add `STANCE_ALIASES = {"pro_seller": "pro_a", "pro_buyer": "pro_b"}` constant
@@ -76,7 +76,7 @@
 
 ### Task 4: Modify evaluate_node for parallel execution
 
-**Location**: `/Users/chengsishi/law-template/fd-coding-law-bench-mcp/src/fd_coding_law_bench_mcp/pipeline/graph.py`
+**Location**: `<path-to>/fd-coding-law-bench-mcp/src/fd_coding_law_bench_mcp/pipeline/graph.py`
 
 **Steps**:
 1. Create new function `evaluate_with_judges(contract_text, rubric_name, judge_models=["kimi-k3", "glm-5", "deepseek"])`
@@ -92,7 +92,7 @@
 
 ### Task 5: Modify scoring logic for multi-judge verdicts
 
-**Location**: `/Users/chengsishi/law-template/src/eval/scoring.py`
+**Location**: `<path-to>/src/eval/scoring.py`
 
 **Steps**:
 1. Update `evaluate_contract()` signature to accept `judge_models` parameter
@@ -108,7 +108,7 @@
 
 ### Task 6: Graceful degradation handling
 
-**Location**: `/Users/chengsishi/law-template/fd-coding-law-bench-mcp/src/fd_coding_law_bench_mcp/pipeline/graph.py`
+**Location**: `<path-to>/fd-coding-law-bench-mcp/src/fd_coding_law_bench_mcp/pipeline/graph.py`
 
 **Steps**:
 1. Wrap each judge call in try-except
@@ -128,7 +128,7 @@
 
 ### Task 7: Create sub-agent for batch tagging
 
-**Location**: `/Users/chengsishi/law-template/scripts/backfill_legal_topics.py` (new file)
+**Location**: `<path-to>/scripts/backfill_legal_topics.py` (new file)
 
 **Steps**:
 1. Read all clauses for a contract type via `clause_list()`
@@ -145,7 +145,7 @@
 
 ### Task 8: Verify coverage completeness
 
-**Location**: `/Users/chengsishi/law-template/scripts/verify_topic_coverage.py` (new file)
+**Location**: `<path-to>/scripts/verify_topic_coverage.py` (new file)
 
 **Steps**:
 1. Get rubric criteria count for a contract type
@@ -163,7 +163,7 @@
 
 ### Task 9: Run targeted self-iteration on sale
 
-**Location**: `/Users/chengsishi/law-template/fd-coding-law-bench-mcp/src/fd_coding_law_bench_mcp/tools/auto_pipeline.py`
+**Location**: `<path-to>/fd-coding-law-bench-mcp/src/fd_coding_law_bench_mcp/tools/auto_pipeline.py`
 
 **Steps**:
 1. Invoke `auto_pipeline_run(contract_type="sale", stance="balanced", rubric="contract_sale_v3")`
@@ -250,7 +250,7 @@
 
 ### Task 14: Update MCP tool documentation
 
-**Location**: `/Users/chengsishi/law-template/docs/api-evaluate.md`
+**Location**: `<path-to>/docs/api-evaluate.md`
 
 **Steps**:
 1. Document new multi-judge evaluation parameters

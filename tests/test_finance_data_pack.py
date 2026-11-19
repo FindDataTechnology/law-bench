@@ -1,7 +1,7 @@
 """Tests for the finance-data domain pack (packs/finance-data/).
 
 Data source discipline: the tests monkeypatch ``FD_SENTIMENT_REPO`` to the
-real sibling repo ``/Users/chengsishi/finddata/fd-sentiment`` (the gold file
+real sibling repo ``<workspace>/fd-sentiment`` (the gold file
 ``gold/gold-v9.json`` exists there — verified 2026-11-03, 105 items), so every
 truth assertion runs against real data. **No gold data is fabricated in this
 repo**: the only fixture under ``tests/fixtures/finance/`` is a deliberately

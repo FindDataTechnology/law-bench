@@ -68,7 +68,7 @@ NAMESPACE = "gov"
 # Sibling repo root (read-only). Env override FD_GOV_REPO wins at call time
 # via gov_repo(); the constant is the documented default.
 GOV_REPO = Path(
-    os.environ.get("FD_GOV_REPO", "/Users/chengsishi/finddata/fd-cn-gov")
+    os.environ.get("FD_GOV_REPO", "")
 )
 
 # Registry file inside the sibling repo (verified to exist there).

@@ -1,6 +1,6 @@
 """参数化跑分器（迁入自 fd-text-core）：nDCG / hit@k / MRR + 双指纹 + 跨次回归判定。
 
-真源（只读）：``/Users/chengsishi/finddata/fd-text-core/fd_text_core/eval/runner.py``
+真源（只读）：``<workspace>/fd-text-core/fd_text_core/eval/runner.py``
 与 ``.../eval/store.py``（落库腿，表 DDL 见 migrations/versions/0006_eval_runs.py、
 0008_eval_ndcg_variant.py）。迁入即单一真源；等价双跑（tests/test_retrieval_eval.py）
 确认零漂移前，原仓尺子仍是行为基准——口径同 finance-data 包「迁入 ≠ 取代」。

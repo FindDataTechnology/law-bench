@@ -32,7 +32,8 @@ jobs:
           # 本体内核只能从 vendored wheel 装（establish-ontology-kernel 8.1）：
           # pyproject 里那条依赖在 PyPI 上不存在，`[tool.uv.sources]` 又只有 uv 认，
           # 所以必须先就地把 wheel 装上，`pip install -e .` 才不会解析失败。
-          pip install vendor/fd_ontology_kernel-*.whl
+          pip install vendor/fd_ontology_kernel-*.whl \
+                    vendor/fd_open_data_protocol-*.whl
           pip install -e .
           pip install -e fd-coding-law-bench-mcp
           pip install pytest pytest-asyncio
@@ -84,7 +85,8 @@ jobs:
       - name: Install (vendored kernel wheel + this repo)
         run: |
           python -m pip install --upgrade pip
-          pip install vendor/fd_ontology_kernel-*.whl
+          pip install vendor/fd_ontology_kernel-*.whl \
+                    vendor/fd_open_data_protocol-*.whl
           pip install -e .
 
       # 16 条断言逐条可失败（闸门先自检「每条断言都能红」再跑适配方）。

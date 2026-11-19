@@ -22,6 +22,8 @@ dependencies = [
     "pypdf>=6.14.2",
     "itsdangerous>=2.2",
     "fd-ontology-kernel",
+    # Observation-layer vocabulary; read by scripts/import_protocol_ontology.py.
+    "fd-open-data-protocol",
 ]
 
 [tool.uv.sources]
@@ -37,6 +39,15 @@ dependencies = [
 # fd-ontology-kernel-0.1.0". So uv resolves it here and CI/pip installs
 # `vendor/*.whl` before `pip install -e .`.
 fd-ontology-kernel = { path = "vendor/fd_ontology_kernel-0.1.0-py3-none-any.whl" }
+
+# The observation-layer vocabulary (30 entity types / 14 relation types / 30
+# concept families) lives in fd-open-data-protocol, and the template importer
+# (`scripts/import_protocol_ontology.py`) reads it from there. Same treatment as
+# the kernel: a wheel in `vendor/`, built from that repo's **committed HEAD** —
+# never from a working tree, or an unrelated uncommitted vocabulary edit would
+# ship silently. Measured 2026-11-19: 52 KB, deps already satisfied here
+# (pydantic / pyyaml).
+fd-open-data-protocol = { path = "vendor/fd_open_data_protocol-0.3.2-py3-none-any.whl" }
 
 [dependency-groups]
 dev = [

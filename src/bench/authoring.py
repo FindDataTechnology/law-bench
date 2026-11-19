@@ -389,6 +389,51 @@ def authoring_create_unit(
     )
 
 
+def authoring_create_crosswalk(
+    conn: Any,
+    *,
+    domain_key: str,
+    external_key: str,
+    body: str,
+    operator: str,
+    attrs: dict,
+    tags: Optional[dict] = None,
+) -> dict:
+    """Create one crosswalk assertion (a KU of kind ``crosswalk``).
+
+    Crosswalks are **not** gated by the template's ``entity_types``: the tuple
+    ("this entity maps to that external record") is an assertion *about* an
+    entity, so requiring every domain to declare a crosswalk type would be
+    asking template authors to declare the seam itself. What validates them is
+    ``crosswalk.validate_crosswalk``, called at submission time by the proposal
+    inbox and again here — the same predicate both times.
+
+    Everything else is the ordinary write path: the kernel's vocabulary-free
+    create, the paired append-only event, one transaction.
+    """
+    from . import crosswalk as crosswalk_mod
+
+    problems = crosswalk_mod.validate_crosswalk(attrs)
+    if problems:
+        raise ValueError(
+            "crosswalk attrs invalid: " + "; ".join(problems)
+        )
+    domain = _load_domain(conn, domain_key=domain_key)
+    return _create_unit(
+        conn,
+        domain=domain,
+        kind="crosswalk",
+        external_key=external_key,
+        body=body,
+        operator=operator,
+        tags=tags,
+        attrs=attrs,
+        # The kernel gates the KIND name against this set, so it must be the
+        # set that contains "crosswalk" — not the entity-type vocabulary.
+        vocab_key="crosswalk",
+    )
+
+
 def authoring_create_units(
     conn: Any,
     *,
