@@ -198,6 +198,12 @@
   text-align: center;
   font-size: 0.78rem;
   line-height: 1.25rem;
+  /* The bar has a border and a tinted background; without horizontal inset the
+     percentage lands flush against the 4px rounded edge ("100%" worst case).
+     Pill geometry here, not page layout: 0.4rem is the inset that keeps a
+     three-digit percentage clear of the rounded corners at 1.25rem height. */
+  padding: 0 0.4rem;
+  box-sizing: border-box;
   color: var(--text);
   font-weight: 600;
 }
