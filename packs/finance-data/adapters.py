@@ -56,7 +56,12 @@ NAMESPACE = "finance-data"
 # Sibling repo root (read-only). Env override FD_SENTIMENT_REPO wins at call
 # time via sentiment_repo(); the constant is the documented default.
 SENTIMENT_REPO = Path(
-    os.environ.get("FD_SENTIMENT_REPO", "")
+    # Default = the sibling checkout next to this repo. An empty default would
+    # make the documented "sibling repo" contract false: Path("") is ".", whose
+    # .name is "" — so `SENTIMENT_REPO.name == "fd-sentiment"` (the thing that tells a
+    # reader where the default points) silently became false. The env var still
+    # wins at call time via the accessor.
+    os.environ.get("FD_SENTIMENT_REPO", "") or (Path(__file__).resolve().parents[2] / "fd-sentiment")
 )
 
 # Gold file inside the sibling repo (verified to exist there).

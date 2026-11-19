@@ -26,6 +26,19 @@ from src.web.auth.deps import User, get_current_user
 from src.web.deps import get_db
 
 
+@pytest.fixture(autouse=True)
+def _no_idp(monkeypatch):
+    """App startup probes the IdP; tests must not depend on a real Logto.
+
+    Same shim the other web suites use (`test_admin_web._no_idp`): without it the
+    suite passes locally (where a stale discovery cache exists) and fails in CI
+    with `LogtoUnreachable: Temporary failure in name resolution`.
+    """
+    from src.web.auth import logto
+
+    monkeypatch.setattr(logto, "verify_reachable", lambda: None)
+
+
 @pytest.fixture()
 def world(empty_db):  # noqa: F811
     # The app opens the process-wide cached connection (get_shared_conn); without

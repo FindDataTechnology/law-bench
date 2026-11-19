@@ -68,7 +68,12 @@ NAMESPACE = "gov"
 # Sibling repo root (read-only). Env override FD_GOV_REPO wins at call time
 # via gov_repo(); the constant is the documented default.
 GOV_REPO = Path(
-    os.environ.get("FD_GOV_REPO", "")
+    # Default = the sibling checkout next to this repo. An empty default would
+    # make the documented "sibling repo" contract false: Path("") is ".", whose
+    # .name is "" — so `SENTIMENT_REPO.name == "fd-cn-gov"` (the thing that tells a
+    # reader where the default points) silently became false. The env var still
+    # wins at call time via the accessor.
+    os.environ.get("FD_GOV_REPO", "") or (Path(__file__).resolve().parents[2] / "fd-cn-gov")
 )
 
 # Registry file inside the sibling repo (verified to exist there).
