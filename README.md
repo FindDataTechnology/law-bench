@@ -1,5 +1,7 @@
 # law-bench · 中文法律合同起草与评测工作台
 
+> **Part of the [Lex line (寻数·识律)](https://www.finddatatech.cloud/products/lex) of [FindData](https://www.finddatatech.cloud)** — the LawBench workbench: clause corpus, taxonomy-driven contract assembly and LLM evaluation.
+
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml)
 [![PostgreSQL](https://img.shields.io/badge/store-PostgreSQL-336791)](src/settings.py)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
