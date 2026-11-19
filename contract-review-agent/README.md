@@ -36,7 +36,7 @@
 
 ```bash
 # 1. 配置环境变量
-cd /Users/chengsishi/law-template/contract-review-agent
+cd <path-to>/contract-review-agent
 cp .env.example .env
 # 编辑 .env 文件，填写你的 API KEY 和数据库配置
 

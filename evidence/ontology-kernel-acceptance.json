@@ -1,0 +1,333 @@
+{
+  "domain": "dom-accept",
+  "versions": [
+    {
+      "version": 1,
+      "digest": "c37975e6d1f6168099f7f94ebbec1e56d4db8555cf2648c4564d3876810b83be"
+    },
+    {
+      "version": 2,
+      "digest": "e98793cfe03c29cdf65aa28c904b5b38b38cdb26dac0b26fe27c602e1cf2b628"
+    }
+  ],
+  "import": {
+    "created": 3,
+    "reimported": 3
+  },
+  "ledger": {
+    "curation": {
+      "total": 7,
+      "by_kind": [
+        {
+          "kind": "company",
+          "count": 3,
+          "lane": "entity"
+        },
+        {
+          "kind": "belongs_to",
+          "count": 2,
+          "lane": "relationship"
+        },
+        {
+          "kind": "indicator",
+          "count": 2,
+          "lane": "entity"
+        }
+      ],
+      "rows": [
+        {
+          "kind": "company",
+          "lane": "entity",
+          "count": 3
+        },
+        {
+          "kind": "indicator",
+          "lane": "entity",
+          "count": 2
+        },
+        {
+          "kind": "belongs_to",
+          "lane": "relationship",
+          "count": 2
+        }
+      ],
+      "by_tier": {
+        "raw": 7,
+        "bronze": 0,
+        "silver": 0,
+        "gold": 0
+      },
+      "recent_events": [
+        {
+          "id": 10,
+          "domain_id": 1,
+          "unit_kind": "belongs_to",
+          "unit_key": "co-3->belongs_to:co-1",
+          "op": "update",
+          "before": {
+            "id": 7,
+            "body": "co-3 belongs_to co-1",
+            "kind": "belongs_to",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {
+              "to": "co-1",
+              "from": "co-3",
+              "to_key": "co-1",
+              "from_key": "co-3"
+            },
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:33.566104+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:33.566104+00:00",
+            "source_path": null,
+            "external_key": "co-3->belongs_to:co-1"
+          },
+          "after": {
+            "id": 7,
+            "body": "co-3 belongs_to co-1",
+            "kind": "belongs_to",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {
+              "to": "co-1",
+              "from": "co-3",
+              "to_key": "co-1",
+              "from_key": "co-3"
+            },
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:33.566104+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:35.753457+00:00",
+            "source_path": null,
+            "external_key": "co-3->belongs_to:co-1"
+          },
+          "operator": "expert-3",
+          "via": "authoring",
+          "created_at": "2026-11-11T18:53:31.080873+00:00"
+        },
+        {
+          "id": 9,
+          "domain_id": 1,
+          "unit_kind": "indicator",
+          "unit_key": "ind-2",
+          "op": "update",
+          "before": {
+            "id": 6,
+            "body": "指标二",
+            "kind": "indicator",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {},
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:33.056295+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:33.056295+00:00",
+            "source_path": null,
+            "external_key": "ind-2"
+          },
+          "after": {
+            "id": 6,
+            "body": "指标二",
+            "kind": "indicator",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {},
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:33.056295+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:35.343657+00:00",
+            "source_path": null,
+            "external_key": "ind-2"
+          },
+          "operator": "expert-3",
+          "via": "authoring",
+          "created_at": "2026-11-11T18:53:31.080873+00:00"
+        },
+        {
+          "id": 8,
+          "domain_id": 1,
+          "unit_kind": "company",
+          "unit_key": "co-3",
+          "op": "update",
+          "before": {
+            "id": 5,
+            "body": "公司三",
+            "kind": "company",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {},
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:32.550648+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:32.550648+00:00",
+            "source_path": null,
+            "external_key": "co-3"
+          },
+          "after": {
+            "id": 5,
+            "body": "公司三",
+            "kind": "company",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {},
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:32.550648+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:34.799589+00:00",
+            "source_path": null,
+            "external_key": "co-3"
+          },
+          "operator": "expert-3",
+          "via": "authoring",
+          "created_at": "2026-11-11T18:53:31.080873+00:00"
+        },
+        {
+          "id": 7,
+          "domain_id": 1,
+          "unit_kind": "belongs_to",
+          "unit_key": "co-3->belongs_to:co-1",
+          "op": "create",
+          "before": null,
+          "after": {
+            "id": 7,
+            "body": "co-3 belongs_to co-1",
+            "kind": "belongs_to",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {
+              "to": "co-1",
+              "from": "co-3",
+              "to_key": "co-1",
+              "from_key": "co-3"
+            },
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:33.566104+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:33.566104+00:00",
+            "source_path": null,
+            "external_key": "co-3->belongs_to:co-1"
+          },
+          "operator": "expert-3",
+          "via": "authoring",
+          "created_at": "2026-11-11T18:53:31.080873+00:00"
+        },
+        {
+          "id": 6,
+          "domain_id": 1,
+          "unit_kind": "indicator",
+          "unit_key": "ind-2",
+          "op": "create",
+          "before": null,
+          "after": {
+            "id": 6,
+            "body": "指标二",
+            "kind": "indicator",
+            "tags": {},
+            "tier": "raw",
+            "attrs": {},
+            "namespace": "dom-accept",
+            "created_at": "2026-11-11T18:53:33.056295+00:00",
+            "provenance": {
+              "via": "authoring",
+              "operator": "expert-3"
+            },
+            "updated_at": "2026-11-11T18:53:33.056295+00:00",
+            "source_path": null,
+            "external_key": "ind-2"
+          },
+          "operator": "expert-3",
+          "via": "authoring",
+          "created_at": "2026-11-11T18:53:31.080873+00:00"
+        }
+      ],
+      "deleted": 0,
+      "source": "knowledge_units"
+    },
+    "publication": {
+      "has_publication": true,
+      "latest": {
+        "version": 2,
+        "digest": "e98793cfe03c29cdf65aa28c904b5b38b38cdb26dac0b26fe27c602e1cf2b628",
+        "published_at": "2026-11-11T18:53:31.080873+00:00",
+        "published_by": "lead-1",
+        "changelog": {
+          "added": [
+            "co-3",
+            "co-3->belongs_to:co-1",
+            "ind-2"
+          ],
+          "counts": {
+            "entities": 5,
+            "relationships": 2
+          },
+          "changed": [],
+          "removed": []
+        }
+      },
+      "history": [
+        {
+          "version": 2,
+          "digest": "e98793cfe03c29cdf65aa28c904b5b38b38cdb26dac0b26fe27c602e1cf2b628",
+          "published_at": "2026-11-11T18:53:31.080873+00:00",
+          "published_by": "lead-1",
+          "changelog": {
+            "added": [
+              "co-3",
+              "co-3->belongs_to:co-1",
+              "ind-2"
+            ],
+            "counts": {
+              "entities": 5,
+              "relationships": 2
+            },
+            "changed": [],
+            "removed": []
+          }
+        },
+        {
+          "version": 1,
+          "digest": "c37975e6d1f6168099f7f94ebbec1e56d4db8555cf2648c4564d3876810b83be",
+          "published_at": "2026-11-11T18:53:28.614374+00:00",
+          "published_by": "lead-1",
+          "changelog": {
+            "counts": {
+              "entities": 3,
+              "relationships": 1
+            },
+            "initial": true
+          }
+        }
+      ],
+      "source": "ontology_publications"
+    },
+    "reconcile": {
+      "unused_kinds": [],
+      "out_of_vocab_kinds": [],
+      "template_outdated": false,
+      "consistent": true,
+      "summary_key": "ledger.reconcile.consistent"
+    }
+  }
+}

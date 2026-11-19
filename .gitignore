@@ -113,3 +113,6 @@ assistant-ui/node_modules/
 
 # CopilotKit island build output (rebuilt by the image's node stage)
 src/web/static/assistant/
+
+# graphify 代码图谱产物（每仓各一份，16MB 级；由 `graphify update` 重建，不入库）
+graphify-out/

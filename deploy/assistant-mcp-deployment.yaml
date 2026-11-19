@@ -35,12 +35,14 @@ spec:
       labels:
         app: law-bench-mcp-assistant
     spec:
-      # cheap-7 since 2026-09-27: the healthy node carrying the current image
-      # (sha-b4c90f4, includes the bundled MCP package since sha-3b6502b).
-      # cheap-4's kubelet flapped phantom disk-pressure that night; the web
-      # pod moved to cheap-7 too.
+      # 2026-11-19: cheap-7 → cheap-5。cheap-7 盘 80%（30G 盘，业务数据 + 镜像层
+      # 已无可回收空间），而本 pod 的镜像 law-template 正是该节点上最大的单块快照
+      # （/app/.venv 1.2G）；此 pod 无卷、无 hostNetwork、dnsPolicy 走标准 coredns，
+      # 属全集群唯一「迁移零风险且真能腾地方」的工作负载。
+      # cheap-5 requests 54% / limits 165%（cheap-7 是 80% / 238%），也更均衡。
+      # 回滚：把 hostname 改回 cheap-7。
       nodeSelector:
-        kubernetes.io/hostname: cheap-7
+        kubernetes.io/hostname: cheap-5
       # TCR personal edition pull creds (switch-image-pipeline-github-actions-tcr).
       imagePullSecrets:
         - name: tcr-pull

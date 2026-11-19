@@ -1,0 +1,29 @@
+{
+ "samples": [
+  {
+   "kind": "entity",
+   "external_key": "7",
+   "silver": "{'id': 1, 'kind': 'entity', 'namespace': 'wire', 'external_key': '7', 'body': 'entity 冒烟日期 | dataset smoke rows=3 pk=[date]', 'tags': {'origin': 'graph_sync', 'registry': 'wire'}, 'attrs': {'id': 7, 'name': '冒烟日期', 'tier': None, 'dataset': {'id': 'ec311b35-2cd9-40d4-bf6c-3afebd84cfab', 'key': 'smoke', 'name': 'smoke', 'row_count': 3, 'storage_tier': 'cell'}, 'pk_columns': ['date'], 'description': None, 'sensitivity': None, 'column_notes': {'date': '冒烟主键'}, 'display_column': 'date'}, 'tier': 'silver', 'source_path': None, 'provenance': {'synced_at': '2026-11-05T02:49:25.690329+00:00', 'synced_from': 'wire'}, 'created_at': '2026-11-05T02:49:25.690353+00:00', 'updated_at': '2026-11-05T02:54:11.640523+00:00'}",
+   "gold": "{'id': 1, 'kind': 'entity', 'namespace': 'wire', 'external_key': '7', 'body': 'entity 冒烟日期 | dataset smoke rows=3 pk=[date]', 'tags': {'origin': 'graph_sync', 'registry': 'wire'}, 'attrs': {'id': 7, 'name': '冒烟日期', 'tier': None, 'dataset': {'id': 'ec311b35-2cd9-40d4-bf6c-3afebd84cfab', 'key': 'smoke', 'name': 'smoke', 'row_count': 3, 'storage_tier': 'cell'}, 'pk_columns': ['date'], 'description': None, 'sensitivity': None, 'column_notes': {'date': '冒烟主键'}, 'display_column': 'date'}, 'tier': 'gold', 'source_path': None, 'provenance': {'review': {'at': '2026-11-05T02:54:11.928729+00:00', 'note': '人工核验通过(3.1): 图谱形状/主键纪律/数据集绑定逐项比对', 'reviewer': 'platform-operator(chengsi)'}, 'synced_at': '2026-11-05T02:49:25.690329+00:00', 'sensitivity': 'internal', 'synced_from': 'wire'}, 'created_at': '2026-11-05T02:49:25.690353+00:00', 'updated_at': '2026-11-05T02:54:11.928745+00:00'}"
+  },
+  {
+   "kind": "relation",
+   "external_key": "15",
+   "silver": "{'id': 9, 'kind': 'relation', 'namespace': 'wire', 'external_key': '15', 'body': 'relation 15.order_id -(n:1)-> 10.order_id', 'tags': {'origin': 'graph_sync', 'registry': 'wire'}, 'attrs': {'id': 15, 'kind': 'n:1', 'tier': None, 'label': None, 'to_column': 'order_id', 'from_column': 'order_id', 'sensitivity': None, 'to_entity_id': 10, 'from_entity_id': 15, 'junction_dataset_id': None, 'junction_source_column': None, 'junction_target_column': None}, 'tier': 'silver', 'source_path': None, 'provenance': {'synced_at': '2026-11-05T02:49:28.152288+00:00', 'synced_from': 'wire'}, 'created_at': '2026-11-05T02:49:28.152362+00:00', 'updated_at': '2026-11-05T02:54:12.209892+00:00'}",
+   "gold": "{'id': 9, 'kind': 'relation', 'namespace': 'wire', 'external_key': '15', 'body': 'relation 15.order_id -(n:1)-> 10.order_id', 'tags': {'origin': 'graph_sync', 'registry': 'wire'}, 'attrs': {'id': 15, 'kind': 'n:1', 'tier': None, 'label': None, 'to_column': 'order_id', 'from_column': 'order_id', 'sensitivity': None, 'to_entity_id': 10, 'from_entity_id': 15, 'junction_dataset_id': None, 'junction_source_column': None, 'junction_target_column': None}, 'tier': 'gold', 'source_path': None, 'provenance': {'review': {'at': '2026-11-05T02:54:12.488600+00:00', 'note': '人工核验通过(3.1): 图谱形状/主键纪律/数据集绑定逐项比对', 'reviewer': 'platform-operator(chengsi)'}, 'synced_at': '2026-11-05T02:49:28.152288+00:00', 'sensitivity': 'internal', 'synced_from': 'wire'}, 'created_at': '2026-11-05T02:49:28.152362+00:00', 'updated_at': '2026-11-05T02:54:12.488775+00:00'}"
+  }
+ ],
+ "gold_pending": [
+  [
+   "entity",
+   "7",
+   "internal"
+  ],
+  [
+   "relation",
+   "15",
+   "internal"
+  ]
+ ],
+ "date": "2026-11-05"
+}

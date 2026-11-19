@@ -4,6 +4,7 @@
 Keep the test suite hermetic: no external network or LLM calls, no shared development database, deterministic fakes for judge services, and broad coverage of the evaluation engine, drafting pipeline, web layer, and CLI.
 
 ## Requirements
+
 ### Requirement: Hermetic Test Execution
 The test suite SHALL execute without any external network or LLM calls and SHALL NOT read or mutate the development/shared PostgreSQL database addressed by `database_url`. Every test that needs a database SHALL operate against a throwaway per-test PostgreSQL database (or per-test schema) isolated from every other test. Every test that exercises LLM-judging behavior SHALL inject a deterministic in-process fake judge rather than calling the real model endpoint. The suite SHALL require a reachable local PostgreSQL instance to run database-backed tests, but SHALL NOT require Elasticsearch, MinIO, or OpenRouter (those are faked in tests).
 
@@ -22,6 +23,8 @@ The test suite SHALL execute without any external network or LLM calls and SHALL
 ### Requirement: Shared Test Fixtures
 The suite SHALL provide shared fixtures in `tests/conftest.py`: a seeded throwaway PostgreSQL database built from the real schema (loaded from `scripts/extract_harbor_rules.py`) with one harbor and one local rubric; a FastAPI `TestClient` whose `get_db` dependency is overridden to return a connection to that throwaway database; and a deterministic fake LLM judge whose per-criterion verdicts are configurable per test. The `get_db` override SHALL yield a PostgreSQL connection (not a filesystem `Path`).
 
+The seeded database fixture SHALL confirm that the schema actually landed before seeding, and SHALL fail at **setup** with an explicit "schema bootstrap did not complete" error when it did not. A fixture that proceeds to `TRUNCATE` a table that was never created reports `UndefinedTable` against whatever the test happened to touch — the failure then points at the test instead of at the bootstrap, which is why this assertion belongs here.
+
 #### Scenario: A test requests the seeded database fixture
 - **WHEN** a test depends on the seeded-database fixture
 - **THEN** it receives a connection to a fresh throwaway PostgreSQL database containing the real schema plus one `harbor:` rubric and one `local` rubric, isolated from every other test
@@ -33,6 +36,10 @@ The suite SHALL provide shared fixtures in `tests/conftest.py`: a seeded throwaw
 #### Scenario: A test requests the fake judge
 - **WHEN** a test depends on the fake-judge fixture
 - **THEN** it receives a judge factory whose verdicts can be preset per criterion (consumed in criteria order, with ``max_workers=1``), so a test can force an all-pass or a partial-fail run deterministically
+
+#### Scenario: Schema bootstrap failure is reported as itself
+- **WHEN** the session database is created but its schema did not complete (e.g. a lock wait timed out during table creation)
+- **THEN** the fixture fails at setup naming the schema bootstrap, MUST NOT proceed to seed and surface `undefined table` from a later statement
 
 ### Requirement: Evaluation Engine Coverage
 The suite SHALL cover `src/eval/` end to end: `rubric.py` (list/load, `KeyError` on unknown rubric, `ValueError` on rubric with no criteria); `store.py` (`ensure_schema` idempotency, `store_result` round-trip, `list_runs` ordering); `scoring.py` (all-pass aggregation, per-criterion result shape, a failing criterion producing `FAIL`, a judge-call error captured per criterion rather than sinking the run, `judge_model` fallback to `EVAL_MODEL`); `judge.py` (`_strip_litellm_prefix`, `RuntimeError` on missing env vars); and `manage.py` CRUD plus harbor-read-only guards (already present, retained and extended for the module split).
@@ -116,4 +123,3 @@ The behavior-preserving refactor SHALL preserve every existing public surface: `
 #### Scenario: The drafting CLI interface is unchanged
 - **WHEN** `python main.py "起草一份服务协议" out.md` is run (with kickoff monkeypatched)
 - **THEN** it accepts the request and output path in the same positional form as before the argparse rewrite
-

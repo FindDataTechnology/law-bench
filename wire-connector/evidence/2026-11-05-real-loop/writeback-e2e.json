@@ -1,0 +1,45 @@
+{
+ "dry_preview": "pending writeback batch: 2 unit(s)\n  - entity 7 sensitivity=internal reviewer=platform-operator(chengsi)\n  - relation 15 sensitivity=internal reviewer=platform-operator(chengsi)",
+ "result": {
+  "confirmed": "True",
+  "pushed": "True",
+  "namespace": "wire",
+  "attempted": "2",
+  "succeeded": "[]",
+  "failed": "[{'kind': 'entity', 'external_key': '7', 'error': 'no console bearer token for the WRITE face: set WIRE_ID_TOKEN with a wire-console Logto ID token — writes never go through the machine channel (reviewer attribution rides the console identity)'}, {'kind': 'relation', 'external_key': '15', 'error': 'no console bearer token for the WRITE face: set WIRE_ID_TOKEN with a wire-console Logto ID token — writes never go through the machine channel (reviewer attribution rides the console identity)'}]",
+  "skipped": "[]",
+  "counts": "{'succeeded': 0, 'failed': 2, 'skipped': 0}"
+ },
+ "gate": "run_writeback_confirmed(confirm=lambda: True) — interactive equivalent",
+ "date": "2026-11-05",
+ "real_run_with_console_token": {
+  "confirmed": "True",
+  "pushed": "True",
+  "namespace": "wire",
+  "attempted": "2",
+  "succeeded": "[{'kind': 'relation', 'external_key': '15', 'receipt': {'endpoint': 'PUT /api/v1/entities/15/relationships/15', 'wire_updated': True, 'first_class_fields': ['label', 'tier', 'sensitivity'], 'idempotency_key': 'wire/relation/15'}}]",
+  "failed": "[{'kind': 'entity', 'external_key': '7', 'error': 'PUT https://wire.finddatatech.cloud/api/v1/entities/7 → HTTP 422: {\"detail\":\"列注记的列 _bench 不在数据集 ec311b35-2cd9-40d4-bf6c-3afebd84cfab 列快照中\"}'}]",
+  "skipped": "[]",
+  "counts": "{'succeeded': 1, 'failed': 1, 'skipped': 0}"
+ },
+ "final_entity_and_relation_run": {
+  "confirmed": "True",
+  "pushed": "True",
+  "namespace": "wire",
+  "attempted": "2",
+  "succeeded": "[]",
+  "failed": "[{'kind': 'entity', 'external_key': '7', 'error': 'PUT https://wire.finddatatech.cloud/api/v1/entities/7 → 401: credential rejected (expired console ID token, wrong X-Internal-Token, or not in scope): {\"detail\":\"invalid console token: ExpiredSignatureError\"}'}]",
+  "skipped": "[{'kind': 'relation', 'external_key': '15', 'reason': 'already written back (registry key is the idempotency key; force=True to re-send)'}]",
+  "counts": "{'succeeded': 0, 'failed': 1, 'skipped': 1}"
+ },
+ "final_run_all_green": {
+  "confirmed": "True",
+  "pushed": "True",
+  "namespace": "wire",
+  "attempted": "2",
+  "succeeded": "[{'kind': 'entity', 'external_key': '7', 'receipt': {'endpoint': 'PUT /api/v1/entities/7', 'wire_updated_at': '2026-11-05T04:11:49.945640', 'stamp_key': '_bench', 'first_class_fields': ['tier', 'sensitivity'], 'idempotency_key': 'wire/entity/7'}}]",
+  "failed": "[]",
+  "skipped": "[{'kind': 'relation', 'external_key': '15', 'reason': 'already written back (registry key is the idempotency key; force=True to re-send)'}]",
+  "counts": "{'succeeded': 1, 'failed': 0, 'skipped': 1}"
+ }
+}

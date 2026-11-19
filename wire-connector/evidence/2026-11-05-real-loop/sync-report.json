@@ -1,0 +1,21 @@
+{
+ "run1": {
+  "namespace": "wire",
+  "nodes": "5",
+  "edges": "5",
+  "created": "['7', '10', '11', '14', '15', '8', '13', '14', '15', '16']",
+  "updated": "[]",
+  "unchanged": "[]"
+ },
+ "run2": {
+  "namespace": "wire",
+  "nodes": "5",
+  "edges": "5",
+  "created": "[]",
+  "updated": "[]",
+  "unchanged": "['7', '10', '11', '14', '15', '8', '13', '14', '15', '16']"
+ },
+ "channel": "machine (/api/v1/internal/entities?customer_id=drillcust001, X-Internal-Token)",
+ "note": "first real pull via machine channel (design D2 console-first superseded: machine face shipped 2b4a85c)",
+ "date": "2026-11-05"
+}

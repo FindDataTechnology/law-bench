@@ -1,6 +1,6 @@
 # Donor Whitelist — law-bench-server 资产挑入（task 1.1）
 
-供体：`/Users/chengsishi/finddata/law-bench-server/`（SMB 拷贝，HEAD 2f3125e，2026-11-02 复制）。
+供体：`<workspace>/law-bench-server/`（SMB 拷贝，HEAD 2f3125e，2026-11-02 复制）。
 审查日：2026-11-02。审查方式：逐文件列表 + 凭据模式扫描（api_key/token/secret/password/Bearer/sk-）+ PII 扫描（电话/邮箱/证件号）+ 合同 docx 正文抽验。
 
 ## 结论：准入（12 类 54 文件）
