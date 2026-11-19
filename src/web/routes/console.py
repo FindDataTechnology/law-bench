@@ -2016,34 +2016,13 @@ def console_legacy_sources(
 
 
 def _crosswalk_rows(db, *, path: str, entity_key: Optional[str]) -> list[dict]:
-    sql = (
-        "SELECT external_key, body, attrs, tier, updated_at "
-        "FROM knowledge_units WHERE namespace = %s AND kind = 'crosswalk' "
-        "  AND (tags->>'deleted') IS NULL"
-    )
-    params: list = [path]
-    if entity_key:
-        sql += " AND external_key = %s"
-        params.append(entity_key)
-    sql += " ORDER BY external_key, updated_at DESC"
-    out = []
-    for row in db.execute(sql, tuple(params)).fetchall():
-        attrs = row["attrs"] or {}
-        out.append({
-            "key": row["external_key"],
-            "body": row["body"],
-            "relation": attrs.get("relation"),
-            "peer": attrs.get("peer"),
-            "confidence": attrs.get("confidence"),
-            "connectivity": attrs.get("connectivity"),
-            "missing_states": _crosswalk().effective_missing_states(
-                attrs.get("connectivity")
-            ),
-            "confirmed": _crosswalk().is_confirmed(attrs, threshold=None),
-            "tier": row["tier"],
-            "updated_at": row["updated_at"],
-        })
-    return out
+    """Thin alias — the row shape lives in ``bench.crosswalk.list_rows``.
+
+    The machine read face serves the same rows, so the shaping has exactly one
+    definition. A copy here would drift into "the console shows one thing, the
+    machine another", which reads as a bug in whichever you looked at second.
+    """
+    return _crosswalk().list_rows(db, namespace=path, entity_key=entity_key)
 
 
 def _crosswalk():

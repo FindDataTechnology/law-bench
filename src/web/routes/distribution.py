@@ -1017,3 +1017,46 @@ def list_domain_rulers(domain_key: str, request: Request, db: DbConn = Depends(g
             continue
         rulers.append(ruler)
     return {"domain": domain_key, "count": len(rulers), "rulers": rulers}
+
+
+@read_only_router.get(
+    "/api/v1/distribution/{domain_key}/crosswalks",
+    name="distribution_crosswalks",
+)
+def list_domain_crosswalks(
+    domain_key: str,
+    request: Request,
+    entity: Optional[str] = None,
+    db: DbConn = Depends(get_db),
+):
+    """Mapping assertions + their connectivity, for a **machine** consumer.
+
+    Why this route exists at all: the three-state connector evidence is allowed
+    to live on the platform (crosswalk KUs), and the ERP line's generator reads
+    it from here instead of from its own file. Until this route existed that
+    "platform is the read authority" sentence had no machine path — the session
+    route below is Logto-gated, and the public pod serves a different audience.
+
+    Deliberately the SAME rows the console read face serves, built by the same
+    function: a second copy of the query would drift, and the drift would look
+    like "the console shows one thing, the machine another" rather than like a
+    bug. Strictly read-only — no footprint row, no ``last_used_at`` touch.
+
+    The token's domain binding gates the path before any row is read; an
+    out-of-scope domain answers 403 and never leaks whether the domain exists.
+    """
+    from ...bench import crosswalk, quality
+
+    _authenticate_consumer(request, db, domain_key)
+    domain = workspaces.get_domain(db, domain_key=domain_key)
+    if domain is None:
+        raise HTTPException(status_code=404, detail=f"域不存在：{domain_key}")
+    path = domain.get("path") or domain["key"]
+    rows = crosswalk.list_rows(db, namespace=path, entity_key=entity)
+    return {
+        "domain": domain_key,
+        "entity": entity,
+        "count": len(rows),
+        "crosswalks": rows,
+        "gaps": quality.crosswalk_gaps(db, namespace=path),
+    }

@@ -238,3 +238,41 @@ def effective_missing_states(
     missing = missing_connectivity_states(connectivity)
     expired = expired_states(connectivity, max_age_days=max_age_days)
     return [s for s in CONNECTIVITY_STATES if s in missing or s in expired]
+
+
+def list_rows(
+    conn: Any, *, namespace: str, entity_key: Optional[str] = None
+) -> list[dict]:
+    """Every live crosswalk in ``namespace``, shaped once for every reader.
+
+    Two read faces serve these rows (a Logto-gated console route and the
+    machine ``/api/v1/distribution`` route). A second copy of the shaping would
+    drift into "the console shows one thing, the machine another" — which reads
+    as a bug in whichever one you looked at second.
+    """
+    sql = (
+        "SELECT external_key, body, attrs, tier, updated_at "
+        "FROM knowledge_units WHERE namespace = %s AND kind = 'crosswalk' "
+        "  AND (tags->>'deleted') IS NULL"
+    )
+    params: list = [namespace]
+    if entity_key:
+        sql += " AND external_key = %s"
+        params.append(entity_key)
+    sql += " ORDER BY external_key, updated_at DESC"
+    out: list[dict] = []
+    for row in conn.execute(sql, tuple(params)).fetchall():
+        attrs = row["attrs"] or {}
+        out.append({
+            "key": row["external_key"],
+            "body": row["body"],
+            "relation": attrs.get("relation"),
+            "peer": attrs.get("peer"),
+            "confidence": attrs.get("confidence"),
+            "connectivity": attrs.get("connectivity"),
+            "missing_states": effective_missing_states(attrs.get("connectivity")),
+            "confirmed": is_confirmed(attrs, threshold=None),
+            "tier": row["tier"],
+            "updated_at": row["updated_at"],
+        })
+    return out
