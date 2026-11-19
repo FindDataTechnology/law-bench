@@ -67,7 +67,7 @@ spec:
             - lawbench.finddatatech.cloud
       initContainers:
         - name: seed-db
-          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-a66cafc
+          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-2a84034
           imagePullPolicy: IfNotPresent
           securityContext:
             runAsUser: 0
@@ -117,7 +117,7 @@ spec:
           # 真判据=探针 Pod 内 import 路由表 + 滚版 readyReplicas + 端点实探。
           # 本片内容：评测结论台账 + 建表引导修复 + 机器读面三条只读端点。
           # 回滚=sha-1641e54（崩溃）/ sha-720ae6f（上一个稳定版）。
-          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-a66cafc
+          image: ccr.ccs.tencentyun.com/law-bench/law-template:sha-2a84034
           imagePullPolicy: IfNotPresent
           env:
             # 提交方校验：**默认即 strict**（本片起不再设 BENCH_SUBMITTER_MODE）。

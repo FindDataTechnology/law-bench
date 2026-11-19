@@ -345,7 +345,17 @@ def _check_crosswalk_proposal(
             hint="按 crosswalk.validate_crosswalk 的报错逐条修正后重提",
         )
 
-    if external_key not in known:
+    # The endpoint's identity is `<type>:<key>`, but knowledge units are stored
+    # under the bare key — the type lives in the `kind` column. Comparing the
+    # whole tuple against `known` would never match a real entity (found on
+    # production 2026-11-19: `clause:合同法#第70条` reported missing while the
+    # unit `合同法#第70条` existed). So compare the key half, and keep the type
+    # half for the error message where it helps a reader.
+    if ":" in external_key:
+        _, _, bare_key = external_key.partition(":")
+    else:
+        bare_key = external_key
+    if bare_key not in known and external_key not in known:
         raise ProposalTargetExists(
             "crosswalk_endpoint_missing",
             external_key=external_key,
