@@ -160,6 +160,24 @@ def layer_change_problem(*, existing: dict, new_schema: dict) -> Optional[str]:
     )
 
 
+def template_authority(schema: dict) -> str:
+    """Who owns this vocabulary: ``platform``, ``external``, or ``legacy``.
+
+    This — not the layer name — is what ``extends`` must compare. Layers rank
+    specificity (a foundation feeding an industry template is normal); authority
+    says who may release a change. Merging a platform vocabulary with an
+    externally-owned one would force one side to accept the other's lifecycle,
+    which is exactly what ``aligned_with`` exists to avoid.
+
+    ``legacy`` is the pseudo-authority for a template that declares none: every
+    pre-layering template is platform-owned by definition, so it inherits freely
+    among its peers and never into an ``external`` one.
+    """
+    authority = (schema or {}).get("authority") or {}
+    kind = authority.get("kind") if isinstance(authority, dict) else None
+    return kind if isinstance(kind, str) and kind else "legacy"
+
+
 def validate_layer_declarations(schema: dict) -> list[str]:
     """Layer, authority and ``aligned_with`` structure (pure, no connection).
 

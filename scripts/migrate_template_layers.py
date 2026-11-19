@@ -59,6 +59,13 @@ def plan(conn) -> list[tuple[dict, dict]]:
     return out
 
 
+def eval_dsn() -> str:
+    """The real PostgreSQL DSN (``database_url`` env), never the SQLite path constant."""
+    from src.eval import db as edb
+
+    return edb._dsn()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dry-run", action="store_true")
@@ -69,7 +76,9 @@ def main(argv: list[str] | None = None) -> int:
 
     from src.eval import store as eval_store
 
-    dsn = args.database_url or eval_store.DEFAULT_DB
+    # DEFAULT_DB is the legacy SQLite path constant, NOT a DSN — passing it to
+    # psycopg makes conninfo parsing blow up on a PosixPath. Read the real DSN.
+    dsn = args.database_url or eval_dsn()
     conn = psycopg.connect(dsn, row_factory=psycopg.rows.dict_row)
     try:
         eval_store.ensure_schema(db_path=conn)

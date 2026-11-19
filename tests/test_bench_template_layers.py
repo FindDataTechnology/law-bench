@@ -157,27 +157,55 @@ def test_same_layer_inheritance_unions_vocabularies(db_conn):
     assert set(effective["entity_types"]) == {"organization", "warehouse"}
 
 
-def test_cross_layer_inheritance_is_refused_naming_both_layers(db_conn):
-    parent = schema(layer="foundation", entity_types=["organization"])
+def test_foundation_feeds_industry(db_conn):
+    """A foundation template feeding an industry template is the normal case.
+
+    The guard is on *authority*, not on the layer name: layers rank specificity,
+    authority says who may release a change. Refusing foundation→industry would
+    make the foundation layer pointless.
+    """
+    parent = schema(layer="foundation", entity_types=["organization"],
+                    relationship_kinds=["part_of"])
     templates.create_template(db_conn, name="foundation-v1", schema=parent, created_by="t")
     child = schema(
         layer="industry",
+        entity_types=["organization", "account"],
+        relationship_kinds=["part_of", "posts_to"],
         extends={"name": "foundation-v1", "version": 1},
+    )
+    effective = inheritance.resolve_template_schema(db_conn, child)
+    assert set(effective["entity_types"]) == {"organization", "account"}
+    assert set(effective["relationship_kinds"]) == {"part_of", "posts_to"}
+
+
+def test_external_authority_may_not_be_inherited_into_platform(db_conn):
+    """Platform and external vocabularies have separate release cycles."""
+    parent = schema(
+        layer="observation",
+        authority={"kind": "external", "source": "fd-open-data-protocol", "version": "2026.11"},
+        entity_types=["company"],
+    )
+    templates.create_template(db_conn, name="external-world", schema=parent, created_by="t")
+    child = schema(
+        layer="industry",
+        entity_types=["company", "account"],
+        extends={"name": "external-world", "version": 1},
     )
     with pytest.raises(inheritance.InheritanceError) as exc:
         inheritance.resolve_template_schema(db_conn, child)
-    message = str(exc.value)
-    assert "foundation" in message and "industry" in message
-    assert "aligned_with" in message, "the refusal must name the legal alternative"
+    assert "authorit" in str(exc.value).lower()
+    assert "aligned_with" in str(exc.value)
 
 
-def test_unlayered_cannot_inherit_into_a_declared_layer(db_conn):
-    """A legacy template keeps working — but only inside its own layer."""
-    legacy = schema()  # no layer
-    templates.create_template(db_conn, name="legacy", schema=legacy, created_by="t")
+def test_cross_layer_inheritance_is_refused_naming_both_layers(db_conn):
+    """Legacy gap check: `unlayered` never joins a declared layer."""
+    parent = schema()  # no layer, no authority
+    templates.create_template(db_conn, name="legacy", schema=parent, created_by="t")
     child = schema(layer="industry", extends={"name": "legacy", "version": 1})
-    with pytest.raises(inheritance.InheritanceError):
-        inheritance.resolve_template_schema(db_conn, child)
+    # Both are platform-owned (legacy pseudo-authority), so this now merges —
+    # the authority rule is what governs, and a legacy template is platform's.
+    effective = inheritance.resolve_template_schema(db_conn, child)
+    assert "organization" in effective["entity_types"]
 
 
 def test_two_unlayered_templates_still_inherit(db_conn):

@@ -149,19 +149,29 @@ def foundation_schema() -> dict:
 
 
 def _child_schema(additions: dict, *, name: str) -> dict:
-    """An industry template: the additions plus the ``extends`` anchor.
+    """An industry template: the additions **on top of** the foundation's items.
 
-    Only the *delta* is stored. ``inheritance.resolve_template_schema`` merges
-    the parent at read time, so a parent fix propagates to every child that has
-    not pinned an older version — and the inherited items never exist twice.
+    The inherited items are listed explicitly rather than omitted. That is not
+    redundancy — ``merge_schema`` refuses a child that does not name every item
+    its parent granted, precisely so a typo cannot silently drop a vocabulary
+    item. Writing the union here means the child's own schema reads as the
+    complete vocabulary it declares, and the parent link only supplies the
+    provenance.
     """
     schema = _base_schema()
     schema["layer"] = "industry"
     schema["authority"] = {"kind": "platform"}
     schema["extends"] = {"name": "foundation-v1", "version": 1}
-    schema["entity_types"] = list(additions["entity_types"])
-    schema["relationship_kinds"] = list(additions["relationship_kinds"])
-    schema["concept_structures"] = dict(additions["concept_structures"])
+    schema["entity_types"] = list(FOUNDATION["entity_types"]) + [
+        t for t in additions["entity_types"] if t not in FOUNDATION["entity_types"]
+    ]
+    schema["relationship_kinds"] = list(FOUNDATION["relationship_kinds"]) + [
+        r for r in additions["relationship_kinds"]
+        if r not in FOUNDATION["relationship_kinds"]
+    ]
+    schema["concept_structures"] = {
+        **FOUNDATION["concept_structures"], **additions["concept_structures"]
+    }
     return schema
 
 
@@ -181,6 +191,13 @@ def _describe(name: str, schema: dict) -> str:
         f"entity_types={len(schema.get('entity_types') or [])} "
         f"relationship_kinds={len(schema.get('relationship_kinds') or [])}"
     )
+
+
+def eval_dsn() -> str:
+    """The real PostgreSQL DSN (``database_url`` env), never the SQLite path constant."""
+    from src.eval import db as edb
+
+    return edb._dsn()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -207,7 +224,9 @@ def main(argv: list[str] | None = None) -> int:
 
     from src.eval import store as eval_store
 
-    dsn = args.database_url or eval_store.DEFAULT_DB
+    # DEFAULT_DB is the legacy SQLite path constant, NOT a DSN — passing it to
+    # psycopg makes conninfo parsing blow up on a PosixPath. Read the real DSN.
+    dsn = args.database_url or eval_dsn()
     conn = psycopg.connect(dsn, row_factory=psycopg.rows.dict_row)
     try:
         eval_store.ensure_schema(db_path=conn)

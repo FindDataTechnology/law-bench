@@ -65,20 +65,29 @@ def resolve_template_schema(
 def merge_schema(parent: dict, child: dict) -> dict:
     """Merge child over parent: extensible lists union, maps deep-merge.
 
-    Raises :class:`InheritanceError` when the child drops an inherited item —
-    the rule is "may add, may override a map entry, may not remove" — or when
-    the two sides sit in different ontology layers. Layers are the reason
-    ``extends`` can be trusted: it joins two vocabularies that answer to the
-    same authority. Cross-layer semantics are a *mapping* (``aligned_with``),
-    not a merge; merging would force one side to accept the other's lifecycle.
+    Raises :class:`InheritanceError` when the child drops an inherited item
+    ("may add, may override a map entry, may not remove") or when the two sides
+    answer to **different authorities**.
+
+    The guard is on authority, not on the layer name. Layers rank how *specific*
+    a vocabulary is (foundation → industry → domain); authority says who may
+    change it. A foundation an industry template inherits from is a normal,
+    intended relationship — refusing it would make the foundation layer
+    pointless. What must never be merged is a platform-owned vocabulary with an
+    externally-owned one: those two have separate release cycles, and a merge
+    would force one side to accept the other's lifecycle. That relationship is a
+    *mapping* (``aligned_with``), not inheritance.
     """
     parent_layer = templates.template_layer(parent)
     child_layer = templates.template_layer(child)
-    if parent_layer != child_layer:
+    parent_auth = templates.template_authority(parent)
+    child_auth = templates.template_authority(child)
+    if parent_auth != child_auth:
         raise InheritanceError(
-            f"extends crosses ontology layers: parent is {parent_layer!r}, "
-            f"child is {child_layer!r}. Same-layer inheritance only; declare "
-            "cross-layer equivalence with 'aligned_with' instead."
+            f"extends crosses vocabulary authorities: parent {parent_layer!r} is "
+            f"{parent_auth!r}, child {child_layer!r} is {child_auth!r}. Only "
+            "same-authority vocabularies may inherit; relate cross-authority "
+            "types with 'aligned_with' instead (a mapping, not a merge)."
         )
     merged = dict(parent)
     for key in EXTENSIBLE_KEYS:
