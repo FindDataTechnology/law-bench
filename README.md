@@ -1,5 +1,11 @@
 # law-bench · 中文法律合同起草与评测工作台
 
+> **本仓是只读导出面，不能出片。** 出片权归 `FindDataTechnology/law-bench-internal`
+> （它推 `law-bench/law-template` 与 `law-bench/law-render`）。本仓的 `image.yml` 已于
+> 2026-11-22 删除：两仓都推同一镜像名，谁最后跑谁定义 `:main`，而归档面的 workflow
+> 又是 `workflow_dispatch` 可触发的 —— 归档状态挡 push，不挡手动触发。
+> 改动请提到真源，再由导出流程更新本仓。
+
 > **Part of the [Lex line (寻数·识律)](https://www.finddatatech.cloud/products/lex) of [FindData](https://www.finddatatech.cloud)** — the LawBench workbench: clause corpus, taxonomy-driven contract assembly and LLM evaluation.
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](pyproject.toml)
